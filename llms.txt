@@ -1,0 +1,17 @@
+# Prince Picker
+
+Prince Picker is a premium, offline-first warehouse picking and inventory management platform designed for distributors, retailers, and logistics businesses. It allows warehouse operators to track inventory, pick orders up to 3x faster, and manage drop locations with enterprise-grade reliability, even without an internet connection.
+
+## Key Features
+- **Offline-First Architecture**: Built as a Progressive Web App (PWA), it stores data locally and syncs automatically when online.
+- **Fast Barcode Scanning**: Uses device cameras for instantaneous barcode recognition (supports QR, EAN, UPC, and more).
+- **Warehouse Mapping**: Visualizes inventory across Racks, Levels, and Bins for optimized routing.
+- **Real-Time Analytics**: Built-in dashboards track picker efficiency, cycle times, and order accuracy.
+
+## Technology
+- Core: Vanilla JavaScript, HTML5, CSS3 (No heavy frameworks)
+- Storage: IndexedDB, File System Access API
+- Offline: Service Workers, Cache Storage
+
+## Target Audience
+Prince Picker is tailored for medium to large-scale warehouses needing industrial-grade, zero-latency software that mimics the polish and speed of products like Linear, Stripe, and Notion.

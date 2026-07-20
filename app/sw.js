@@ -1,0 +1,78 @@
+'use strict';
+const CACHE_NAME = 'pa-picker-v8';
+const STATIC_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+/* ── INSTALL ── */
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
+  );
+});
+
+/* ── ACTIVATE ── */
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
+  );
+});
+
+/* ── FETCH ── */
+self.addEventListener('fetch', e => {
+  const { request } = e;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') return;
+
+  // Skip cross-origin requests (CDNs, fonts, etc.)
+  if (url.origin !== location.origin) return;
+
+  // API / JSON requests: Network-first with cache fallback
+  const isData = url.pathname.endsWith('.json') || url.pathname.includes('/api/');
+  if (isData) {
+    e.respondWith(
+      fetch(request)
+        .then(res => {
+          if (res && res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.match(request).then(cached =>
+            cached || new Response(JSON.stringify({ error: 'offline' }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
+        )
+    );
+    return;
+  }
+
+  // Static assets: Stale-while-revalidate
+  e.respondWith(
+    caches.match(request).then(cached => {
+      const networkFetch = fetch(request).then(res => {
+        if (res && res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(request, clone));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || networkFetch;
+    })
+  );
+});
