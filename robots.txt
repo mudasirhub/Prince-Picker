@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /app/
 
-Sitemap: https://princepicker.com/sitemap.xml
+Sitemap: https://princepicker.mudasirkhan.in/sitemap.xml

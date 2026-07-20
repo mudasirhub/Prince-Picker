@@ -1,16 +1,16 @@
 {
-  "name": "Prince Automobiles Picker",
-  "short_name": "PA Picker",
-  "description": "Prince Automobiles Warehouse Picking & Barcode Inventory System",
+  "name": "Prince Picker",
+  "short_name": "Prince Picker",
+  "description": "Offline-first warehouse and inventory management software.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#050505",
-  "theme_color": "#FF6A00",
+  "theme_color": "#2563EB",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["productivity", "business", "utilities"],
+  "categories": ["business", "productivity"],
   "prefer_related_applications": false,
   "shortcuts": [
     {
@@ -29,7 +29,7 @@
   "icons": [
     {
       "src": "../favicon.svg",
-      "sizes": "192x192",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
@@ -40,10 +40,16 @@
       "purpose": "any"
     },
     {
-      "src": "../favicon.svg",
+      "src": "../android-chrome-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../android-chrome-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ]
 }

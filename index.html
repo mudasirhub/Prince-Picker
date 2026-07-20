@@ -4,32 +4,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prince Picker | Offline-First Warehouse Picking Platform</title>
+  <title>Prince Picker — Offline Warehouse & Inventory Picking System</title>
 
   <meta name="description"
-    content="Prince Picker is an offline-first warehouse picking and inventory management platform designed for speed, reliability, and enterprise scale.">
+    content="Prince Picker is an offline-first warehouse picking and inventory management system built for distributors, retailers and spare parts businesses. Fast, secure and mobile friendly.">
   <meta name="keywords"
-    content="warehouse picking, inventory management, offline first, warehouse software, barcode scanner, inventory tracker">
-  <meta name="theme-color" content="#FF6A00">
+    content="warehouse picking, inventory management, offline inventory, warehouse software, inventory picker, barcode scanner, spare parts management, PWA inventory, stock management, Android inventory app, Prince Picker">
+  <meta name="theme-color" content="#2563EB">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
-  <link rel="canonical" href="https://princepicker.com/">
+  <link rel="canonical" href="https://princepicker.mudasirkhan.in/">
   <link rel="manifest" href="/site.webmanifest">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <!-- OpenGraph -->
-  <meta property="og:title" content="Prince Picker | Warehouse Picking Software">
+  <meta property="og:title" content="Prince Picker — Offline Warehouse & Inventory Picking System">
   <meta property="og:description"
-    content="Track every product with confidence. Complete warehouse picks up to 3x faster with offline-first technology.">
-  <meta property="og:url" content="https://princepicker.com/">
+    content="Prince Picker is an offline-first warehouse picking and inventory management system built for distributors, retailers and spare parts businesses. Fast, secure and mobile friendly.">
+  <meta property="og:image" content="https://princepicker.mudasirkhan.in/dashboard-preview.png">
+  <meta property="og:url" content="https://princepicker.mudasirkhan.in/">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Prince Picker">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Prince Picker | Warehouse Picking Software">
+  <meta name="twitter:title" content="Prince Picker — Offline Warehouse & Inventory Picking System">
   <meta name="twitter:description"
-    content="Track every product with confidence. Complete warehouse picks up to 3x faster with offline-first technology.">
+    content="Prince Picker is an offline-first warehouse picking and inventory management system built for distributors, retailers and spare parts businesses. Fast, secure and mobile friendly.">
+  <meta name="twitter:image" content="https://princepicker.mudasirkhan.in/dashboard-preview.png">
 
   <!-- JSON-LD -->
   <script type="application/ld+json">
@@ -37,14 +41,19 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Prince Picker",
-    "operatingSystem": "Web, iOS, Android",
+    "operatingSystem": "Android, Web",
     "applicationCategory": "BusinessApplication",
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD"
     },
-    "description": "Offline-First Warehouse Picking & Inventory Management Platform"
+    "description": "Offline-first warehouse and inventory management software.",
+    "creator": {
+      "@type": "Person",
+      "name": "Mudasir Khan"
+    },
+    "url": "https://princepicker.mudasirkhan.in"
   }
   </script>
 
@@ -52,14 +61,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-
   <style>
     :root {
       --bg: #050505;
       --surf: #111111;
       --surf2: #1A1A1A;
-      --primary: #FF6A00;
-      --primary-hover: #e65f00;
+      --primary: #2563EB;
+      --primary-hover: #1d4ed8;
       --text: #FFFFFF;
       --mut: #A3A3A3;
       --mut-light: #525252;
@@ -411,42 +419,42 @@
 
 <body>
 
-  <nav>
-    <a href="/" class="brand">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
-        <ellipse cx="12" cy="5" rx="9" ry="3" />
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-      </svg>
-      Prince Picker
-    </a>
-    <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="/pricing.html">Pricing</a>
-      <a href="/docs.html">Docs</a>
-      <a href="/download/">Download App</a>
-      <a href="https://github.com/mudasirhub/Prince-Picker" target="_blank">GitHub</a>
-    </div>
-    <a href="/app/" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">Launch App</a>
-  </nav>
+  <header>
+    <nav aria-label="Main Navigation">
+      <a href="/" class="brand" aria-label="Prince Picker Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" aria-hidden="true">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+        </svg>
+        Prince Picker
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/download/">Download App</a>
+        <a href="https://github.com/mudasirhub/Prince-Picker" target="_blank" aria-label="Prince Picker GitHub Repository (opens in new tab)">GitHub</a>
+      </div>
+      <a href="/app/" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" aria-label="Launch Web Application">Launch App</a>
+    </nav>
+  </header>
 
-  <section class="hero">
+  <main>
+    <section class="hero">
     <div class="hero-badge">
       <span style="color:var(--success)">●</span> Enterprise Warehouse Platform V2.0
     </div>
     <h1>Warehouse Picking, <span>Uninterrupted.</span></h1>
-    <p>Track every product with confidence. Complete warehouse picks up to 3× faster with our industrial-grade,
-      offline-first application.</p>
+    <p>Prince Picker is an offline-first warehouse picking and inventory management platform built for spare parts businesses, warehouses, retailers and distributors. Complete warehouse picks up to 3× faster with our industrial-grade Progressive Web App.</p>
     <div class="hero-ctas">
       <a href="/app/" class="btn btn-primary">Launch Application</a>
       <a href="/download/" class="btn btn-secondary">Download App</a>
     </div>
 
     <div class="showcase">
-      <div class="showcase-inner" style="padding: 0; background: transparent; border: none;">
-        <img src="dashboard-preview.png" alt="Prince Picker Dashboard Overview"
-          style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px; display: block;"
-          onerror="this.onerror=null; this.src='dashboard-preview.svg';">
+      <div class="showcase-inner">
+        <img src="dashboard-preview.png" alt="Prince Picker Dashboard Overview" loading="lazy" onerror="this.onerror=null; this.src='dashboard-preview.svg';">
       </div>
     </div>
   </section>
@@ -528,6 +536,44 @@
       </div>
     </div>
   </section>
+
+  <section id="about" style="border-top: 1px solid var(--border); padding-top: 80px; margin-top: 40px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 40px; max-width: 800px;">
+      <h2 style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px;">About Prince Picker</h2>
+      <p style="font-size: 16px; line-height: 1.7; color: var(--mut); margin-bottom: 24px;">
+        Prince Picker is an offline-first warehouse picking and inventory management platform built for spare parts businesses, warehouses, retailers and distributors. Developed by Mudasir Khan, the system solves latency, dead connectivity zones, and slow fulfillment times on the warehouse floor by utilizing local-first web technologies.
+      </p>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; max-width: 1000px; font-size: 15px; line-height: 1.6;">
+      <div>
+        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">What is Prince Picker &amp; Who is it for?</h4>
+        <p style="color: var(--mut); margin-bottom: 20px;">
+          It is a progressive warehouse optimization system designed for distributors, retailers, and high-volume spare parts businesses. It allows warehouse workers to perform fast, uninterrupted inventory operations even in areas with poor or zero Wi-Fi connectivity.
+        </p>
+        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">What problems does it solve?</h4>
+        <p style="color: var(--mut);">
+          By caching database schemas locally on the device, it eliminates delays from server round-trips and guarantees that barcode scanning, inventory lookups, and order picking continue working during network outages.
+        </p>
+      </div>
+      <div>
+        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">What technologies does it use?</h4>
+        <p style="color: var(--mut); margin-bottom: 20px;">
+          Prince Picker is built as a Progressive Web App (PWA) using standard modern web tech (HTML, CSS, JavaScript) alongside a mobile-first user interface. It integrates native Android Compose elements for deep system integration, local databases, and camera-based barcode scanning.
+        </p>
+        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">Core Platform Capabilities</h4>
+        <ul style="color: var(--mut); padding-left: 20px; list-style-type: square;">
+          <li>Offline-first PWA with background sync</li>
+          <li>Instant camera-based Barcode scanning</li>
+          <li>Fast inventory search &amp; stock auditing</li>
+          <li>Optimized warehouse picking &amp; order management</li>
+          <li>Seamless multi-device inventory sync</li>
+          <li>Android support and mobile-first interface</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  </main>
 
   <footer>
     <div class="footer-content">
