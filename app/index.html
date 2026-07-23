@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<head>l̥
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#ec5b13">
@@ -10,8 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Prince Picker">
   <meta name="application-name" content="Prince Picker">
-  <meta name="description" content="Prince Picker is an offline-first warehouse picking and inventory management system built for distributors, retailers and spare parts businesses. Fast, secure and mobile friendly.">
-  <meta name="keywords" content="warehouse picking, inventory management, offline inventory, warehouse software, inventory picker, barcode scanner, spare parts management, PWA inventory, stock management, Android inventory app, Prince Picker">
+  <meta name="description"
+    content="Prince Picker is an offline-first warehouse picking and inventory management system built for distributors, retailers and spare parts businesses. Fast, secure and mobile friendly.">
+  <meta name="keywords"
+    content="warehouse picking, inventory management, offline inventory, warehouse software, inventory picker, barcode scanner, spare parts management, PWA inventory, stock management, Android inventory app, Prince Picker">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -123,6 +125,7 @@
       padding: 16px;
       box-shadow: var(--sh);
     }
+
     .settings-group-title {
       font-size: 11px;
       font-weight: 800;
@@ -131,6 +134,7 @@
       letter-spacing: 1px;
       margin-bottom: 14px;
     }
+
     .settings-row {
       display: flex;
       align-items: center;
@@ -138,35 +142,42 @@
       padding-bottom: 12px;
       border-bottom: 1px solid var(--bd);
     }
+
     .settings-row:last-child {
       padding-bottom: 0;
       border-bottom: none;
     }
+
     .settings-label-wrap {
       flex: 1;
       margin-right: 16px;
     }
+
     .settings-label {
       font-size: 15px;
       font-weight: 700;
       color: var(--t1);
     }
+
     .settings-desc {
       font-size: 12px;
       color: var(--t3);
       margin-top: 2px;
     }
+
     .switch {
       position: relative;
       display: inline-block;
       width: 50px;
       height: 28px;
     }
+
     .switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
+
     .slider {
       position: absolute;
       cursor: pointer;
@@ -178,6 +189,7 @@
       transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: 28px;
     }
+
     .slider:before {
       position: absolute;
       content: "";
@@ -188,12 +200,14 @@
       background-color: white;
       transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    input:checked + .slider {
+
+    input:checked+.slider {
       background-color: #ec5b13;
     }
-    input:checked + .slider:before {
+
+    input:checked+.slider:before {
       transform: translateX(22px);
     }
 
@@ -691,6 +705,90 @@
       justify-content: center;
       margin: 0 auto 16px;
       color: var(--rd);
+    }
+
+    /* ══════════════════════════════════════════
+    CONTINUOUS DROP MODE STYLES
+    ══════════════════════════════════════════ */
+    .drop-float-cart {
+      position: fixed;
+      bottom: calc(var(--bot) + 16px);
+      right: 16px;
+      z-index: 99;
+      background: var(--or);
+      color: #fff;
+      border-radius: 16px;
+      padding: 10px 16px;
+      box-shadow: 0 8px 24px rgba(236, 91, 19, 0.45);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 96px;
+      transition: transform 0.15s ease, background-color 0.2s ease;
+    }
+    .drop-float-cart:active {
+      transform: scale(0.94);
+    }
+    .drop-float-cart .dfc-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.2px;
+    }
+    .drop-float-cart .dfc-sub {
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.95;
+      margin-top: 2px;
+      line-height: 1.1;
+    }
+
+    .drop-success-toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 150;
+      background: rgba(6, 78, 59, 0.95);
+      border: 1.5px solid var(--gr-bd);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      min-width: 200px;
+      max-width: 85%;
+      animation: dropToastIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes dropToastIn {
+      from { opacity: 0; transform: translate(-50%, -20px) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+    .drop-success-toast .dst-icon {
+      font-size: 13px;
+      font-weight: 800;
+      color: #34d399;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+    .drop-success-toast .dst-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+    .drop-success-toast .dst-qty {
+      font-size: 13px;
+      font-weight: 700;
+      color: #a7f3d0;
+      margin-top: 2px;
     }
 
     /* ══════════════════════════════════════════
@@ -2320,18 +2418,43 @@
     .scan-flash-success {
       animation: flash-green-anim 0.5s ease-out forwards;
     }
+
     .scan-flash-error {
       animation: flash-red-anim 0.5s ease-out forwards;
     }
+
     @keyframes flash-green-anim {
-      0% { background: rgba(74, 222, 128, 0); box-shadow: inset 0 0 0px rgba(74, 222, 128, 0); }
-      20% { background: rgba(74, 222, 128, 0.2); box-shadow: inset 0 0 60px rgba(74, 222, 128, 0.8); }
-      100% { background: rgba(74, 222, 128, 0); box-shadow: inset 0 0 0px rgba(74, 222, 128, 0); }
+      0% {
+        background: rgba(74, 222, 128, 0);
+        box-shadow: inset 0 0 0px rgba(74, 222, 128, 0);
+      }
+
+      20% {
+        background: rgba(74, 222, 128, 0.2);
+        box-shadow: inset 0 0 60px rgba(74, 222, 128, 0.8);
+      }
+
+      100% {
+        background: rgba(74, 222, 128, 0);
+        box-shadow: inset 0 0 0px rgba(74, 222, 128, 0);
+      }
     }
+
     @keyframes flash-red-anim {
-      0% { background: rgba(248, 113, 113, 0); box-shadow: inset 0 0 0px rgba(248, 113, 113, 0); }
-      20% { background: rgba(248, 113, 113, 0.25); box-shadow: inset 0 0 60px rgba(248, 113, 113, 0.8); }
-      100% { background: rgba(248, 113, 113, 0); box-shadow: inset 0 0 0px rgba(248, 113, 113, 0); }
+      0% {
+        background: rgba(248, 113, 113, 0);
+        box-shadow: inset 0 0 0px rgba(248, 113, 113, 0);
+      }
+
+      20% {
+        background: rgba(248, 113, 113, 0.25);
+        box-shadow: inset 0 0 60px rgba(248, 113, 113, 0.8);
+      }
+
+      100% {
+        background: rgba(248, 113, 113, 0);
+        box-shadow: inset 0 0 0px rgba(248, 113, 113, 0);
+      }
     }
 
     .scan-overlay {
@@ -4208,10 +4331,25 @@
       background: var(--bg);
     }
 
-    .notif-icon.info { background: #E3F2FD; color: #1976D2; }
-    .notif-icon.success { background: #E8F5E9; color: #2E7D32; }
-    .notif-icon.warning { background: #FFF8E1; color: #F57C00; }
-    .notif-icon.critical { background: #FFEBEE; color: #D32F2F; }
+    .notif-icon.info {
+      background: #E3F2FD;
+      color: #1976D2;
+    }
+
+    .notif-icon.success {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .notif-icon.warning {
+      background: #FFF8E1;
+      color: #F57C00;
+    }
+
+    .notif-icon.critical {
+      background: #FFEBEE;
+      color: #D32F2F;
+    }
 
     .notif-content {
       flex: 1;
@@ -4388,8 +4526,13 @@
     }
 
     @media (max-width: 360px) {
-      .dash-grid { grid-template-columns: 1fr; }
-      .dash-title { font-size: 21px; }
+      .dash-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dash-title {
+        font-size: 21px;
+      }
     }
 
     /* Empty State Styling */
@@ -4406,17 +4549,20 @@
       margin: 16px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
+
     .empty-state-icon {
       font-size: 48px;
       margin-bottom: 16px;
       filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.06));
     }
+
     .empty-state-title {
       font-size: 16px;
       font-weight: 800;
       color: var(--t1);
       margin-bottom: 6px;
     }
+
     .empty-state-sub {
       font-size: 13px;
       color: var(--t3);
@@ -4424,6 +4570,7 @@
       line-height: 1.45;
       margin-bottom: 20px;
     }
+
     .empty-state-actions {
       display: flex;
       gap: 10px;
@@ -4431,6 +4578,7 @@
       justify-content: center;
       flex-wrap: wrap;
     }
+
     .empty-state-actions button {
       min-width: 120px;
       height: 40px;
@@ -4482,13 +4630,10 @@
 
   <!-- ══════ SPLASH ══════ -->
   <div class="S on" id="s-splash">
-    <div class="splash-logo"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff"
-        stroke-width="1.8">
-        <ellipse cx="12" cy="5" rx="9" ry="3" />
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-      </svg></div>
-    <div class="splash-title">Prince Picker</div>
+    <div class="splash-logo" style="background:transparent;box-shadow:none;width:88px;height:88px;margin-bottom:16px;">
+      <img src="../picker%20logo.png" alt="Prince Logo" style="width:100%;height:100%;object-fit:cover;border-radius:20px;box-shadow:0 10px 30px rgba(255,106,0,0.55);border:2px solid rgba(255,255,255,0.2)">
+    </div>
+    <div class="splash-title" style="font-weight:900;letter-spacing:-0.5px">Prince Picker</div>
     <div class="splash-status" id="splashStatus">Prince Picker</div>
     <div class="splash-bar">
       <div class="splash-fill" id="splashFill"></div>
@@ -4498,15 +4643,16 @@
   <!-- ══════ SCREEN 1: LOGIN ══════ -->
   <div class="S" id="s-login">
     <div class="tb">
-      <div class="tb-title">Prince Picker</div>
+      <div class="tb-title c" style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <img src="../picker%20logo.png" style="width:24px;height:24px;border-radius:6px;object-fit:cover">
+        <span>Prince Picker</span>
+      </div>
     </div>
     <div class="sc p">
       <div class="login-body">
-        <div class="login-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--or)"
-            stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg></div>
+        <div class="login-icon" style="background:transparent;width:84px;height:84px;margin-bottom:14px;box-shadow:none">
+          <img src="../picker%20logo.png" alt="Prince Logo" style="width:100%;height:100%;object-fit:cover;border-radius:18px;box-shadow:0 8px 24px rgba(255,106,0,0.38)">
+        </div>
         <div class="login-title">Who's picking?</div>
         <div class="login-sub">Enter your name to start picking</div>
         <input class="login-input" id="pickerName" placeholder="Your name" maxlength="32" autocomplete="name">
@@ -4635,8 +4781,11 @@
         <span class="chip c-yl" id="orderOffline" style="display:none">Offline</span>
       </div>
     </div>
-    <div id="ptr-indicator" style="height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: height 0.15s ease, opacity 0.15s ease; opacity: 0; font-size: 13px; font-weight: 700; color: var(--or)">
-      <div class="spinner" style="width: 16px; height: 16px; border-color: rgba(0,0,0,.1); border-top-color: var(--or); margin-right: 8px;"></div>
+    <div id="ptr-indicator"
+      style="height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: height 0.15s ease, opacity 0.15s ease; opacity: 0; font-size: 13px; font-weight: 700; color: var(--or)">
+      <div class="spinner"
+        style="width: 16px; height: 16px; border-color: rgba(0,0,0,.1); border-top-color: var(--or); margin-right: 8px;">
+      </div>
       <span>Pull to refresh...</span>
     </div>
     <div class="sc" style="padding:12px 16px" id="ordersList"></div>
@@ -4684,7 +4833,8 @@
         <div class="tb-title left" id="sessOrderId" style="font-size:14px">Order #–</div>
         <div class="tb-sub" id="sessPickerLbl">–</div>
       </div>
-      <button class="ib" id="btnUndoPick" onclick="undoLastPick()" style="display:none;margin-right:8px;color:var(--rd)" title="Undo last item">
+      <button class="ib" id="btnUndoPick" onclick="undoLastPick()" style="display:none;margin-right:8px;color:var(--rd)"
+        title="Undo last item">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M3 7v6h6" />
           <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
@@ -4719,6 +4869,13 @@
         <div class="tb-sub">Prince Picker</div>
       </div>
       <div class="timer-pill"><span class="t-dot"></span><span id="adhocTimerDisp">00:00</span></div>
+      <button class="ib or" onclick="closeAdhocScan(); nav('s-cart')" title="View Cart" style="margin-left:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg>
+      </button>
     </div>
     <div class="workflow-mode-toggle">
       <button id="adhocPickModeBtn" class="active" onclick="switchAdhocMode('pick')">Pick Mode</button>
@@ -5122,15 +5279,21 @@
   <!-- ══════ DROP MODE ══════ -->
   <div class="S" id="s-drop">
     <div class="tb">
-      <button class="ib" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      <button class="ib" onclick="stopDropInlineScanner(); nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5">
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
       <div class="tb-title c">Drop Mode</div>
-      <div style="width:38px"></div>
+      <button class="ib or" onclick="stopDropInlineScanner(); nav('s-cart')" title="View Cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg>
+      </button>
     </div>
     <div class="mode-toggle">
-      <button class="mode-btn" onclick="nav('s-cart')">
+      <button class="mode-btn" onclick="switchToPickBatchScan()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6" />
         </svg>
@@ -5144,32 +5307,49 @@
         Drop Mode
       </button>
     </div>
-    <div class="sc" id="dropBody"></div>
+
+    <!-- Drop Success Toast Overlay (Auto-dismisses) -->
+    <div id="dropSuccessToast" class="drop-success-toast" style="display:none;">
+      <div class="dst-icon">✓ Added</div>
+      <div class="dst-name" id="dstName">Brake Shoe</div>
+      <div class="dst-qty" id="dstQty">Qty 1</div>
+    </div>
+
+    <!-- Main Drop Body Container -->
+    <div class="sc" id="dropBody" style="position:relative; flex:1; overflow-y:auto;"></div>
+
+    <!-- Persistent Floating Cart Button -->
+    <div id="dropFloatCart" class="drop-float-cart" style="display:none;" onclick="stopDropInlineScanner(); renderDropCart();">
+      <div class="dfc-title">Cart</div>
+      <div class="dfc-sub" id="dfcSkus">0 SKUs</div>
+      <div class="dfc-sub" id="dfcUnits">0 Units</div>
+    </div>
+
     <div class="bn">
-      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      <button class="bnt" onclick="stopDropInlineScanner(); nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
           <path d="M9 11l3 3L22 4" />
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
         </svg>Orders</button>
-      <button class="bnt on" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      <button class="bnt on" onclick="stopDropInlineScanner(); nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
           <circle cx="9" cy="21" r="1" />
           <circle cx="20" cy="21" r="1" />
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
         </svg>Cart</button>
-      <div class="bnt-disc-wrap" onclick="startAdhocScan()"><button class="bnt-disc" style="background:var(--or)"><svg
+      <div class="bnt-disc-wrap" onclick="initDrop()"><button class="bnt-disc" style="background:var(--or)"><svg
             width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
             <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
             <line x1="7" y1="8" x2="7" y2="16" />
             <line x1="14" y1="8" x2="14" y2="16" />
           </svg></button><span class="bnt-disc-lbl" style="color:var(--or)">Scan</span></div>
-      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      <button class="bnt" onclick="stopDropInlineScanner(); nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
           <rect x="2" y="3" width="20" height="5" rx="1" />
           <rect x="2" y="10" width="20" height="5" rx="1" />
           <rect x="2" y="17" width="20" height="5" rx="1" />
         </svg>Inventory</button>
-      <button class="bnt" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      <button class="bnt" onclick="stopDropInlineScanner(); openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="5" r="1" />
           <circle cx="19" cy="5" r="1" />
@@ -5239,34 +5419,40 @@
               border: 1.5px solid var(--bd);
               transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               outline: none;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
               box-sizing: border-box;
             }
+
             .prod-search-input:focus {
               border-color: var(--or);
               box-shadow: 0 6px 16px rgba(236, 91, 19, 0.12), 0 0 0 4px var(--or-lt);
               background: #ffffff;
               transform: translateY(-1px);
             }
+
             .prod-search-input::placeholder {
               color: var(--t3);
               font-weight: 500;
             }
+
             .sf-icon {
               transition: all 0.3s ease;
               color: var(--t3);
             }
+
             .sf:focus-within .sf-icon {
               color: var(--or);
               transform: translateY(-50%) scale(1.1) !important;
             }
           </style>
-          <svg class="sf-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          <svg class="sf-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5"
             style="position:absolute;left:15px;top:50%;transform:translateY(-50%);z-index:2;pointer-events:none;">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input id="prodQ" class="prod-search-input" placeholder="Name, brand, barcode, location..." autocomplete="off">
+          <input id="prodQ" class="prod-search-input" placeholder="Name, brand, barcode, location..."
+            autocomplete="off">
         </div>
         <button class="bc-btn" style="width:46px;height:46px"
           onclick="openScanner(onProdListScan,'Scan to find product')">
@@ -5935,7 +6121,8 @@
         <div class="more-item" id="more-settings" onclick="closeMore();nav('s-settings')">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
           <span>Settings</span>
         </div>
@@ -6046,21 +6233,43 @@
         <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;">
           <div style="font-size:12px;font-weight:700;color:var(--t3);margin-bottom:6px;">SERVER BRIDGE URL</div>
           <div style="display:flex;gap:8px;">
-            <input type="text" id="settServerUrl" class="ap-input" style="flex:1;height:42px;margin:0;" placeholder="http://192.168.1.X:3002">
+            <input type="text" id="settServerUrl" class="ap-input" style="flex:1;height:42px;margin:0;"
+              placeholder="http://192.168.1.X:3002">
             <button class="btn-p" style="height:42px;padding:0 16px;" onclick="saveSettServerUrl()">Save</button>
           </div>
         </div>
       </div>
 
-      <div style="margin-top:32px;text-align:center;font-size:11px;color:var(--t3);font-weight:600;letter-spacing:0.5px;">
+      <div
+        style="margin-top:32px;text-align:center;font-size:11px;color:var(--t3);font-weight:600;letter-spacing:0.5px;">
         PRINCE PICKER • APP V2.0
       </div>
     </div>
     <div class="bn">
-      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Orders</span></button>
-      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></button>
-      <button class="bnt" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Cart</span></button>
-      <button class="bnt" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>More</span></button>
+      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg><span>Orders</span></button>
+      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg><span>Search</span></button>
+      <button class="bnt" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg><span>Cart</span></button>
+      <button class="bnt" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </svg><span>More</span></button>
     </div>
   </div>
 
@@ -6078,18 +6287,23 @@
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px;background:var(--bg);">
       <div style="display:flex;gap:10px;margin-bottom:16px;">
-        <div class="stat-card" style="flex:1;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--sh);">
+        <div class="stat-card"
+          style="flex:1;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--sh);">
           <div style="font-size:10px;font-weight:800;color:var(--t3);letter-spacing:1px;">ACTIVE AUDITS</div>
           <div style="font-size:22px;font-weight:800;color:var(--t1);" id="auditStatActive">0</div>
         </div>
-        <div class="stat-card" style="flex:1;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--sh);">
+        <div class="stat-card"
+          style="flex:1;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--sh);">
           <div style="font-size:10px;font-weight:800;color:var(--t3);letter-spacing:1px;">PENDING UPLOAD</div>
           <div style="font-size:22px;font-weight:800;color:var(--or);" id="auditStatPending">0</div>
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:20px;">
         <button class="btn-p" style="flex:1;height:48px;" onclick="startNewAudit()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           Start New Audit
         </button>
       </div>
@@ -6107,10 +6321,30 @@
       </div>
     </div>
     <div class="bn">
-      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Orders</span></button>
-      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></button>
-      <button class="bnt" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Cart</span></button>
-      <button class="bnt on" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>More</span></button>
+      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg><span>Orders</span></button>
+      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg><span>Search</span></button>
+      <button class="bnt" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg><span>Cart</span></button>
+      <button class="bnt on" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </svg><span>More</span></button>
     </div>
   </div>
 
@@ -6119,7 +6353,10 @@
     <div class="tb">
       <div class="tb-title left" id="activeAuditTitle">Audit in Progress</div>
       <button class="ib" onclick="cancelActiveAudit()" title="Cancel">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px;background:var(--bg);" id="auditWorkflowContainer">
@@ -6128,12 +6365,14 @@
   </div>
 
   <!-- ══════ AUDIT MODALS ══════ -->
-  <div id="auditStartModal" style="display:none;position:fixed;inset:0;z-index:460;align-items:center;justify-content:center">
+  <div id="auditStartModal"
+    style="display:none;position:fixed;inset:0;z-index:460;align-items:center;justify-content:center">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.7)" onclick="closeAuditStartModal()"></div>
     <div style="position:relative;background:var(--card);border-radius:20px;padding:20px;width:90%;max-width:350px;">
       <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:14px;">Start New Audit</div>
       <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;">AUDITOR NAME</div>
-      <input id="auditAuditorName" type="text" class="ap-input" style="width:100%;margin-bottom:16px;" placeholder="Your name...">
+      <input id="auditAuditorName" type="text" class="ap-input" style="width:100%;margin-bottom:16px;"
+        placeholder="Your name...">
       <div style="display:flex;gap:8px;">
         <button class="btn-s" style="flex:1;height:46px" onclick="closeAuditStartModal()">Cancel</button>
         <button class="btn-p" style="flex:2;height:46px" onclick="confirmStartAudit()">Start Audit</button>
@@ -6141,12 +6380,15 @@
     </div>
   </div>
 
-  <div id="auditResumeModal" style="display:none;position:fixed;inset:0;z-index:460;align-items:center;justify-content:center">
+  <div id="auditResumeModal"
+    style="display:none;position:fixed;inset:0;z-index:460;align-items:center;justify-content:center">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.7)"></div>
-    <div style="position:relative;background:var(--card);border-radius:20px;padding:20px;width:90%;max-width:350px;text-align:center;">
+    <div
+      style="position:relative;background:var(--card);border-radius:20px;padding:20px;width:90%;max-width:350px;text-align:center;">
       <div style="font-size:24px;margin-bottom:10px;">📋</div>
       <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:8px;">Active Audit Draft Found</div>
-      <div style="font-size:13px;font-weight:500;color:var(--t3);margin-bottom:20px;">You have an unfinished audit. Would you like to resume it?</div>
+      <div style="font-size:13px;font-weight:500;color:var(--t3);margin-bottom:20px;">You have an unfinished audit.
+        Would you like to resume it?</div>
       <div style="display:flex;gap:8px;">
         <button class="btn-s" style="flex:1;height:46px" onclick="discardActiveAudit()">Discard</button>
         <button class="btn-p" style="flex:1;height:46px" onclick="resumeActiveAudit()">Resume</button>
@@ -6248,33 +6490,65 @@
     </div>
     <div class="sc" style="padding:16px 20px;padding-bottom:100px;">
       <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <button class="btn-p" style="flex:1;height:52px;font-size:15px;border-radius:14px;box-shadow: 0 4px 14px rgba(236,91,19,.25);" onclick="startNewTransfer()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px">
+        <button class="btn-p"
+          style="flex:1;height:52px;font-size:15px;border-radius:14px;box-shadow: 0 4px 14px rgba(236,91,19,.25);"
+          onclick="startNewTransfer()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            style="margin-right:6px">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           New Transfer
         </button>
       </div>
-      
+
       <!-- Metrics -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;" id="transferMetricsContainer">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;"
+        id="transferMetricsContainer">
         <!-- populated by renderTransferDashboard -->
       </div>
-      
-      <div style="font-size:13px;font-weight:800;color:var(--t1);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Pending</div>
+
+      <div
+        style="font-size:13px;font-weight:800;color:var(--t1);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
+        Pending</div>
       <div id="transferPendingList" style="margin-bottom:24px;"></div>
 
-      <div style="font-size:13px;font-weight:800;color:var(--t1);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">History</div>
+      <div
+        style="font-size:13px;font-weight:800;color:var(--t1);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
+        History</div>
       <div id="transferHistoryList"></div>
     </div>
-    
+
     <div class="bn">
-      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Orders</button>
-      <button class="bnt" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Cart</button>
-      <div class="bnt-disc-wrap" onclick="startAdhocScan()"><button class="bnt-disc" style="background:var(--or)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg></button><span class="bnt-disc-lbl" style="color:var(--or)">Scan</span></div>
-      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="5" rx="1"/><rect x="2" y="10" width="20" height="5" rx="1"/><rect x="2" y="17" width="20" height="5" rx="1"/></svg>Inventory</button>
-      <button class="bnt on" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/></svg>More</button>
+      <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>Orders</button>
+      <button class="bnt" onclick="nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg>Cart</button>
+      <div class="bnt-disc-wrap" onclick="startAdhocScan()"><button class="bnt-disc" style="background:var(--or)"><svg
+            width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+            <line x1="7" y1="8" x2="7" y2="16" />
+            <line x1="14" y1="8" x2="14" y2="16" />
+          </svg></button><span class="bnt-disc-lbl" style="color:var(--or)">Scan</span></div>
+      <button class="bnt" onclick="nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="5" rx="1" />
+          <rect x="2" y="10" width="20" height="5" rx="1" />
+          <rect x="2" y="17" width="20" height="5" rx="1" />
+        </svg>Inventory</button>
+      <button class="bnt on" onclick="openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="5" r="1" />
+          <circle cx="19" cy="5" r="1" />
+          <circle cx="5" cy="5" r="1" />
+        </svg>More</button>
     </div>
   </div>
 
@@ -6295,15 +6569,21 @@
   </div>
 
   <!-- ══ TRANSFER RESUME MODAL ══ -->
-  <div id="transferResumeModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
-    <div style="background:var(--card);border-radius:20px;padding:24px;width:90%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.2);">
-      <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:8px;text-align:center;">Transfer In Progress</div>
+  <div id="transferResumeModal"
+    style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
+    <div
+      style="background:var(--card);border-radius:20px;padding:24px;width:90%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.2);">
+      <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:8px;text-align:center;">Transfer In
+        Progress</div>
       <div style="font-size:14px;color:var(--t2);margin-bottom:24px;text-align:center;line-height:1.4;">
         You have an unfinished stock transfer. Would you like to resume?
       </div>
       <div style="display:flex;gap:12px;flex-direction:column;">
-        <button class="btn-p" style="height:48px;font-size:15px;" onclick="resumeActiveTransfer()">Resume Transfer</button>
-        <button class="btn-s" style="height:48px;font-size:15px;color:var(--rd);border-color:var(--rd-bg);background:var(--rd-bg);" onclick="discardActiveTransfer()">Discard</button>
+        <button class="btn-p" style="height:48px;font-size:15px;" onclick="resumeActiveTransfer()">Resume
+          Transfer</button>
+        <button class="btn-s"
+          style="height:48px;font-size:15px;color:var(--rd);border-color:var(--rd-bg);background:var(--rd-bg);"
+          onclick="discardActiveTransfer()">Discard</button>
       </div>
     </div>
   </div>
@@ -6311,13 +6591,8 @@
   <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;
      background:var(--t1);color:#fff;padding:14px 16px;align-items:center;gap:12px;
      box-shadow:0 -4px 20px rgba(0,0,0,.3)">
-    <div
-      style="width:42px;height:42px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-        <ellipse cx="12" cy="5" rx="9" ry="3" />
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-      </svg>
+    <div style="width:42px;height:42px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+      <img src="../picker%20logo.png" alt="Prince Logo" style="width:100%;height:100%;object-fit:cover;border-radius:10px">
     </div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700">Install PA Picker</div>
@@ -6341,90 +6616,15 @@
     // ── Global crash guard ──
     window.onerror = function (msg, src, line, col, err) {
       console.error('[CRASH]', msg, 'at', src, line + ':' + col, err);
-      // Show splash with error instead of blank crash
       try {
         document.getElementById('splashStatus').textContent = 'Error: ' + (msg || 'Unknown').slice(0, 60);
         document.getElementById('splashFill').style.background = '#dc2626';
       } catch (e) { }
-      return true; // prevent default crash dialog where possible
+      return true;
     };
     window.onunhandledrejection = function (e) {
       console.warn('[PROMISE]', e.reason);
     };
-
-    // ══════════════════════════════════════════
-    //  Audio & Haptics
-    // ══════════════════════════════════════════
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(type) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = STATE.soundEnabled ? audioCtx.createOscillator() : null;
-      const gain = osc ? audioCtx.createGain() : null;
-      if (osc && gain) {
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-      }
-
-      const now = audioCtx.currentTime;
-      if (type === 'scan_success') {
-        if (osc && gain) {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(880, now);
-          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-          gain.gain.setValueAtTime(0, now);
-          gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-          osc.start(now);
-          osc.stop(now + 0.3);
-        }
-        if (STATE.vibeEnabled) {
-          try { navigator.vibrate(80); } catch (e) { }
-        }
-      } else if (type === 'scan_error') {
-        if (osc && gain) {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(200, now);
-          osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
-          gain.gain.setValueAtTime(0, now);
-          gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-          osc.start(now);
-          osc.stop(now + 0.4);
-        }
-        if (STATE.vibeEnabled) {
-          try { navigator.vibrate([100, 50, 100]); } catch (e) { }
-        }
-      } else if (type === 'complete') {
-        if (osc && gain) {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.setValueAtTime(659.25, now + 0.15);
-          osc.frequency.setValueAtTime(783.99, now + 0.3);
-          osc.frequency.setValueAtTime(1046.50, now + 0.45);
-          gain.gain.setValueAtTime(0, now);
-          gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
-          osc.start(now);
-          osc.stop(now + 0.8);
-        }
-        if (STATE.vibeEnabled) {
-          try { navigator.vibrate([80, 30, 80, 30, 120]); } catch (e) { }
-        }
-      } else if (type === 'tap') {
-        if (osc && gain) {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, now);
-          gain.gain.setValueAtTime(0, now);
-          gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-          osc.start(now);
-          osc.stop(now + 0.1);
-        }
-        if (STATE.vibeEnabled) {
-          try { navigator.vibrate(30); } catch (e) { }
-        }
-      }
-    }
 
     // ══════════════════════════════════════════
     //  CONSTANTS & CONFIG
@@ -6441,6 +6641,7 @@
     const LS_ACTIVE_TRANSFER = 'pa_active_transfer';
     const LS_NOTIFICATIONS = 'pa_notifications';
     const LS_DISMISSED_NOTIFICATIONS = 'pa_dismissed_notifications';
+
     // ══════════════════════════════════════════
     //  APP STATE
     // ══════════════════════════════════════════
@@ -6467,7 +6668,96 @@
       batchScanEnabled: false,
       notifications: [], // array of notification objects
       dismissedNotificationKeys: new Set(), // set of dedupe keys
+      soundEnabled: true,
+      vibeEnabled: true
     };
+
+    // ══════════════════════════════════════════
+    //  Audio & Haptics
+    // ══════════════════════════════════════════
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) { }
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        try { ctx.resume(); } catch (e) { }
+      }
+      const osc = (STATE && STATE.soundEnabled !== false) ? ctx.createOscillator() : null;
+      const gain = osc ? ctx.createGain() : null;
+      if (osc && gain) {
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+      }
+
+      const now = ctx.currentTime;
+      if (type === 'scan_success') {
+        if (osc && gain) {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+        if (STATE && STATE.vibeEnabled) {
+          try { navigator.vibrate(80); } catch (e) { }
+        }
+      } else if (type === 'scan_error') {
+        if (osc && gain) {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        }
+        if (STATE && STATE.vibeEnabled) {
+          try { navigator.vibrate([100, 50, 100]); } catch (e) { }
+        }
+      } else if (type === 'complete') {
+        if (osc && gain) {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.15);
+          osc.frequency.setValueAtTime(783.99, now + 0.3);
+          osc.frequency.setValueAtTime(1046.50, now + 0.45);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+          osc.start(now);
+          osc.stop(now + 0.8);
+        }
+        if (STATE && STATE.vibeEnabled) {
+          try { navigator.vibrate([80, 30, 80, 30, 120]); } catch (e) { }
+        }
+      } else if (type === 'tap') {
+        if (osc && gain) {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
+        if (STATE && STATE.vibeEnabled) {
+          try { navigator.vibrate(30); } catch (e) { }
+        }
+      }
+    }
 
     // ══════════════════════════════════════════
     //  STARTUP
@@ -6566,19 +6856,19 @@
     function getEffectiveInventory(productId, locationId) {
       const product = STATE.barcodeIndex.get(productId) || STATE.products.find(p => p.id === productId || p.barcode === productId);
       if (!product) return 0;
-      
+
       let baseQty = product.stock || 0;
-      
+
       // For now, if the system doesn't have per-location stock tracking, 
       // we assume the product's total stock is what's being affected.
       // If the app supports per-bin quantities in the future, baseQty should be pulled from that specific bin.
-      
+
       if (!STATE.pendingTransferOverlays || STATE.pendingTransferOverlays.length === 0) {
         return baseQty;
       }
-      
+
       let effectiveQty = baseQty;
-      
+
       STATE.pendingTransferOverlays.forEach(overlay => {
         // If the location matches the overlay's source, subtract
         if (overlay.sourceLocationId === locationId) {
@@ -6595,7 +6885,7 @@
           }
         }
       });
-      
+
       return effectiveQty;
     }
 
@@ -6680,6 +6970,7 @@
           picked: Number(it.picked || 0),
           status: it.status || 'pending',
           skipReason: it.skip_reason || null,
+          mode: it.mode || 'pick',
         }))
       };
     }
@@ -6854,7 +7145,7 @@
       }
       renderOrders();
       startPollTimer();
-      
+
       if (localStorage.getItem(LS_ACTIVE_TRANSFER)) {
         document.getElementById('transferResumeModal').style.display = 'flex';
       } else if (localStorage.getItem(LS_ACTIVE_AUDIT)) {
@@ -7038,6 +7329,7 @@
           status: oi.status || 'pending',
           skipReason: oi.skipReason || null,
           product: product || null,
+          mode: oi.mode || 'pick',
           pickTime: null,
           itemStart: null,
         };
@@ -7082,6 +7374,10 @@
     function switchPickMode(mode) {
       playSound('tap');
       STATE.currentMode = mode;
+      if (mode === 'drop') {
+        nav('s-drop');
+        return;
+      }
       document.getElementById('pickModeBtn').classList.toggle('active', mode === 'pick');
       document.getElementById('dropModeBtn').classList.toggle('active', mode === 'drop');
       if (pickStep) setPickStep(pickStep);
@@ -7126,7 +7422,7 @@
       const area = document.getElementById('stepArea');
       const btns = document.getElementById('stepBtns');
 
-      const isPick = (STATE.currentMode || 'pick') === 'pick';
+      const isPick = ci.mode ? (ci.mode === 'pick') : ((STATE.currentMode || 'pick') === 'pick');
       document.getElementById('progLbl').textContent = isPick ? 'PICKING PROGRESS' : 'DROP PROGRESS';
 
       if (step === 'navigate') {
@@ -7140,8 +7436,8 @@
         const ipIconHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : `<span>${emoji(prod?.name || '')}</span>`;
 
         area.innerHTML = `
-      <div class="snc or-border">
-        <div class="snc-lbl or">📍 ${isPick ? 'Next Pick' : 'Next Drop'}</div>
+      <div class="snc ${isPick ? 'or-border' : 'rd-border'}">
+        <div class="snc-lbl ${isPick ? 'or' : 'rd'}">${isPick ? '📍 Next Pick' : '📦 Next Drop'}</div>
         <div class="snc-big">${prod?.loc || '—'}</div>
         <div class="snc-sub">${parseLoc(prod?.loc || '')}</div>
         <div class="snc-badge"><span class="dot"></span>Walk to this location</div>
@@ -7263,8 +7559,8 @@
         const bCode = locMatch ? 'Bin L' + locMatch[2] + 'B' + locMatch[3] : 'Bin —';
 
         area.innerHTML = `
-      <div style="background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--sh2);text-align:center;border:2px solid var(--or-md);margin-bottom:12px">
-         <div style="display:inline-block;padding:4px 10px;background:var(--or-lt);color:var(--or);font-size:10px;font-weight:800;border-radius:12px;margin-bottom:12px;letter-spacing:1px">${isPick ? 'PICK MODE ACTIVE' : 'DROP MODE ACTIVE'}</div>
+      <div style="background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--sh2);text-align:center;border:2px solid ${isPick ? 'var(--gr-bd)' : 'var(--rd-bd)'};margin-bottom:12px">
+         <div style="display:inline-block;padding:4px 10px;background:${isPick ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};color:${isPick ? '#22c55e' : '#ef4444'};font-size:10px;font-weight:800;border-radius:12px;margin-bottom:12px;letter-spacing:1px;border:1px solid ${isPick ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}">${isPick ? 'PICK ITEM' : 'DROP ITEM'}</div>
          <div style="font-size:22px;font-weight:800;color:var(--t1);margin-bottom:16px;letter-spacing:-0.5px">${isPick ? 'VERIFY PICK' : 'VERIFY DROP'}</div>
          
          <div style="width:120px;height:120px;background:var(--bg);border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);overflow:hidden">
@@ -7446,7 +7742,13 @@
         } else if (STATE.currentMode === 'drop') {
           ci.product.stock = (ci.product.stock || 0) + ci.picked;
         }
-        if (typeof fsSave === 'function') fsSave().catch(function(){});
+        if (typeof fsSave === 'function') fsSave().catch(function () { });
+      }
+
+      // Add to CART
+      const pToCart = ci.product || STATE.barcodeIndex.get(ci.barcode) || STATE.products.find(p => p.barcode === ci.barcode || p.sku === ci.barcode);
+      if (pToCart) {
+        addItemToCart(pToCart, confirmQty);
       }
 
       // Phase 5: Push verified item logs
@@ -7678,7 +7980,7 @@
             </button>
           `;
         }
-        
+
         const div = document.createElement('div');
         div.className = 'prod-card';
         div.style.animationDelay = `${i * 20}ms`;
@@ -7712,6 +8014,11 @@
     function onBarcodeSearch(val) {
       document.getElementById('homeQ').value = val;
       renderSearch(val);
+      const p = STATE.barcodeIndex.get(val) || STATE.products.find(x => x.barcode === val || x.sku === val);
+      if (p) {
+        addItemToCart(p, 1);
+        toast('✓ Added ' + p.name + ' to cart', 'ok');
+      }
       nav('s-search');
     }
 
@@ -7748,7 +8055,7 @@
       if (exists) return;
 
       const notif = {
-        id: payload.id || 'notif_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        id: payload.id || 'notif_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
         dedupeKey: payload.dedupeKey,
         title: payload.title || 'Notification',
         message: payload.message || '',
@@ -7774,10 +8081,10 @@
         }
       }
 
-      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) {}
+      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) { }
 
       updateNotificationBadge();
-      
+
       if (document.getElementById('notifSheet').classList.contains('open')) {
         renderNotificationList();
       }
@@ -7814,8 +8121,8 @@
         STATE.dismissedNotificationKeys = new Set(dismissedArr);
       }
 
-      try { localStorage.setItem(LS_DISMISSED_NOTIFICATIONS, JSON.stringify(dismissedArr)); } catch(e){}
-      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch(e){}
+      try { localStorage.setItem(LS_DISMISSED_NOTIFICATIONS, JSON.stringify(dismissedArr)); } catch (e) { }
+      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) { }
 
       updateNotificationBadge();
       renderNotificationList();
@@ -7831,10 +8138,10 @@
           dismissedArr = dismissedArr.slice(dismissedArr.length - 300);
           STATE.dismissedNotificationKeys = new Set(dismissedArr);
         }
-        try { localStorage.setItem(LS_DISMISSED_NOTIFICATIONS, JSON.stringify(dismissedArr)); } catch(e){}
+        try { localStorage.setItem(LS_DISMISSED_NOTIFICATIONS, JSON.stringify(dismissedArr)); } catch (e) { }
 
         STATE.notifications.splice(idx, 1);
-        try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch(e) {}
+        try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) { }
         updateNotificationBadge();
       }
     }
@@ -7851,9 +8158,9 @@
     function handleNotificationTap(id) {
       const n = STATE.notifications.find(x => x.id === id);
       if (!n) return;
-      
+
       n.isRead = true;
-      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch(e){}
+      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) { }
       updateNotificationBadge();
 
       if (n.actionRoute) {
@@ -7897,8 +8204,8 @@
         if (n.severity === 'critical') icon = '‼️';
 
         const d = new Date(n.createdAt);
-        let timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
+        let timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         html += `
           <div class="notif-row-wrap" id="notif_wrap_${n.id}">
             <div class="notif-swipe-bg">
@@ -7925,14 +8232,14 @@
         let currentX = 0;
         let isSwiping = false;
         let isScrolling = false;
-        
+
         el.addEventListener('touchstart', (e) => {
           startX = e.touches[0].clientX;
           startY = e.touches[0].clientY;
           isSwiping = false;
           isScrolling = false;
           el.classList.remove('snap');
-        }, {passive: true});
+        }, { passive: true });
 
         el.addEventListener('touchmove', (e) => {
           if (isScrolling) return;
@@ -7954,7 +8261,7 @@
             el.style.transform = `translateX(${dx}px)`;
             el.style.opacity = 1 - (Math.abs(dx) / (el.offsetWidth * 1.5));
           }
-        }, {passive: false});
+        }, { passive: false });
 
         el.addEventListener('touchend', (e) => {
           if (isSwiping) {
@@ -7978,9 +8285,9 @@
 
         el.addEventListener('click', (e) => {
           if (isSwiping || Math.abs(currentX) > 5) {
-             e.preventDefault();
-             e.stopPropagation();
-             return;
+            e.preventDefault();
+            e.stopPropagation();
+            return;
           }
           handleNotificationTap(el.dataset.id);
         });
@@ -8129,8 +8436,8 @@
         <div style="font-size:13px;font-weight:800;color:var(--t2);margin-top:24px;margin-bottom:12px;text-align:left;letter-spacing:0.5px">ITEM SUMMARY</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;text-align:left">
           ${items.map(it => {
-            const isPick = it.status === 'picked';
-            return `
+          const isPick = it.status === 'picked';
+          return `
             <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:700;color:var(--t1);text-overflow:ellipsis;white-space:nowrap;overflow:hidden">${it.product?.name || it.barcode}</div>
@@ -8139,7 +8446,7 @@
               </div>
               <span class="chip ${isPick ? 'c-gr' : 'c-rd'}" style="font-size:10px;font-weight:800;margin-left:auto">${isPick ? 'PICKED' : 'SKIPPED'}</span>
             </div>`;
-          }).join('')}
+        }).join('')}
         </div>`;
       }
 
@@ -8362,26 +8669,35 @@
         sessions.forEach((s, i) => {
           const isFlat = !s.items && s.sku;
           const items = s.items || [];
-          const picked = isFlat ? 1 : items.filter(i => i.status === 'picked').length;
-          const total = isFlat ? 1 : items.length;
+          const picked = isFlat ? (s.qty || 1) : items.filter(i => i.status === 'picked').length;
+          const total = isFlat ? (s.qty || 1) : items.length;
           const elapsed = (s.end && s.start) ? Math.round((new Date(s.end) - new Date(s.start)) / 1000) : 0;
           const dur = elapsed >= 3600 ? `${Math.floor(elapsed / 3600)}h ${Math.floor((elapsed % 3600) / 60)}m` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
           const st = new Date(s.start || s.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
           const en = s.end ? new Date(s.end).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '–';
           const done = isFlat ? true : (total > 0 && picked === total);
-          const title = isFlat ? 'Item: ' + s.sku : (s.type === 'add' ? '✚ Added: ' + (s.productName || '') : s.type === 'edit' ? '✎ Edited: ' + (s.productName || '') : 'Order #' + s.orderId);
+
+          const logMode = s.type || 'pick';
+          const isDrop = logMode === 'drop';
+          const isPick = logMode === 'pick';
+          const pName = s.name || s.sku;
+          const title = isFlat ? (isDrop ? '📦 Drop: ' + pName : '📍 Pick: ' + pName) : (s.type === 'add' ? '✚ Added: ' + (s.productName || '') : s.type === 'edit' ? '✎ Edited: ' + (s.productName || '') : 'Order #' + s.orderId);
+
+          const badgeText = isDrop ? 'DROP' : isPick && isFlat ? 'PICK' : (done ? 'DONE' : picked > 0 ? 'PARTIAL' : 'PENDING');
+          const badgeClass = isDrop ? 'c-rd' : (isPick && isFlat) ? 'c-gr' : (done ? 'c-gr' : picked > 0 ? 'c-yl' : 'c-rd');
 
           html += `<div class="log-card" onclick="openLogDetail(${STATE.logs.indexOf(s)})" style="animation-delay:${i * 25}ms">
         <div class="log-top">
-          <div class="log-icon ${s.type === 'add' || s.type === 'edit' ? 'drop' : 'pick'}" style="${s.type === 'add' ? 'background:var(--gr-bg)' : s.type === 'edit' ? 'background:var(--bl-bg)' : ''}">${s.type === 'add' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' :
-              s.type === 'edit' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--bl)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' :
-                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
+          <div class="log-icon ${isDrop ? 'drop' : 'pick'}" style="${isDrop ? 'background:rgba(239,68,68,0.15);color:#ef4444' : s.type === 'add' ? 'background:var(--gr-bg)' : s.type === 'edit' ? 'background:var(--bl-bg)' : 'background:rgba(34,197,94,0.15);color:#22c55e'}">${isDrop ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>' :
+              s.type === 'add' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' :
+                s.type === 'edit' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--bl)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' :
+                  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
             }</div>
           <div class="log-head">
             <div class="log-name">${title}</div>
-            <div class="log-time">${st} – ${en}</div>
+            <div class="log-time">${st}${s.location ? ' · Loc: ' + s.location : ''} · Qty: ${s.qty || total}</div>
           </div>
-          <span class="chip ${done ? 'c-gr' : picked > 0 ? 'c-yl' : 'c-rd'}" style="font-size:10px;font-weight:800;letter-spacing:.4px">${done ? 'DONE' : picked > 0 ? 'PARTIAL' : 'PENDING'}</span>
+          <span class="chip ${badgeClass}" style="font-size:10px;font-weight:800;letter-spacing:.4px;padding:2px 8px;border-radius:10px">${badgeText}</span>
         </div>
         <div class="log-div"></div>
         <div class="log-stats">
@@ -8400,12 +8716,12 @@
       const s = STATE.logs[idx];
       if (!s) return;
       const isFlat = !s.items && s.sku;
-      const items = s.items || (isFlat ? [{ barcode: s.sku, picked: s.qty, status: 'picked', itemStart: s.timestamp }] : []);
-      const picked = isFlat ? 1 : items.filter(i => i.status === 'picked').length;
+      const items = s.items || (isFlat ? [{ barcode: s.sku, picked: s.qty || 1, status: 'picked', itemStart: s.timestamp, mode: s.type }] : []);
+      const picked = isFlat ? (s.qty || 1) : items.filter(i => i.status === 'picked').length;
       const elapsed = (s.end && s.start) ? Math.round((new Date(s.end) - new Date(s.start)) / 1000) : 0;
       const dur = elapsed >= 3600 ? `${Math.floor(elapsed / 3600)}h ${Math.floor((elapsed % 3600) / 60)}m ${elapsed % 60}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
 
-      const titleText = isFlat ? 'Item Trace' : `Order #${s.orderId} Details`;
+      const titleText = isFlat ? (s.type === 'drop' ? 'Drop Item Trace' : 'Pick Item Trace') : `Order #${s.orderId} Details`;
       document.getElementById('detailTitle').textContent = titleText;
       document.getElementById('detailStatus').textContent = (isFlat || picked === items.length) ? 'Completed' : 'Incomplete';
       document.getElementById('detailStats').innerHTML = `
@@ -8414,18 +8730,25 @@
     <div class="stat-tile"><div class="st-lbl">Start</div><div class="st-val">${new Date(s.start || s.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div></div>
     <div class="stat-tile"><div class="st-lbl">End</div><div class="st-val">${s.end ? new Date(s.end).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '–'}</div></div>`;
       document.getElementById('detailTimeline').innerHTML = items.map((it, i) => {
-        const p = it.product || (isFlat ? { name: s.sku, loc: s.location } : null);
-        const isPick = it.status === 'picked';
-        const t = it.itemStart ? new Date(it.itemStart).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '–';
+        const p = it.product || (isFlat ? { name: s.name || s.sku, loc: s.location } : null);
+        const itemMode = it.mode || s.type || 'pick';
+        const isDropMode = itemMode === 'drop';
+        const isPickMode = itemMode === 'pick';
+        const isSuccess = it.status === 'picked' || isFlat;
+        const t = it.itemStart ? new Date(it.itemStart).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : (s.timestamp ? new Date(s.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '–');
+        
+        const badgeLabel = isDropMode ? 'DROPPED' : isPickMode ? 'PICKED' : (isSuccess ? 'PICKED' : 'SKIPPED');
+        const badgeClass = isDropMode ? 'r' : (isSuccess ? 'g' : 'r');
+
         return `<div class="tl-item" style="animation-delay:${i * 25}ms">
-      <div class="tl-icon ${isPick ? 'g' : 'r'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isPick ? 'var(--gr)' : 'var(--rd)'}" stroke-width="2.5">${isPick ? '<polyline points="20 6 9 17 4 12"/>' : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}</svg></div>
+      <div class="tl-icon ${badgeClass}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isDropMode ? 'var(--rd)' : 'var(--gr)'}" stroke-width="2.5">${isDropMode ? '<polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/>' : '<polyline points="20 6 9 17 4 12"/>'}</svg></div>
       <div class="tl-info">
-        <div class="tl-name">${p?.name || it.barcode}</div>
-        <div class="tl-meta">${t} · <span class="tl-loc">${p?.loc || '—'}</span>${it.pickTime ? ' · ' + it.pickTime + 's' : ''}</div>
+        <div class="tl-name">${p?.name || it.barcode || s.sku}</div>
+        <div class="tl-meta">${t} · <span class="tl-loc">${p?.loc || s.location || '—'}</span> · Qty: ${it.picked || it.qty || s.qty || 1}${it.pickTime ? ' · ' + it.pickTime + 's' : ''}</div>
         ${it.skipReason ? `<div class="skip-row"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Reason: ${it.skipReason}</div>` : ''}
-        ${it.note ? `<div class="note-row" style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${it.note}</div>` : ''}
+        ${it.note || s.note ? `<div class="note-row" style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${it.note || s.note}</div>` : ''}
       </div>
-      <span class="tl-badge ${isPick ? 'g' : 'r'}">${isPick ? 'Picked' : 'Skipped'}</span>
+      <span class="tl-badge ${badgeClass}">${badgeLabel}</span>
     </div>`;
       }).join('');
       nav('s-log-detail');
@@ -8546,6 +8869,53 @@
       SCAN.rafId = requestAnimationFrame(scanLoop);
     }
 
+    // ══════════════════════════════════════════
+    //  QR META PARSER
+    // ══════════════════════════════════════════
+    function extractQrMeta(rawVal) {
+      if (!rawVal || typeof rawVal !== 'string') return '';
+      const str = rawVal.trim();
+      if (!str) return '';
+
+      // Pattern 1: Hash-delimited QR format e.g. #890#1#260526#SAI-783A-CP#1#175#87141090#SN#LN5#114851#22192
+      if (str.includes('#')) {
+        const tokens = str.split('#').map(s => s.trim()).filter(Boolean);
+
+        // 1a: Check if any token matches a product in barcode index
+        if (typeof STATE !== 'undefined' && STATE.barcodeIndex) {
+          for (const tok of tokens) {
+            if (STATE.barcodeIndex.has(tok)) return tok;
+          }
+        }
+
+        // 1b: Search for hyphenated part number (e.g. SAI-783A-CP)
+        const partNumToken = tokens.find(t => /^[A-Z0-9]+-[A-Z0-9]+(-[A-Z0-9]+)*$/i.test(t));
+        if (partNumToken) return partNumToken;
+
+        // 1c: Search for alphanumeric SKU token (letters + numbers)
+        const alphaNumToken = tokens.find(t => /[A-Za-z]/.test(t) && /\d/.test(t) && t.length >= 3);
+        if (alphaNumToken) return alphaNumToken;
+
+        // 1d: Fallback to 4th field (index 3) or first non-empty field
+        if (tokens.length >= 4 && tokens[3]) return tokens[3];
+        if (tokens.length > 0) return tokens[0];
+      }
+
+      // Pattern 2: Delimited key-value formats (| ; : , =)
+      if (str.includes('|') || str.includes(';') || str.includes(':') || str.includes('=')) {
+        const parts = str.split(/[|;:,\=]/).map(s => s.trim()).filter(Boolean);
+        if (typeof STATE !== 'undefined' && STATE.barcodeIndex) {
+          for (const p of parts) {
+            if (STATE.barcodeIndex.has(p)) return p;
+          }
+        }
+        const partMatch = parts.find(p => /^[A-Z0-9]+-[A-Z0-9]+(-[A-Z0-9]+)*$/i.test(p));
+        if (partMatch) return partMatch;
+      }
+
+      return str;
+    }
+
     function onDetect(rawVal) {
       // Extract part number from QR meta format
       var val = extractQrMeta(rawVal);
@@ -8611,7 +8981,7 @@
               playSound('scan_success');
               triggerFlash(true);
               speak("Location verified. Scan product.");
-              
+
               SCAN.callback = onProdScan;
               SCAN.lastVal = null;
               document.getElementById('scanTitle').textContent = 'Scan product barcode';
@@ -8620,10 +8990,10 @@
               document.getElementById('scanVal').className = 'scan-val muted';
               document.getElementById('scanOkBtn').style.display = 'none';
               document.getElementById('scanDemo').textContent = `Demo: scan "${ci.barcode}"`;
-              
+
               pickStep = 'scan_prod';
               scanState.loc = val;
-              
+
               SCAN.rafId = requestAnimationFrame(scanLoop);
             } else {
               playSound('scan_error');
@@ -8639,20 +9009,25 @@
               playSound('scan_success');
               triggerFlash(true);
               speak("Product verified.");
-              
+
               ci.status = 'picked';
               ci.picked = ci.qty;
               ci.pickTime = Math.round((Date.now() - (ci.itemStart || Date.now())) / 1000);
-              
+
               if (ci.product) {
                 if (STATE.currentMode === 'pick' || !STATE.currentMode) {
                   ci.product.stock = Math.max(0, (ci.product.stock || 0) - ci.picked);
                 } else if (STATE.currentMode === 'drop') {
                   ci.product.stock = (ci.product.stock || 0) + ci.picked;
                 }
-                if (typeof fsSave === 'function') fsSave().catch(function(){});
+                if (typeof fsSave === 'function') fsSave().catch(function () { });
               }
-              
+
+              const pBatchToCart = ci.product || STATE.barcodeIndex.get(ci.barcode) || STATE.products.find(p => p.barcode === ci.barcode || p.sku === ci.barcode);
+              if (pBatchToCart) {
+                addItemToCart(pBatchToCart, ci.picked || 1);
+              }
+
               STATE.logs.push({
                 type: STATE.currentMode || 'pick',
                 sku: ci.barcode,
@@ -8661,19 +9036,19 @@
                 note: ci.note || '',
                 timestamp: new Date()
               });
-              
+
               STATE.session.currentIdx++;
-              
+
               while (STATE.session.currentIdx < STATE.session.items.length && STATE.session.items[STATE.session.currentIdx].status !== 'pending') {
                 STATE.session.currentIdx++;
               }
-              
+
               updateProgress();
-              
+
               if (STATE.session.currentIdx < STATE.session.items.length) {
                 const nextCi = STATE.session.items[STATE.session.currentIdx];
                 nextCi.itemStart = Date.now();
-                
+
                 SCAN.callback = onLocScan;
                 SCAN.lastVal = null;
                 document.getElementById('scanTitle').textContent = 'Scan location barcode';
@@ -8682,9 +9057,9 @@
                 document.getElementById('scanVal').className = 'scan-val muted';
                 document.getElementById('scanOkBtn').style.display = 'none';
                 document.getElementById('scanDemo').textContent = `Demo: scan "${nextCi.product?.loc || ''}"`;
-                
+
                 speak(`Go to location ${nextCi.product?.loc || 'unknown'}. Scan location.`);
-                
+
                 pickStep = 'scan_loc';
                 SCAN.rafId = requestAnimationFrame(scanLoop);
               } else {
@@ -8786,11 +9161,18 @@
     //  HELPERS
     // ══════════════════════════════════════════
     function goTo(id) {
+      if (id !== 's-drop' && typeof stopDropInlineScanner === 'function') {
+        stopDropInlineScanner();
+      }
       document.querySelectorAll('.S').forEach(function (s) { s.classList.remove('on'); });
       document.getElementById(id)?.classList.add('on');
 
+      if (id === 's-drop') {
+        setTimeout(function () { if (typeof initDrop === 'function') initDrop(); }, 50);
+      }
+
       if (id === 's-login') {
-        setTimeout(function() {
+        setTimeout(function () {
           const nameEl = document.getElementById('pickerName');
           const serverEl = document.getElementById('serverUrl');
           if (nameEl && nameEl.value.trim() === '') {
@@ -8891,7 +9273,7 @@
       // Decrement index
       sess.currentIdx--;
       const ci = sess.items[sess.currentIdx];
-      
+
       // If it was picked, look for its flat log entry and remove it
       if (ci.status === 'picked') {
         const logIdx = STATE.logs.findIndex(log => log.sku === ci.barcode && log.type === (STATE.currentMode || 'pick'));
@@ -8899,13 +9281,13 @@
           STATE.logs.splice(logIdx, 1);
         }
       }
-      
+
       // Revert status
       ci.status = 'pending';
       ci.picked = 0;
       ci.skipReason = null;
       ci.pickTime = null;
-      
+
       toast('✓ Last pick undone', 'ok');
       setPickStep('navigate');
     }
@@ -8936,7 +9318,7 @@
           const height = Math.min(diff * 0.4, threshold + 20); // damping
           ptr.style.height = height + 'px';
           ptr.style.opacity = Math.min(diff / threshold, 1);
-          
+
           const label = ptr.querySelector('span');
           if (height >= threshold) {
             label.textContent = 'Release to refresh...';
@@ -8952,17 +9334,17 @@
         if (!pulling) return;
         pulling = false;
         ptr.style.transition = 'height 0.2s ease, opacity 0.2s ease';
-        
+
         const currentHeight = parseInt(ptr.style.height) || 0;
         if (currentHeight >= threshold) {
           ptr.style.height = '40px';
           ptr.querySelector('span').textContent = 'Refreshing...';
-          
+
           try {
             await refreshOrders();
-          } catch (err) {}
+          } catch (err) { }
         }
-        
+
         ptr.style.height = '0px';
         ptr.style.opacity = '0';
       });
@@ -8974,14 +9356,20 @@
     initNetworkMonitor();
     initPullToRefresh();
 
-    // Auto-save to file when app goes to background or closes
+    // Auto-save to file & pause/resume continuous camera when app goes to background or closes
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden') {
+        if (typeof stopDropInlineScanner === 'function') stopDropInlineScanner();
         if (FS_PROD_HANDLE && FS_PRODUCTS.length) fsSave().catch(function () { });
         if (FS_IMG_HANDLE && Object.keys(FS_IMAGES).length) fsSaveImages().catch(function () { });
+      } else if (document.visibilityState === 'visible') {
+        if (STATE.currentMode === 'drop' && typeof DROP !== 'undefined' && !DROP.isLocked && document.getElementById('s-drop')?.classList.contains('on')) {
+          if (typeof startDropInlineScanner === 'function') startDropInlineScanner();
+        }
       }
     });
     window.addEventListener('beforeunload', function () {
+      if (typeof stopDropInlineScanner === 'function') stopDropInlineScanner();
       if (FS_PROD_HANDLE && FS_PRODUCTS.length) fsSave().catch(function () { });
     });
 
@@ -8993,21 +9381,65 @@
       items: [],  // { _idx, name, barcode, loc, stock, brand, mrp, qty }
     };
 
+    function addItemToCart(prod, qty = 1, itemMode = null) {
+      if (!prod) return;
+      // Default mode to 'pick'. Only treat as 'drop' if explicitly specified as 'drop' OR actively on the Drop screen.
+      let mode = 'pick';
+      if (itemMode === 'drop' || (itemMode === null && STATE.currentMode === 'drop' && document.getElementById('s-drop')?.classList.contains('on'))) {
+        mode = 'drop';
+      }
+      let targetProd = prod;
+      if (typeof prod === 'string') {
+        targetProd = STATE.barcodeIndex.get(prod) || STATE.products.find(p => p.barcode === prod || p.sku === prod);
+      }
+      if (!targetProd) return;
+      if (targetProd._idx === undefined) {
+        const foundIdx = STATE.products.findIndex(p =>
+          (p.id && targetProd.id && p.id === targetProd.id) ||
+          (p.barcode && targetProd.barcode && p.barcode === targetProd.barcode) ||
+          (p.sku && targetProd.sku && p.sku === targetProd.sku)
+        );
+        if (foundIdx >= 0) {
+          targetProd = STATE.products[foundIdx];
+        } else {
+          targetProd._idx = STATE.products.length + CART.items.length;
+        }
+      }
+
+      const existing = CART.items.find(c => (c._idx === targetProd._idx || (c.barcode && c.barcode === targetProd.barcode) || (c.sku && c.sku === targetProd.sku)) && c.mode === mode);
+      if (existing) {
+        existing.qty = (existing.qty || 0) + (qty || 1);
+      } else {
+        CART.items.push({ ...targetProd, qty: qty || 1, mode: mode });
+      }
+
+      updateCartBadge();
+      if (document.getElementById('s-cart')?.classList.contains('on')) {
+        renderCart();
+      }
+      if (document.getElementById('s-search')?.classList.contains('on')) {
+        const q = document.getElementById('homeQ')?.value.trim() || '';
+        renderSearch(q);
+      }
+    }
+
     function toggleCart(idx) {
       const prod = STATE.products[idx];
       if (!prod) return;
-      const existing = CART.items.findIndex(c => c._idx === idx);
+      // Toggling from inventory search always uses 'pick' mode
+      const mode = 'pick';
+      const existing = CART.items.findIndex(c => c._idx === idx && c.mode === mode);
       if (existing >= 0) {
         CART.items.splice(existing, 1);
         toast('Removed from cart');
       } else {
-        CART.items.push({ ...prod, qty: 1 });
+        CART.items.push({ ...prod, qty: 1, mode: mode });
         toast('✓ Added to cart', 'ok');
       }
       updateCartBadge();
       if (document.getElementById('s-cart').classList.contains('on')) renderCart();
       if (document.getElementById('s-search').classList.contains('on')) {
-         renderSearch(document.getElementById('homeQ').value.trim());
+        renderSearch(document.getElementById('homeQ').value.trim());
       }
     }
 
@@ -9031,7 +9463,7 @@
       }
       adjustCartQty(idx, d);
       if (document.getElementById('s-search').classList.contains('on')) {
-         renderSearch(document.getElementById('homeQ').value.trim());
+        renderSearch(document.getElementById('homeQ').value.trim());
       }
     }
 
@@ -9079,8 +9511,8 @@
 
       // Low stock badge
       const low = CART.items.filter(c => {
-         const effStock = getEffectiveInventory(c.id || c.barcode, c.loc);
-         return effStock > 0 && effStock < 5;
+        const effStock = getEffectiveInventory(c.id || c.barcode, c.loc);
+        return effStock > 0 && effStock < 5;
       }).length;
       const lb = document.getElementById('cartLowBadge');
       if (lb) lb.textContent = low;
@@ -9112,8 +9544,8 @@
       if (cartTabMode === 'loc') data = [...CART.items].sort((a, b) => locSort(a.loc) - locSort(b.loc));
       else if (cartTabMode === 'name') data = [...CART.items].sort((a, b) => a.name.localeCompare(b.name));
       else data = CART.items.filter(c => {
-         const effStock = getEffectiveInventory(c.id || c.barcode, c.loc);
-         return effStock > 0 && effStock < 5;
+        const effStock = getEffectiveInventory(c.id || c.barcode, c.loc);
+        return effStock > 0 && effStock < 5;
       });
 
       el.innerHTML = '';
@@ -9130,7 +9562,12 @@
       <div class="pick-info">
         <div class="pick-name">${item.name}</div>
         <div class="pick-loc">${item.loc || '—'}</div>
-        <div class="pick-sku"><span class="chip ${sc}" style="padding:2px 6px;font-size:10px">Stock: ${effStock}</span></div>
+        <div class="pick-sku" style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          <span class="chip ${sc}" style="padding:2px 6px;font-size:10px">Stock: ${effStock}</span>
+          ${item.mode === 'drop'
+            ? '<span class="chip c-rd" style="padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:0.5px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:10px">DROP</span>'
+            : '<span class="chip c-gr" style="padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:0.5px;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);border-radius:10px">PICK</span>'}
+        </div>
       </div>
       <div class="pick-qty-wrap">
         <div class="pick-qty-ctrl">
@@ -9200,7 +9637,7 @@
         status: 'assigned',
         picker: STATE.pickerName,
         items: CART.items.map(c => ({
-          barcode: c.barcode, qty: c.qty, picked: 0, status: 'pending', skipReason: null
+          barcode: c.barcode, qty: c.qty, picked: 0, status: 'pending', skipReason: null, mode: c.mode || 'pick'
         }))
       };
       const normalized = normalizeOrder(fakeOrder);
@@ -9223,7 +9660,21 @@
       mode: 'pick', itemsScanned: 0, timerInt: null, timerSec: 0, targetProd: null, confirmQty: 1
     };
 
+    function switchToPickBatchScan() {
+      if (typeof stopDropInlineScanner === 'function') stopDropInlineScanner();
+      STATE.currentMode = 'pick';
+      STATE.batchScanEnabled = true;
+      try { localStorage.setItem('pa_batch_scan_enabled', 'true'); } catch (e) { }
+      playSound('tap');
+      toast('Switched to Pick Mode (Batch Scan Active)', 'ok');
+      startAdhocScan();
+    }
+
     function startAdhocScan() {
+      if (STATE.currentMode === 'drop') {
+        nav('s-drop');
+        return;
+      }
       adhocState.itemsScanned = 0; adhocState.timerSec = 0; adhocState.targetProd = null;
       document.getElementById('adhocCntTxt').textContent = '0 Items';
 
@@ -9248,6 +9699,12 @@
     function switchAdhocMode(mode) {
       playSound('tap');
       adhocState.mode = mode; STATE.currentMode = mode;
+      if (mode === 'drop') {
+        if (adhocState.timerInt) clearInterval(adhocState.timerInt);
+        stopInlineScanner();
+        nav('s-drop');
+        return;
+      }
       document.getElementById('adhocPickModeBtn').classList.toggle('active', mode === 'pick');
       document.getElementById('adhocDropModeBtn').classList.toggle('active', mode === 'drop');
       if (!adhocState.targetProd) renderAdhocScanner();
@@ -9397,6 +9854,9 @@
       if (adhocState.mode === 'drop') p.stock = (p.stock || 0) + q;
       else p.stock = Math.max(0, (p.stock || 0) - q);
 
+      // Add to CART
+      if (p) addItemToCart(p, q);
+
       adhocState.itemsScanned += q;
       document.getElementById('adhocCntTxt').textContent = adhocState.itemsScanned + ' Items';
       toast('✓ ' + (adhocState.mode === 'pick' ? 'Picked ' : 'Dropped ') + q + ' units', 'ok');
@@ -9404,113 +9864,707 @@
     }
 
     // ══════════════════════════════════════════
-    //  DROP MODE
+    //  DROP MODE V1 (HIGH-SPEED WAREHOUSE WORKFLOW)
     // ══════════════════════════════════════════
-    const DROP = { item: null, step: 1 };
+    if (typeof window.inventoryTransaction !== 'function') {
+      window.inventoryTransaction = function (opts) {
+        if (!opts) return;
+        const type = (opts.type || 'DROP').toUpperCase();
+        const sku = opts.sku || opts.barcode || '';
+        const qty = Number(opts.qty) || 1;
+        const location = opts.location || '';
+        const sessionId = opts.sessionId || ('DROP-' + Date.now());
 
-    function initDrop() {
-      DROP.item = null; DROP.step = 1;
-      const body = document.getElementById('dropBody');
-      if (!body) return;
-      body.innerHTML = `
-    <div class="drop-banner" style="margin-top:10px">
-      <div class="drop-banner-title">Step 1: Scan Product Barcode</div>
-      <div class="drop-banner-desc">Locate the item barcode on the product and scan it to begin restocking.</div>
-    </div>
-    <div style="margin:0 16px 12px;background:var(--card);border-radius:16px;padding:24px;text-align:center;box-shadow:var(--sh)">
-      <div style="font-size:48px;margin-bottom:10px;opacity:.25">📦</div>
-      <div style="font-size:13px;color:var(--t3);font-weight:600">No product scanned yet</div>
-    </div>
-    <div style="display:flex;gap:10px;padding:0 16px">
-      <button class="btn-s" style="flex:1" onclick="dropManualProduct()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
-        Manual
-      </button>
-      <button class="btn-p" style="flex:2" onclick="openScanner(onDropProductScan,'Scan product barcode')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/></svg>
-        Scan Product
-      </button>
-    </div>`;
+        const prod = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
+        if (prod) {
+          if (type === 'DROP') {
+            prod.stock = (prod.stock || 0) + qty;
+          } else if (type === 'PICK') {
+            prod.stock = Math.max(0, (prod.stock || 0) - qty);
+          }
+          prod.qty = prod.stock;
+          const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
+          if (fpIdx >= 0) {
+            FS_PRODUCTS[fpIdx].stock = prod.stock;
+            FS_PRODUCTS[fpIdx].qty = prod.stock;
+          }
+          if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
+          if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
+        }
+
+        STATE.logs.unshift({
+          orderId: sessionId,
+          type: type.toLowerCase(),
+          sku: sku,
+          qty: qty,
+          location: location,
+          timestamp: new Date()
+        });
+
+        if (typeof fsSave === 'function') {
+          fsSave().catch(function () { });
+        }
+        try {
+          localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50)));
+        } catch (e) { }
+      };
     }
 
-    function onDropProductScan(val) {
-      const prod = STATE.barcodeIndex.get(val.trim()) || STATE.products.find(p => p.sku === val.trim());
-      if (!prod) { toast('Product not found: ' + val, 'err'); return; }
-      DROP.item = prod; DROP.step = 2;
-      renderDropStep2();
+    const DROP = {
+      sessionId: null,
+      cart: [],
+      isLocked: false,
+      unknownQueue: [],
+      lastScanTime: 0,
+      lastScanBarcode: null,
+      idleTimer: null,
+      verificationGroups: [],
+      currentLocIndex: 0,
+      completedStats: { productsProcessed: 0, totalUnits: 0, locationsVerified: 0 },
+
+      // Inline Continuous Scanner State
+      scannerActive: false,
+      video: null,
+      canvas: null,
+      ctx: null,
+      stream: null,
+      rafId: null,
+      detector: null,
+      toastTimer: null,
+      processingLocCommit: false
+    };
+
+    function resetDropIdleTimer() {
+      if (DROP.idleTimer) clearTimeout(DROP.idleTimer);
+      DROP.idleTimer = setTimeout(showDropIdleReminder, 45000);
+    }
+
+    function showDropIdleReminder() {
+      if (STATE.currentMode === 'drop' && DROP.cart.length > 0 && !DROP.isLocked) {
+        toast('No recent scans. Continuous scanner active.', 'info');
+      }
+    }
+
+    function getDropTotalUnits() {
+      return DROP.cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+    }
+
+    function getDropUniqueLocations() {
+      return new Set(DROP.cart.map(item => item.loc || 'UNASSIGNED')).size;
+    }
+
+    function resetDropSession() {
+      stopDropInlineScanner();
+      if (DROP.idleTimer) clearTimeout(DROP.idleTimer);
+      DROP.sessionId = null;
+      DROP.cart = [];
+      DROP.isLocked = false;
+      DROP.unknownQueue = [];
+      DROP.lastScanTime = 0;
+      DROP.lastScanBarcode = null;
+      DROP.verificationGroups = [];
+      DROP.currentLocIndex = 0;
+      DROP.processingLocCommit = false;
+      DROP.completedStats = { productsProcessed: 0, totalUnits: 0, locationsVerified: 0 };
+      updateFloatingCartButton();
+    }
+
+    function initDrop() {
+      STATE.currentMode = 'drop';
+      if (!DROP.sessionId) DROP.sessionId = 'DROP-SES-' + Date.now();
+      resetDropIdleTimer();
+
+      const body = document.getElementById('dropBody');
+      if (!body) return;
+
+      if (DROP.cart.length > 0 && DROP.isLocked) {
+        stopDropInlineScanner();
+        renderDropLocVerificationStep();
+      } else {
+        renderDropScanner();
+      }
+    }
+
+    // ── Continuous Scanner Camera Lifecycle ──
+    async function startDropInlineScanner() {
+      const feedEl = document.getElementById('dropScannerFeed');
+      if (!feedEl) return;
+
+      stopDropInlineScanner();
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        DROP.stream = stream;
+        DROP.video = document.getElementById('dropVideoEl');
+        DROP.canvas = document.getElementById('dropCanvasEl');
+        if (!DROP.video || !DROP.canvas) return;
+
+        DROP.ctx = DROP.canvas.getContext('2d', { willReadFrequently: true });
+        DROP.video.srcObject = stream;
+        await DROP.video.play();
+
+        if ('BarcodeDetector' in window) {
+          try {
+            DROP.detector = new BarcodeDetector({ formats: ['qr_code', 'ean_13', 'code_128', 'ean_8', 'upc_a'] });
+          } catch (e) { DROP.detector = null; }
+        }
+
+        DROP.scannerActive = true;
+        const errEl = document.getElementById('dropCameraErr');
+        if (errEl) errEl.style.display = 'none';
+        dropInlineScanLoop();
+      } catch (err) {
+        console.warn('[DropScanner] camera error:', err);
+        DROP.scannerActive = false;
+        const errEl = document.getElementById('dropCameraErr');
+        if (errEl) {
+          errEl.style.display = 'flex';
+          const msgEl = document.getElementById('dropErrTxt');
+          if (msgEl) msgEl.textContent = err.name === 'NotAllowedError' ? 'Camera Permission Denied' : 'Camera Unavailable';
+        }
+      }
+    }
+
+    function dropInlineScanLoop() {
+      if (!DROP.scannerActive) return;
+      const v = DROP.video, c = DROP.canvas;
+      if (!v || !c || v.readyState < 2 || !v.videoWidth || !v.videoHeight) {
+        DROP.rafId = requestAnimationFrame(dropInlineScanLoop);
+        return;
+      }
+      if (c.width !== v.videoWidth) { c.width = v.videoWidth; c.height = v.videoHeight; }
+      DROP.ctx.drawImage(v, 0, 0, c.width, c.height);
+
+      if (DROP.detector) {
+        DROP.detector.detect(c).then(results => {
+          if (results.length > 0) onDropProductScan(results[0].rawValue);
+        }).catch(() => { });
+      } else if (typeof jsQR === 'function') {
+        const imgData = DROP.ctx.getImageData(0, 0, c.width, c.height);
+        const result = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+        if (result?.data) onDropProductScan(result.data);
+      }
+
+      DROP.rafId = requestAnimationFrame(dropInlineScanLoop);
+    }
+
+    function stopDropInlineScanner() {
+      DROP.scannerActive = false;
+      if (DROP.rafId) { cancelAnimationFrame(DROP.rafId); DROP.rafId = null; }
+      if (DROP.stream) {
+        DROP.stream.getTracks().forEach(track => track.stop());
+        DROP.stream = null;
+      }
+      if (DROP.video) { DROP.video.srcObject = null; }
+      updateFloatingCartButton();
+    }
+
+    function showDropSuccessToast(name, qty) {
+      const toastEl = document.getElementById('dropSuccessToast');
+      if (!toastEl) return;
+      document.getElementById('dstName').textContent = name || 'Product';
+      document.getElementById('dstQty').textContent = 'Qty ' + qty;
+      toastEl.style.display = 'block';
+      clearTimeout(DROP.toastTimer);
+      DROP.toastTimer = setTimeout(() => {
+        toastEl.style.display = 'none';
+      }, 1500);
+    }
+
+    function updateFloatingCartButton() {
+      const btn = document.getElementById('dropFloatCart');
+      if (!btn) return;
+      const skus = DROP.cart.length;
+      const units = getDropTotalUnits();
+      document.getElementById('dfcSkus').textContent = skus + ' SKU' + (skus !== 1 ? 's' : '');
+      document.getElementById('dfcUnits').textContent = units + ' Unit' + (units !== 1 ? 's' : '');
+
+      if (STATE.currentMode === 'drop' && DROP.scannerActive && !DROP.isLocked) {
+        btn.style.display = 'flex';
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+
+    function renderDropScanner() {
+      const body = document.getElementById('dropBody');
+      if (!body) return;
+
+      body.innerHTML = `
+        <div style="position:relative; width:100%; height:100%; min-height:450px; background:#000; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <!-- Camera Feed Container -->
+          <div id="dropScannerFeed" style="position:absolute; inset:0; width:100%; height:100%;">
+            <video id="dropVideoEl" playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+            <canvas id="dropCanvasEl" style="display:none;"></canvas>
+          </div>
+
+          <!-- Target Reticle & HUD -->
+          <div style="position:relative; z-index:10; text-align:center; pointer-events:none; padding:16px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,0.25);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:4px 12px;border-radius:14px;font-size:11px;font-weight:800;letter-spacing:0.5px;margin-bottom:12px;backdrop-filter:blur(8px)">
+              ⚡ BATCH DROP SCAN ACTIVE
+            </div>
+            <div style="width:220px; height:220px; border:2.5px solid rgba(239,68,68,0.9); border-radius:24px; margin:0 auto 16px; box-shadow:0 0 0 4000px rgba(0,0,0,0.45), 0 0 20px rgba(239,68,68,0.4); position:relative;">
+              <div style="position:absolute; top:50%; left:8%; right:8%; height:2px; background:rgba(239,68,68,0.85); box-shadow:0 0 8px #ef4444;"></div>
+            </div>
+            <div style="font-size:15px; font-weight:800; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.8);">Point camera at product barcode</div>
+            <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.75); margin-top:4px;">Continuous batch scanning active</div>
+          </div>
+
+          <!-- Camera Error / Fallback Card -->
+          <div id="dropCameraErr" style="display:none; position:absolute; inset:0; z-index:20; background:var(--card); flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
+            <div style="width:56px; height:56px; border-radius:50%; background:var(--or-lt); color:var(--or); display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:14px;">📷</div>
+            <div style="font-size:18px; font-weight:800; color:var(--t1); margin-bottom:6px;" id="dropErrTxt">Camera Unavailable</div>
+            <div style="font-size:13px; color:var(--t3); margin-bottom:20px;">Ensure camera access is granted or use manual entry below.</div>
+            <div style="display:flex; gap:10px; width:100%; max-width:280px;">
+              <button class="btn-s" style="flex:1;" onclick="startDropInlineScanner()">Retry Camera</button>
+              <button class="btn-p" style="flex:1;" onclick="dropManualProduct()">Manual Entry</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      updateFloatingCartButton();
+
+      setTimeout(() => {
+        if (STATE.currentMode === 'drop' && !DROP.isLocked) {
+          startDropInlineScanner();
+        }
+      }, 50);
     }
 
     function dropManualProduct() {
       const val = prompt('Enter product barcode or SKU:');
-      if (val) onDropProductScan(val.trim());
+      if (val && val.trim()) onDropProductScan(val.trim());
     }
 
-    function renderDropStep2() {
-      const prod = DROP.item;
+    function onDropProductScan(rawVal) {
+      if (DROP.isLocked) return;
+
+      const now = Date.now();
+      const val = extractQrMeta(rawVal).trim();
+      if (!val) return;
+
+      // Duplicate scan protection: 700ms debounce for identical barcode read
+      if (val === DROP.lastScanBarcode && (now - DROP.lastScanTime) < 700) {
+        return;
+      }
+      DROP.lastScanBarcode = val;
+      DROP.lastScanTime = now;
+      resetDropIdleTimer();
+
+      const prod = STATE.barcodeIndex.get(val) || STATE.products.find(p => p.sku === val || p.barcode === val);
+      if (!prod) {
+        playSound('scan_error');
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        renderDropUnknownProductModal(val);
+        return;
+      }
+
+      // Automatically add one quantity to Drop Cart or merge duplicate
+      const existing = DROP.cart.find(c => c.sku === prod.sku || c.barcode === prod.barcode);
+      let currentQty = 1;
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+        currentQty = existing.qty;
+      } else {
+        DROP.cart.push({
+          product: prod,
+          sku: prod.sku || prod.barcode,
+          barcode: prod.barcode || prod.sku,
+          name: prod.name,
+          brand: prod.brand || '',
+          loc: prod.loc || 'UNASSIGNED',
+          stock: prod.stock || 0,
+          qty: 1
+        });
+      }
+
+      // Add to main CART
+      addItemToCart(prod, 1, 'drop');
+
+      playSound('scan_success');
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      // Show Small Success Toast & update Floating Cart without leaving scanner
+      showDropSuccessToast(prod.name, currentQty);
+      updateFloatingCartButton();
+    }
+
+    function renderDropUnknownProductModal(val) {
+      stopDropInlineScanner();
       const body = document.getElementById('dropBody');
-      if (!body || !prod) return;
+      if (!body) return;
+
+      body.innerHTML = `
+    <div style="margin:20px 16px;background:var(--rd-bg);border:2px solid var(--rd-bd);border-radius:18px;padding:24px;text-align:center;box-shadow:var(--sh2)">
+      <div style="width:48px;height:48px;border-radius:50%;background:rgba(220,38,38,0.15);color:var(--rd);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--rd);margin-bottom:6px">Unknown Product</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:16px">Barcode: <strong>${val}</strong></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn-p" style="width:100%" onclick="addUnknownProductFromDrop('${val}')">
+          Add Product
+        </button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-s" style="flex:1" onclick="skipUnknownProductFromDrop('${val}')">Skip</button>
+          <button class="btn-s" style="flex:1" onclick="renderDropScanner()">Continue Scanning</button>
+        </div>
+      </div>
+    </div>`;
+      updateFloatingCartButton();
+    }
+
+    function skipUnknownProductFromDrop(val) {
+      DROP.unknownQueue.push({ barcode: val, timestamp: new Date() });
+      toast('Skipped unknown barcode: ' + val);
+      renderDropScanner();
+    }
+
+    function addUnknownProductFromDrop(val) {
+      stopDropInlineScanner();
+      nav('s-add-product');
+      setTimeout(() => {
+        const input = document.getElementById('apBarcode') || document.getElementById('apSku');
+        if (input) input.value = val;
+      }, 200);
+    }
+
+    function renderDropCart() {
+      stopDropInlineScanner();
+      const body = document.getElementById('dropBody');
+      if (!body) return;
+
+      const totalUnits = getDropTotalUnits();
+      const uniqueSkus = DROP.cart.length;
+      const uniqueLocs = getDropUniqueLocations();
+      const locked = DROP.isLocked;
+
+      let cartHtml = '';
+      if (DROP.cart.length === 0) {
+        cartHtml = `
+      <div style="margin:40px 16px;text-align:center;color:var(--t3)">
+        <div style="font-size:48px;margin-bottom:12px;opacity:0.3">🛒</div>
+        <div style="font-size:16px;font-weight:700;color:var(--t2);margin-bottom:4px">Drop Cart is empty</div>
+        <div style="font-size:13px">Scan products in continuous scanner mode to add items.</div>
+      </div>`;
+      } else {
+        cartHtml = DROP.cart.map((item, idx) => {
+          const imgSrc = FS_IMAGES[item.product?.id] || FS_IMAGES[item.barcode];
+          const thumbHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : `<span>${emoji(item.name)}</span>`;
+          return `
+        <div class="pick-row" style="margin:0 16px 8px;padding:12px;background:var(--card);border-radius:14px;border:1px solid var(--bd)">
+          <div class="pick-thumb" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${thumbHtml}</div>
+          <div class="pick-info" style="flex:1;margin:0 10px">
+            <div class="pick-name" style="font-size:14px;font-weight:700">${item.name}</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px">SKU: <strong>${item.sku}</strong></div>
+            <div style="font-size:11px;color:var(--or);font-weight:700;margin-top:2px">📍 ${item.loc}</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:2px">Current Stock: ${item.stock}</div>
+          </div>
+          <div class="pick-qty-wrap" style="display:flex;align-items:center;gap:8px">
+            <div class="pick-qty-ctrl">
+              <button class="pqb" onclick="adjustDropCartQty(${idx}, -1)" ${locked ? 'disabled' : ''}>−</button>
+              <span class="pqv">${item.qty}</span>
+              <button class="pqb" onclick="adjustDropCartQty(${idx}, 1)" ${locked ? 'disabled' : ''}>+</button>
+            </div>
+            <button class="pick-del" onclick="removeDropCartItem(${idx})" ${locked ? 'disabled' : ''}>✕</button>
+          </div>
+        </div>`;
+        }).join('');
+      }
+
       body.innerHTML = `
     <div class="drop-banner" style="margin-top:10px">
-      <div class="drop-banner-title">Step 2: Scan Location Barcode</div>
-      <div class="drop-banner-desc">Verify destination by scanning the shelf barcode at rack <strong>${prod.loc}</strong>.</div>
+      <div class="drop-banner-title">Drop Cart Review ${locked ? '(LOCKED)' : ''}</div>
+      <div class="drop-banner-desc">${locked ? 'Cart is locked during location verification.' : 'Review scanned products, adjust quantities, or proceed to location verification.'}</div>
     </div>
-    <div class="cam-placeholder" style="margin-top:0;margin-bottom:10px">
-      <div class="drop-scan-frame"><div class="drop-scan-line"></div></div>
-      <div class="scan-badge-overlay"><span class="scan-badge-dot"></span>SCANNING...</div>
-    </div>
-    <div class="active-item-card">
-      <div>
-        <div class="aic-lbl">Active Item</div>
-        <div class="aic-name">${prod.name}</div>
-        <div class="aic-part">Barcode: ${prod.barcode}</div>
+
+    ${cartHtml}
+
+    ${DROP.cart.length > 0 && !locked ? `
+    <div style="text-align:right;padding:0 16px 12px">
+      <button style="background:none;border:none;color:var(--rd);font-size:12px;font-weight:700;cursor:pointer" onclick="clearDropCart()">Clear Cart</button>
+    </div>` : ''}
+
+    <div style="margin:16px;background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--bd)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+        <span style="color:var(--t3);font-weight:600">Total SKUs</span>
+        <span style="font-weight:800;color:var(--t1)">${uniqueSkus}</span>
       </div>
-      <div class="aic-qty">Qty: 1</div>
-    </div>
-    <div class="dest-card" style="margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="dc-pin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-        <div><div class="dc-lbl">Destination</div><div class="dc-code">${prod.loc}</div></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+        <span style="color:var(--t3);font-weight:600">Total Units</span>
+        <span style="font-weight:800;color:var(--or)">${totalUnits}</span>
       </div>
-      <div><div class="dc-sub">Location</div><div class="dc-aisle">${parseLoc(prod.loc)}</div></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--t3);font-weight:600">Unique Locations</span>
+        <span style="font-weight:800;color:var(--t1)">${uniqueLocs}</span>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;padding:0 16px">
-      <button class="btn-s" style="flex:1" onclick="initDrop()">Cancel</button>
-      <button class="btn-p" style="flex:2" onclick="openScanner(onDropLocScan,'Scan location: ${prod.loc}')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/></svg>
-        Scan Location
-      </button>
+
+    <div style="display:flex;gap:10px;padding:0 16px 20px">
+      <button class="btn-s" style="flex:1" onclick="renderDropScanner()">Continue Scanning</button>
+      ${locked ? `
+        <button class="btn-s" style="flex:1; color:var(--rd); border-color:var(--rd-bd)" onclick="cancelDropVerification()">Cancel Verification</button>
+      ` : `
+        <button class="btn-p gr" style="flex:1.5" onclick="startDropVerification()" ${DROP.cart.length === 0 ? 'disabled' : ''}>
+          Verify & Complete Drop
+        </button>
+      `}
     </div>`;
+
+      updateFloatingCartButton();
     }
 
-    function onDropLocScan(val) {
-      const prod = DROP.item;
-      if (!prod) { initDrop(); return; }
-      const match = normalizeLocStr(val) === normalizeLocStr(prod.loc) ||
-        normalizeLocStr(val).includes(normalizeLocStr(prod.loc)) ||
-        normalizeLocStr(prod.loc).includes(normalizeLocStr(val));
-      if (match) {
-        // Increment stock
-        prod.stock = (prod.stock || 0) + 1;
-        prod.qty = prod.stock;
-        // Update in FS_PRODUCTS too
-        var fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode; });
-        if (fpIdx >= 0) { FS_PRODUCTS[fpIdx].stock = prod.stock; FS_PRODUCTS[fpIdx].qty = prod.stock; }
-        STATE.barcodeIndex.set(prod.barcode, prod);
-        // Auto-save
-        fsSave().catch(function () { });
-        // Log the drop
-        STATE.logs.unshift({
-          orderId: 'DROP-' + Date.now(),
-          type: 'drop',
-          start: new Date(), end: new Date(),
-          items: [{ barcode: prod.barcode, product: prod, qty: 1, picked: 1, status: 'picked', pickTime: 5, skipReason: null }]
-        });
-        try { localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50))); } catch (e) { }
-        toast('✓ Dropped at ' + prod.loc + ' · Stock now: ' + prod.stock, 'ok');
-        initDrop();
-      } else {
-        toast('⚠ Wrong location — expected ' + prod.loc, 'err');
+    function cancelDropVerification() {
+      if (confirm('Cancel location verification and unlock cart? Previously committed items will remain saved.')) {
+        DROP.isLocked = false;
+        renderDropCart();
       }
+    }
+
+    function adjustDropCartQty(idx, d) {
+      if (DROP.isLocked) return;
+      if (!DROP.cart[idx]) return;
+      DROP.cart[idx].qty = Math.max(1, (DROP.cart[idx].qty || 1) + d);
+      renderDropCart();
+    }
+
+    function removeDropCartItem(idx) {
+      if (DROP.isLocked) return;
+      if (!DROP.cart[idx]) return;
+      DROP.cart.splice(idx, 1);
+      toast('Item removed from cart');
+      renderDropCart();
+    }
+
+    function clearDropCart() {
+      if (DROP.isLocked) return;
+      if (confirm('Clear all items from Drop Cart? Inventory will remain unchanged.')) {
+        DROP.cart = [];
+        toast('Drop Cart cleared');
+        renderDropCart();
+      }
+    }
+
+    function startDropVerification() {
+      if (DROP.cart.length === 0) {
+        toast('Drop Cart is empty', 'err');
+        return;
+      }
+
+      stopDropInlineScanner();
+      DROP.isLocked = true;
+
+      // Group products by storage location
+      const locGroups = {};
+      DROP.cart.forEach(item => {
+        const rawLoc = item.loc || 'UNASSIGNED';
+        const normLoc = normalizeLocStr(rawLoc);
+        if (!locGroups[normLoc]) {
+          locGroups[normLoc] = { rawLoc: rawLoc, normLoc: normLoc, items: [] };
+        }
+        locGroups[normLoc].items.push(item);
+      });
+
+      DROP.verificationGroups = Object.values(locGroups);
+      DROP.currentLocIndex = 0;
+      DROP.processingLocCommit = false;
+
+      renderDropLocVerificationStep();
+    }
+
+    function renderDropLocVerificationStep() {
+      stopDropInlineScanner();
+      const body = document.getElementById('dropBody');
+      if (!body) return;
+
+      const group = DROP.verificationGroups[DROP.currentLocIndex];
+      if (!group) {
+        renderDropComplete();
+        return;
+      }
+
+      body.innerHTML = `
+    <div class="drop-banner" style="margin-top:10px">
+      <div class="drop-banner-title">Step ${DROP.currentLocIndex + 1} of ${DROP.verificationGroups.length}: Location Verification</div>
+      <div class="drop-banner-desc">Scan location QR barcode to verify shelf destination before committing products.</div>
+    </div>
+
+    <div style="margin:0 16px 12px;background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--sh);border:2px solid var(--or-md)">
+      <div style="font-size:11px;font-weight:800;color:var(--t3);letter-spacing:1px;margin-bottom:4px">EXPECTED LOCATION</div>
+      <div style="font-size:26px;font-weight:800;color:var(--or);margin-bottom:12px">${group.rawLoc}</div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:8px">Products assigned to this location:</div>
+      <div style="background:var(--bg);border-radius:12px;padding:10px">
+        ${group.items.map(item => `
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--bd2)">
+            <span style="font-weight:700;color:var(--t1)">${item.name} (${item.sku})</span>
+            <span style="font-weight:800;color:var(--or)">Qty ${item.qty}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;padding:0 16px">
+      <button class="btn-s" style="flex:1" onclick="renderDropCart()">View Cart</button>
+      <button class="btn-p" style="flex:2" onclick="openScanner(onDropLocVerifyScan,'Scan Location QR: ' + '${group.rawLoc}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/></svg>
+        Scan Location QR
+      </button>
+    </div>`;
+      updateFloatingCartButton();
+    }
+
+    function onDropLocVerifyScan(scannedVal) {
+      if (DROP.processingLocCommit) return;
+
+      const group = DROP.verificationGroups[DROP.currentLocIndex];
+      if (!group) return;
+
+      const normScanned = normalizeLocStr(scannedVal);
+      const match = normScanned === group.normLoc || normScanned.includes(group.normLoc) || group.normLoc.includes(normScanned);
+
+      if (match) {
+        DROP.processingLocCommit = true;
+        playSound('scan_success');
+        triggerFlash(true);
+
+        // COMMIT INVENTORY: Invoke black-box inventoryTransaction() for every item in this verified location group
+        group.items.forEach(item => {
+          inventoryTransaction({
+            type: "DROP",
+            sku: item.sku,
+            qty: item.qty,
+            location: group.rawLoc,
+            sessionId: DROP.sessionId
+          });
+        });
+
+        DROP.completedStats.productsProcessed += group.items.length;
+        DROP.completedStats.totalUnits += group.items.reduce((sum, i) => sum + i.qty, 0);
+        DROP.completedStats.locationsVerified += 1;
+
+        toast('✓ Location ' + group.rawLoc + ' verified & committed!', 'ok');
+
+        DROP.currentLocIndex++;
+        DROP.processingLocCommit = false;
+
+        if (DROP.currentLocIndex < DROP.verificationGroups.length) {
+          setTimeout(renderDropLocVerificationStep, 400);
+        } else {
+          setTimeout(renderDropComplete, 400);
+        }
+      } else {
+        playSound('scan_error');
+        triggerFlash(false);
+
+        scanState.wrongType = 'LOCATION';
+        scanState.wrongVal = scannedVal;
+        scanState.wrongExpected = group.rawLoc;
+
+        const body = document.getElementById('dropBody');
+        if (!body) return;
+
+        body.innerHTML = `
+      <div style="background:var(--rd-bg);border-radius:18px;padding:24px 20px;margin:16px;text-align:center;box-shadow:var(--sh2);border:2px solid var(--rd-bd)">
+        <div style="width:48px;height:48px;border-radius:50%;background:rgba(220,38,38,0.15);color:var(--rd);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:var(--rd);margin-bottom:6px">WRONG LOCATION</div>
+        <div style="font-size:13px;color:var(--rd);font-weight:600;margin-bottom:20px">Please scan the correct shelf QR to commit items for this location. Inventory remains unchanged.</div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px">
+          <div style="flex:1;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--rd-bd)">
+            <div style="font-size:10px;font-weight:800;color:var(--rd);letter-spacing:1px;margin-bottom:4px">SCANNED</div>
+            <div style="font-size:14px;font-weight:700;color:var(--t1);word-break:break-all">${scannedVal}</div>
+          </div>
+          <div style="flex:1;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--gr-bd)">
+            <div style="font-size:10px;font-weight:800;color:var(--gr);letter-spacing:1px;margin-bottom:4px">EXPECTED</div>
+            <div style="font-size:14px;font-weight:700;color:var(--t1);word-break:break-all">${group.rawLoc}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button class="btn-s" style="flex:1;color:var(--rd);border-color:var(--rd-bd)" onclick="renderDropCart()">Cancel</button>
+          <button class="btn-p" style="flex:2" onclick="openScanner(onDropLocVerifyScan, 'Retry Location Scan: ' + '${group.rawLoc}')">
+            RETRY LOCATION SCAN
+          </button>
+        </div>
+      </div>`;
+      }
+    }
+
+    function renderDropComplete() {
+      stopDropInlineScanner();
+      playSound('complete');
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 150]);
+
+      const body = document.getElementById('dropBody');
+      if (!body) return;
+
+      const hasUnknown = DROP.unknownQueue.length > 0;
+
+      body.innerHTML = `
+    <div style="margin:24px 16px;background:var(--card);border-radius:20px;padding:28px 20px;text-align:center;box-shadow:var(--sh2);border:2px solid var(--gr-bd)">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--gr-bg);color:var(--gr);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:24px;font-weight:800;color:var(--t1);margin-bottom:6px">Drop Completed 🎉</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:24px">All verified items have been successfully committed to inventory.</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:14px;padding:16px;margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--t3);font-weight:600">Products Processed</span>
+          <span style="font-weight:800;color:var(--t1)">${DROP.completedStats.productsProcessed}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--t3);font-weight:600">Total Units</span>
+          <span style="font-weight:800;color:var(--or)">${DROP.completedStats.totalUnits}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--t3);font-weight:600">Locations Verified</span>
+          <span style="font-weight:800;color:var(--gr)">${DROP.completedStats.locationsVerified}</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${hasUnknown ? `<button class="btn-p" style="background:var(--or);color:#fff" onclick="renderDropUnknownReview()">Unknown Product Review (${DROP.unknownQueue.length})</button>` : ''}
+        <button class="btn-p gr" style="width:100%;height:48px;font-size:15px" onclick="resetDropSession(); initDrop();">Start New Drop</button>
+        <button class="btn-s" style="width:100%;height:44px" onclick="resetDropSession(); nav('s-orders');">Done</button>
+      </div>
+    </div>`;
+      updateFloatingCartButton();
+    }
+
+    function renderDropUnknownReview() {
+      stopDropInlineScanner();
+      const body = document.getElementById('dropBody');
+      if (!body) return;
+
+      body.innerHTML = `
+    <div class="drop-banner" style="margin-top:10px">
+      <div class="drop-banner-title">Unknown Product Review</div>
+      <div class="drop-banner-desc">Barcodes scanned during session that were not found in inventory.</div>
+    </div>
+
+    <div style="padding:0 16px">
+      ${DROP.unknownQueue.map(item => `
+        <div style="background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--t1)">Barcode: ${item.barcode}</div>
+            <div style="font-size:10px;color:var(--t3)">${new Date(item.timestamp).toLocaleTimeString()}</div>
+          </div>
+          <button class="btn-s" style="font-size:11px;padding:4px 8px" onclick="addUnknownProductFromDrop('${item.barcode}')">Add Product</button>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="padding:16px">
+      <button class="btn-s" style="width:100%" onclick="resetDropSession(); nav('s-orders');">Return to Dashboard</button>
+    </div>`;
+      updateFloatingCartButton();
     }
 
 
@@ -11574,7 +12628,7 @@
 
       const sSound = document.getElementById('settSound');
       if (sSound) sSound.checked = STATE.soundEnabled;
-      
+
       const sVibe = document.getElementById('settVibe');
       if (sVibe) sVibe.checked = STATE.vibeEnabled;
 
@@ -11615,7 +12669,7 @@
       STATE.vibeEnabled = checked;
       localStorage.setItem(LS_VIBE, checked ? 'true' : 'false');
       toast(checked ? 'Vibration enabled' : 'Vibration muted');
-      if (checked) { try { navigator.vibrate(50); } catch (e) {} }
+      if (checked) { try { navigator.vibrate(50); } catch (e) { } }
     }
 
     function toggleVoice(checked) {
@@ -11679,23 +12733,23 @@
     function renderDashboard() {
       var container = document.getElementById('dashboardBody');
       if (!container) return;
-      
+
       var totalSessions = STATE.logs.length;
       var totalItems = 0;
       var totalCycleMs = 0;
       var sessionsWithTime = 0;
-      var dailyPicks = {}; 
-      
-      STATE.logs.forEach(function(sess) {
+      var dailyPicks = {};
+
+      STATE.logs.forEach(function (sess) {
         var sessPicks = 0;
-        (sess.items || []).forEach(function(it) {
+        (sess.items || []).forEach(function (it) {
           if (it.status === 'picked') {
             var q = Number(it.picked || it.qty || 1);
             sessPicks += q;
             totalItems += q;
           }
         });
-        
+
         if (sess.start && sess.end) {
           var d1 = new Date(sess.start), d2 = new Date(sess.end);
           var diff = d2 - d1;
@@ -11704,74 +12758,74 @@
             sessionsWithTime++;
           }
         }
-        
+
         var day = (sess.start ? new Date(sess.start) : new Date()).toISOString().split('T')[0];
         dailyPicks[day] = (dailyPicks[day] || 0) + sessPicks;
       });
-      
+
       var avgCycleMin = sessionsWithTime > 0 ? Math.round(totalCycleMs / sessionsWithTime / 60000) : 0;
       var accuracy = 100; // Placeholders
-      
+
       // Sort days
       var days = Object.keys(dailyPicks).sort();
       var last7 = days.slice(-7);
       var maxPicks = 1;
-      last7.forEach(function(d) { if (dailyPicks[d] > maxPicks) maxPicks = dailyPicks[d]; });
-      
+      last7.forEach(function (d) { if (dailyPicks[d] > maxPicks) maxPicks = dailyPicks[d]; });
+
       var barsHtml = '';
       if (last7.length > 0) {
-        barsHtml = last7.map(function(d) {
+        barsHtml = last7.map(function (d) {
           var count = dailyPicks[d];
           var pct = Math.max(2, Math.round((count / maxPicks) * 100));
           var dayName = new Date(d).toLocaleDateString('en-US', { weekday: 'short' });
           return '<div class="dash-bar-row">' +
-                 '<div class="dash-day">' + dayName + '</div>' +
-                 '<div class="dash-track"><div class="dash-fill" style="width:' + pct + '%"></div></div>' +
-                 '<div class="dash-count">' + count + '</div>' +
-                 '</div>';
+            '<div class="dash-day">' + dayName + '</div>' +
+            '<div class="dash-track"><div class="dash-fill" style="width:' + pct + '%"></div></div>' +
+            '<div class="dash-count">' + count + '</div>' +
+            '</div>';
         }).join('');
       } else {
         barsHtml = '<div style="color:var(--t4);font-size:12px;text-align:center;padding:20px 0">No picking data yet</div>';
       }
-      
-      var html = 
+
+      var html =
         '<div class="dash-hero">' +
-          '<div class="dash-kicker">Welcome back</div>' +
-          '<div class="dash-title">' + (STATE.pickerName || 'Picker') + '</div>' +
-          '<div class="dash-sub">Here is your performance overview</div>' +
+        '<div class="dash-kicker">Welcome back</div>' +
+        '<div class="dash-title">' + (STATE.pickerName || 'Picker') + '</div>' +
+        '<div class="dash-sub">Here is your performance overview</div>' +
         '</div>' +
-        
+
         '<div class="dash-grid">' +
-          '<div class="dash-card">' +
-            '<div class="dash-label">Total Picks</div>' +
-            '<div class="dash-value">' + totalItems + '</div>' +
-            '<div class="dash-note">all time</div>' +
-          '</div>' +
-          '<div class="dash-card">' +
-            '<div class="dash-label">Avg Cycle</div>' +
-            '<div class="dash-value">' + avgCycleMin + '<span style="font-size:14px">m</span></div>' +
-            '<div class="dash-note">per session</div>' +
-          '</div>' +
-          '<div class="dash-card">' +
-            '<div class="dash-label">Sessions</div>' +
-            '<div class="dash-value">' + totalSessions + '</div>' +
-            '<div class="dash-note">completed</div>' +
-          '</div>' +
-          '<div class="dash-card">' +
-            '<div class="dash-label">Accuracy</div>' +
-            '<div class="dash-value">' + accuracy + '<span style="font-size:14px">%</span></div>' +
-            '<div class="dash-note">estimated</div>' +
-          '</div>' +
+        '<div class="dash-card">' +
+        '<div class="dash-label">Total Picks</div>' +
+        '<div class="dash-value">' + totalItems + '</div>' +
+        '<div class="dash-note">all time</div>' +
         '</div>' +
-        
+        '<div class="dash-card">' +
+        '<div class="dash-label">Avg Cycle</div>' +
+        '<div class="dash-value">' + avgCycleMin + '<span style="font-size:14px">m</span></div>' +
+        '<div class="dash-note">per session</div>' +
+        '</div>' +
+        '<div class="dash-card">' +
+        '<div class="dash-label">Sessions</div>' +
+        '<div class="dash-value">' + totalSessions + '</div>' +
+        '<div class="dash-note">completed</div>' +
+        '</div>' +
+        '<div class="dash-card">' +
+        '<div class="dash-label">Accuracy</div>' +
+        '<div class="dash-value">' + accuracy + '<span style="font-size:14px">%</span></div>' +
+        '<div class="dash-note">estimated</div>' +
+        '</div>' +
+        '</div>' +
+
         '<div class="dash-chart" style="margin-top:14px">' +
-          '<div class="dash-chart-title">' +
-            '<strong>Activity Trend</strong>' +
-            '<span>Last 7 Days</span>' +
-          '</div>' +
-          '<div style="display:flex;flex-direction:column;gap:8px">' + barsHtml + '</div>' +
+        '<div class="dash-chart-title">' +
+        '<strong>Activity Trend</strong>' +
+        '<span>Last 7 Days</span>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' + barsHtml + '</div>' +
         '</div>';
-        
+
       container.innerHTML = html;
     }
 
@@ -12096,8 +13150,8 @@
     function renderAuditDashboard() {
       const activeEl = document.getElementById('auditStatActive');
       const pendingEl = document.getElementById('auditStatPending');
-      if(activeEl) activeEl.textContent = STATE.auditSessions.length;
-      if(pendingEl) pendingEl.textContent = STATE.auditQueue.length;
+      if (activeEl) activeEl.textContent = STATE.auditSessions.length;
+      if (pendingEl) pendingEl.textContent = STATE.auditQueue.length;
 
       const qList = document.getElementById('auditQueueList');
       if (qList) {
@@ -12180,8 +13234,8 @@
 
     function confirmStartAudit() {
       const name = document.getElementById('auditAuditorName').value.trim();
-      if(!name) { toast('Auditor name required', 'err'); return; }
-      
+      if (!name) { toast('Auditor name required', 'err'); return; }
+
       activeAudit = {
         id: 'AUD-' + Date.now().toString(36).toUpperCase(),
         auditType: 'guided_count',
@@ -12211,7 +13265,7 @@
     }
 
     function cancelActiveAudit() {
-      if(confirm('Cancel this audit? All progress will be lost.')) {
+      if (confirm('Cancel this audit? All progress will be lost.')) {
         activeAudit = null;
         clearActiveAudit();
         nav('s-audit');
@@ -12240,21 +13294,21 @@
 
     function startGuidedCount() {
       const loc = document.getElementById('auditLocationInput').value.trim();
-      if(!loc) { toast('Enter a location', 'err'); return; }
-      
+      if (!loc) { toast('Enter a location', 'err'); return; }
+
       currentAuditLocation = loc;
       activeAudit.location = loc;
       logAuditEvent(activeAudit, 'location_selected', { location: loc });
-      
+
       // Find all products in this location
       const locStr = loc.toLowerCase();
       currentAuditItems = STATE.products.filter(p => (p.loc || '').toLowerCase() === locStr);
-      
-      if(currentAuditItems.length === 0) {
+
+      if (currentAuditItems.length === 0) {
         toast('No products found in ' + loc, 'err');
         return;
       }
-      
+
       currentAuditIndex = 0;
       saveActiveAudit();
       renderAuditCountStep();
@@ -12268,7 +13322,7 @@
 
       const prod = currentAuditItems[currentAuditIndex];
       document.getElementById('activeAuditTitle').textContent = `Count ${currentAuditIndex + 1} of ${currentAuditItems.length}`;
-      
+
       document.getElementById('auditWorkflowContainer').innerHTML = `
         <div class="stat-card" style="background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--sh);margin-bottom:16px;">
           <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px;">${prod.name}</div>
@@ -12317,13 +13371,13 @@
 
     function submitAuditCount() {
       const input = document.getElementById('auditPhysicalCount');
-      if(!input.value) { toast('Enter physical count', 'err'); return; }
+      if (!input.value) { toast('Enter physical count', 'err'); return; }
       const countedQty = parseInt(input.value, 10);
-      
+
       const prod = currentAuditItems[currentAuditIndex];
       const cachedQty = prod.stock || 0;
       const difference = countedQty - cachedQty;
-      
+
       const auditItem = {
         barcode: prod.barcode,
         sku: prod.sku,
@@ -12382,11 +13436,11 @@
 
     function submitAuditDiff(item) {
       const reason = document.getElementById('auditReason').value;
-      if(!reason) { toast('Please select a reason', 'err'); return; }
-      
+      if (!reason) { toast('Please select a reason', 'err'); return; }
+
       item.reason = reason;
       item.notes = document.getElementById('auditNotes').value.trim();
-      
+
       activeAudit.items.push(item);
       logAuditEvent(activeAudit, 'count_saved', { sku: item.sku, reason: reason });
       saveActiveAudit();
@@ -12396,9 +13450,9 @@
 
     function renderAuditReviewStep() {
       document.getElementById('activeAuditTitle').textContent = `Supervisor Review`;
-      
+
       const diffCount = activeAudit.items.filter(i => i.localDifference !== 0).length;
-      
+
       document.getElementById('auditWorkflowContainer').innerHTML = `
         <div style="text-align:center;margin-bottom:20px;">
           <div style="font-size:40px;margin-bottom:10px;">📋</div>
@@ -12423,13 +13477,13 @@
       activeAudit.status = 'Queued';
       activeAudit.endTime = new Date().toISOString();
       activeAudit.supervisor = document.getElementById('auditSupervisorPin').value ? 'Supervisor' : 'Auto-Approved';
-      
+
       logAuditEvent(activeAudit, 'locally_approved');
       logAuditEvent(activeAudit, 'audit_queued');
 
       STATE.auditQueue.push(activeAudit);
       saveAudits();
-      
+
       // Add Activity Log
       STATE.logs.push({
         type: 'audit_queued',
@@ -12448,15 +13502,15 @@
 
     let isSyncingAudits = false;
     async function trySyncAudits() {
-      if(!STATE.auditQueue.length) return;
-      if(!STATE.online && !(window.PICKER_BRIDGE && window.PICKER_BRIDGE.connected)) return;
-      if(isSyncingAudits) return;
+      if (!STATE.auditQueue.length) return;
+      if (!STATE.online && !(window.PICKER_BRIDGE && window.PICKER_BRIDGE.connected)) return;
+      if (isSyncingAudits) return;
 
       const serverUrl = STATE.serverUrl || (window.PICKER_BRIDGE ? window.PICKER_BRIDGE.bridgeUrl : '');
-      if(!serverUrl) return;
+      if (!serverUrl) return;
 
       isSyncingAudits = true;
-      
+
       // Deduplicate queue against history using Audit ID
       const historyIds = new Set(STATE.auditHistory.map(a => a.id));
       const validQueue = [];
@@ -12475,27 +13529,27 @@
       }
 
       const toSync = [...validQueue];
-      
+
       try {
         const res = await fetch(`${serverUrl}/api/audits/sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ audits: toSync })
         });
-        
+
         if (res.ok || res.status === 404) {
           // If 404, simulate success for mock environment. 
           // Move from Queue to History.
           const successfullySyncedIds = new Set(toSync.map(a => a.id));
           STATE.auditQueue = STATE.auditQueue.filter(a => !successfullySyncedIds.has(a.id));
-          
+
           toSync.forEach(a => {
             a.status = 'Waiting For POS';
             a.lastSyncAttempt = new Date().toISOString();
             logAuditEvent(a, 'upload_succeeded');
             STATE.auditHistory.push(a);
           });
-          
+
           saveAudits();
           toast('Audits sent to Bridge', 'ok');
           if (document.getElementById('s-audit').classList.contains('on')) renderAuditDashboard();
@@ -12526,12 +13580,12 @@
       decisions.forEach(decision => {
         const audit = STATE.auditHistory.find(a => a.id === decision.auditId);
         if (!audit) return;
-        
+
         // Prevent duplicate processing
         if (audit.posDecision === decision.status) return;
 
         audit.posDecision = decision.status;
-        
+
         if (decision.status === 'accepted') {
           audit.status = 'Accepted';
           audit.posDecisionAt = new Date().toISOString();
@@ -12605,7 +13659,7 @@
     }
 
     // DEV HELPER: Simulate a POS decision for the latest waiting audit
-    window.devMockPOSDecision = function(status = 'accepted') {
+    window.devMockPOSDecision = function (status = 'accepted') {
       const waiting = STATE.auditHistory.find(a => a.status === 'Waiting For POS');
       if (waiting) {
         handlePOSDecisions([{
@@ -12624,11 +13678,11 @@
     // ══════════════════════════════════════════
     //  STOCK TRANSFER MODULE
     // ══════════════════════════════════════════
-    
+
     function logTransferEvent(transfer, type, metadata = null) {
       transfer.eventHistory = transfer.eventHistory || [];
       transfer.eventHistory.push({
-        eventId: 'EVT-' + Date.now() + '-' + Math.floor(Math.random()*1000),
+        eventId: 'EVT-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
         transferId: transfer.id,
         type: type,
         timestamp: new Date().toISOString(),
@@ -12639,11 +13693,11 @@
 
     function renderTransferDashboard() {
       document.getElementById('activeTransferTitle').textContent = 'Stock Transfers';
-      
+
       const pendingCount = STATE.transferQueue.length + STATE.transferHistory.filter(t => t.status === 'Waiting For POS').length;
       const conflicts = STATE.transferHistory.filter(t => t.physicalReconciliationRequired).length;
       const todayTransfers = STATE.transferHistory.filter(t => t.startTime && t.startTime.startsWith(new Date().toISOString().split('T')[0])).length;
-      
+
       document.getElementById('transferMetricsContainer').innerHTML = `
         <div class="stat-card" style="background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--sh);">
           <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;">TRANSFERS TODAY</div>
@@ -12661,7 +13715,7 @@
       `;
 
       let qHtml = '';
-      if(STATE.transferQueue.length === 0 && !STATE.transferHistory.find(t => t.status === 'Waiting For POS')) {
+      if (STATE.transferQueue.length === 0 && !STATE.transferHistory.find(t => t.status === 'Waiting For POS')) {
         qHtml = '<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">No pending transfers.</div>';
       } else {
         const pendingList = [...STATE.transferQueue, ...STATE.transferHistory.filter(t => t.status === 'Waiting For POS')];
@@ -12672,7 +13726,7 @@
           } else if (t.status === 'Waiting For POS') {
             badgeHtml = `<div style="font-size:10px;font-weight:800;color:var(--bl);background:var(--bl-lt);padding:4px 8px;border-radius:6px;text-transform:uppercase;border:1px solid rgba(59,130,246,0.3);display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>WAITING POS</div>`;
           } else {
-             badgeHtml = `<div style="font-size:10px;font-weight:800;color:var(--or);background:var(--or-lt);padding:4px 8px;border-radius:6px;text-transform:uppercase;">${t.status}</div>`;
+            badgeHtml = `<div style="font-size:10px;font-weight:800;color:var(--or);background:var(--or-lt);padding:4px 8px;border-radius:6px;text-transform:uppercase;">${t.status}</div>`;
           }
 
           qHtml += `
@@ -12688,8 +13742,8 @@
       document.getElementById('transferPendingList').innerHTML = qHtml;
 
       let hHtml = '';
-      const hList = STATE.transferHistory.filter(t => t.status !== 'Waiting For POS').slice().reverse().slice(0,20);
-      if(hList.length === 0) {
+      const hList = STATE.transferHistory.filter(t => t.status !== 'Waiting For POS').slice().reverse().slice(0, 20);
+      if (hList.length === 0) {
         hHtml = '<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">No history yet.</div>';
       } else {
         hList.forEach(t => {
@@ -12697,18 +13751,18 @@
           if (t.status === 'Accepted') {
             badgeHtml = `<div style="font-size:10px;font-weight:800;color:var(--gr);background:var(--gr-lt);padding:4px 8px;border-radius:6px;text-transform:uppercase;display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>ACCEPTED</div>`;
           } else if (t.status === 'Rejected' || t.status === 'Conflict') {
-             badgeHtml = `<div style="font-size:10px;font-weight:800;color:var(--rd);background:var(--rd-bg);padding:4px 8px;border-radius:6px;text-transform:uppercase;display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>${t.status}</div>`;
+            badgeHtml = `<div style="font-size:10px;font-weight:800;color:var(--rd);background:var(--rd-bg);padding:4px 8px;border-radius:6px;text-transform:uppercase;display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>${t.status}</div>`;
           } else {
-             const isErr = t.physicalReconciliationRequired;
-             const col = isErr ? 'var(--rd)' : 'var(--gr)';
-             const bg = isErr ? 'var(--rd-bg)' : 'var(--gr-lt)';
-             badgeHtml = `<div style="font-size:10px;font-weight:800;color:${col};background:${bg};padding:4px 8px;border-radius:6px;text-transform:uppercase;">${t.status}</div>`;
+            const isErr = t.physicalReconciliationRequired;
+            const col = isErr ? 'var(--rd)' : 'var(--gr)';
+            const bg = isErr ? 'var(--rd-bg)' : 'var(--gr-lt)';
+            badgeHtml = `<div style="font-size:10px;font-weight:800;color:${col};background:${bg};padding:4px 8px;border-radius:6px;text-transform:uppercase;">${t.status}</div>`;
           }
           hHtml += `
             <div style="background:var(--card);border:1.5px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
               <div>
                 <div style="font-size:14px;font-weight:800;color:var(--t1);margin-bottom:4px;">${t.id}</div>
-                <div style="font-size:11px;color:var(--t3);font-weight:600;">${new Date(t.startTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} • ${t.items.length} items</div>
+                <div style="font-size:11px;color:var(--t3);font-weight:600;">${new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${t.items.length} items</div>
               </div>
               ${badgeHtml}
             </div>`;
@@ -12738,7 +13792,7 @@
       document.getElementById('transferResumeModal').style.display = 'none';
       clearActiveTransfer();
       toast('Draft Transfer Discarded', 'ok');
-      
+
       // Fallback logic for startup
       if (localStorage.getItem(LS_ACTIVE_AUDIT)) {
         document.getElementById('auditResumeModal').style.display = 'flex';
@@ -12780,7 +13834,7 @@
         physicalReconciliationRequired: false,
         eventHistory: []
       };
-      
+
       logTransferEvent(window.activeTransfer, 'transfer_started');
       saveActiveTransfer();
       nav('s-transfer-active');
@@ -12797,7 +13851,7 @@
     // ── Step: Source ──
     function renderTransferSourceStep() {
       document.getElementById('activeTransferTitle').textContent = `Transfer: ${window.activeTransfer.id}`;
-      
+
       let html = `
         <div style="text-align:center;margin-bottom:24px;">
           <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Step 1 of 4</div>
@@ -12823,17 +13877,17 @@
         </button>
       `;
       document.getElementById('transferWorkflowContainer').innerHTML = html;
-      
+
       const stored = localStorage.getItem(LS_ACTIVE_TRANSFER);
-      if(stored) {
-         let p = JSON.parse(stored);
-         p.currentStep = 'source';
-         localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
+      if (stored) {
+        let p = JSON.parse(stored);
+        p.currentStep = 'source';
+        localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
       }
     }
 
     function onTransferSourceScan(val) {
-      if(!val) return;
+      if (!val) return;
       window.activeTransfer.sourceLocation = { id: val, label: val }; // Use valid location lookup if available
       logTransferEvent(window.activeTransfer, 'source_scanned', { location: val });
       saveActiveTransfer();
@@ -12891,24 +13945,24 @@
         ` : ''}
       `;
       document.getElementById('transferWorkflowContainer').innerHTML = html;
-      
+
       const stored = localStorage.getItem(LS_ACTIVE_TRANSFER);
-      if(stored) {
-         let p = JSON.parse(stored);
-         p.currentStep = 'products';
-         localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
+      if (stored) {
+        let p = JSON.parse(stored);
+        p.currentStep = 'products';
+        localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
       }
     }
 
     function onTransferProductScan(barcode) {
-      if(!barcode) return;
+      if (!barcode) return;
       const product = STATE.barcodeIndex.get(barcode) || STATE.products.find(p => p.barcode === barcode || p.sku === barcode);
-      if(!product) {
+      if (!product) {
         playSound('scan_error');
         toast('Product not found in cache', 'err');
         return;
       }
-      
+
       // If product is already in the transfer, we could increment. But we'll route to Qty step to let them adjust.
       playSound('scan_success');
       toast('Product found', 'ok');
@@ -12920,7 +13974,7 @@
       const existingItem = window.activeTransfer.items.find(i => i.productId === product.id || i.sku === product.sku);
       const currentQty = existingItem ? existingItem.transferQty : 1;
       const effectiveAvail = getEffectiveInventory(product.barcode || product.sku, window.activeTransfer.sourceLocation.id);
-      
+
       // Check mismatch (if product has a default location in cache that differs from source)
       let mismatchHtml = '';
       if (product.loc && product.loc !== window.activeTransfer.sourceLocation.id) {
@@ -12961,11 +14015,11 @@
 
     function confirmTransferQty(product, qtyStr) {
       const qty = parseInt(qtyStr, 10);
-      if(isNaN(qty) || qty <= 0) {
+      if (isNaN(qty) || qty <= 0) {
         toast('Enter valid quantity', 'err');
         return;
       }
-      
+
       const effectiveAvail = getEffectiveInventory(product.barcode || product.sku, window.activeTransfer.sourceLocation.id);
       let warnings = [];
       if (qty > effectiveAvail) {
@@ -12974,10 +14028,10 @@
         }
         warnings.push('Quantity Exceeds Effective Local Availability');
       }
-      
+
       const mismatch = product.loc && product.loc !== window.activeTransfer.sourceLocation.id;
       if (mismatch) warnings.push('Product Not Expected Here');
-      
+
       const existingIdx = window.activeTransfer.items.findIndex(i => i.productId === product.id || i.sku === product.sku);
       const itemData = {
         productId: product.id || product.barcode,
@@ -12996,9 +14050,9 @@
       } else {
         window.activeTransfer.items.push(itemData);
       }
-      
-      if(warnings.length > 0) window.activeTransfer.warnings.push(...warnings);
-      
+
+      if (warnings.length > 0) window.activeTransfer.warnings.push(...warnings);
+
       logTransferEvent(window.activeTransfer, 'product_added', { sku: product.sku, qty: qty });
       saveActiveTransfer();
       renderTransferProductStep();
@@ -13032,18 +14086,18 @@
         </div>
       `;
       document.getElementById('transferWorkflowContainer').innerHTML = html;
-      
+
       const stored = localStorage.getItem(LS_ACTIVE_TRANSFER);
-      if(stored) {
-         let p = JSON.parse(stored);
-         p.currentStep = 'destination';
-         localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
+      if (stored) {
+        let p = JSON.parse(stored);
+        p.currentStep = 'destination';
+        localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
       }
     }
 
     function onTransferDestScan(val) {
-      if(!val) return;
-      if(val === window.activeTransfer.sourceLocation.id) {
+      if (!val) return;
+      if (val === window.activeTransfer.sourceLocation.id) {
         playSound('scan_error');
         toast('Destination cannot equal Source', 'err');
         return;
@@ -13059,7 +14113,7 @@
     function renderTransferReviewStep() {
       const t = window.activeTransfer;
       const totalUnits = t.items.reduce((sum, it) => sum + it.transferQty, 0);
-      
+
       let itemsHtml = '';
       t.items.forEach(it => {
         itemsHtml += `
@@ -13104,12 +14158,12 @@
         </div>
       `;
       document.getElementById('transferWorkflowContainer').innerHTML = html;
-      
+
       const stored = localStorage.getItem(LS_ACTIVE_TRANSFER);
-      if(stored) {
-         let p = JSON.parse(stored);
-         p.currentStep = 'review';
-         localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
+      if (stored) {
+        let p = JSON.parse(stored);
+        p.currentStep = 'review';
+        localStorage.setItem(LS_ACTIVE_TRANSFER, JSON.stringify(p));
       }
     }
 
@@ -13117,9 +14171,9 @@
       const t = window.activeTransfer;
       t.confirmedAt = new Date().toISOString();
       t.status = 'Queued';
-      
+
       logTransferEvent(t, 'transfer_confirmed');
-      
+
       // 1. Create Local Pending Overlay
       const overlay = {
         transferId: t.id,
@@ -13130,11 +14184,11 @@
         status: 'pending_sync'
       };
       STATE.pendingTransferOverlays.push(overlay);
-      
+
       // 2. Queue for Sync
       STATE.transferQueue.push(t);
       saveTransfers();
-      
+
       // 3. Global Activity Log
       STATE.logs.push({
         type: 'transfer_queued',
@@ -13149,7 +14203,7 @@
       toast('Physical Transfer Confirmed', 'ok');
       nav('s-transfer');
       renderTransferDashboard();
-      
+
       // 5. Trigger Sync
       trySyncTransfers();
     }
@@ -13165,7 +14219,7 @@
       if (!serverUrl) return;
 
       isSyncingTransfers = true;
-      
+
       const historyIds = new Set(STATE.transferHistory.map(t => t.id));
       const validQueue = [];
       STATE.transferQueue.forEach(t => {
@@ -13183,30 +14237,30 @@
       }
 
       const toSync = [...validQueue];
-      
+
       try {
         const res = await fetch(`${serverUrl}/api/transfers/sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transfers: toSync })
         });
-        
+
         if (res.ok || res.status === 404) {
           // Move from Queue to History (Waiting For POS)
           const successfullySyncedIds = new Set(toSync.map(t => t.id));
           STATE.transferQueue = STATE.transferQueue.filter(t => !successfullySyncedIds.has(t.id));
-          
+
           toSync.forEach(t => {
             t.status = 'Waiting For POS';
             t.lastSyncAttempt = new Date().toISOString();
             logTransferEvent(t, 'upload_succeeded');
             STATE.transferHistory.push(t);
-            
+
             // Update overlay status
             const overlay = STATE.pendingTransferOverlays.find(o => o.transferId === t.id);
             if (overlay) overlay.status = 'waiting_pos';
           });
-          
+
           saveTransfers();
           if (document.getElementById('s-transfer').classList.contains('on')) renderTransferDashboard();
         } else {
@@ -13236,19 +14290,19 @@
       decisions.forEach(decision => {
         const transfer = STATE.transferHistory.find(t => t.id === decision.transferId);
         if (!transfer) return;
-        
+
         if (transfer.posDecision === decision.status) return;
 
         transfer.posDecision = decision.status;
         transfer.posDecisionAt = new Date().toISOString();
-        
+
         const overlay = STATE.pendingTransferOverlays.find(o => o.transferId === transfer.id);
 
         if (decision.status === 'accepted') {
           transfer.status = 'Accepted';
           transfer.posReferenceId = decision.posReferenceId;
           logTransferEvent(transfer, 'pos_accepted', decision);
-          if(overlay) overlay.status = 'accepted_waiting_authoritative_sync';
+          if (overlay) overlay.status = 'accepted_waiting_authoritative_sync';
           STATE.logs.push({ type: 'transfer_accepted', id: transfer.id, time: transfer.posDecisionAt });
           historyUpdated = true;
           addNotification({
@@ -13267,8 +14321,8 @@
           transfer.physicalReconciliationRequired = true;
           logTransferEvent(transfer, 'pos_' + decision.status, decision);
           logTransferEvent(transfer, 'reconciliation_required');
-          if(overlay) overlay.status = 'reconciliation_required';
-          
+          if (overlay) overlay.status = 'reconciliation_required';
+
           STATE.logs.push({ type: 'transfer_' + decision.status, id: transfer.id, time: transfer.posDecisionAt });
           STATE.logs.push({ type: 'reconciliation_required', id: transfer.id, time: transfer.posDecisionAt });
           historyUpdated = true;
@@ -13294,7 +14348,7 @@
     // ── Development Mocks (Disabled for Production) ──
     const DEV_MOCK_ENABLED = false;
 
-    window.devMockTransferDecision = function(transferId, status = 'accepted') {
+    window.devMockTransferDecision = function (transferId, status = 'accepted') {
       if (!DEV_MOCK_ENABLED) { toast('Development mock actions are disabled in production.', 'err'); return; }
       const t = STATE.transferHistory.find(x => x.id === transferId) || STATE.transferHistory.find(x => x.status === 'Waiting For POS');
       if (t) {
@@ -13310,15 +14364,15 @@
         toast('No Waiting transfers found', 'err');
       }
     };
-    
-    window.devMockAuthoritativeTransferSync = function(transferId) {
+
+    window.devMockAuthoritativeTransferSync = function (transferId) {
       if (!DEV_MOCK_ENABLED) { toast('Development mock actions are disabled in production.', 'err'); return; }
       const t = STATE.transferHistory.find(x => x.id === transferId) || STATE.transferHistory.find(x => x.status === 'Accepted');
       if (!t || t.status !== 'Accepted') {
         toast('No Accepted transfer found to mock sync', 'err');
         return;
       }
-      
+
       // Simulate authoritative POS update to base cache
       t.items.forEach(item => {
         const prod = STATE.barcodeIndex.get(item.productId) || STATE.products.find(p => p.id === item.productId || p.barcode === item.productId);
@@ -13326,7 +14380,7 @@
           // System tracks global stock. In real scenario, POS would update the central cache.
         }
       });
-      
+
       // Resolve/remove overlay
       const idx = STATE.pendingTransferOverlays.findIndex(o => o.transferId === t.id);
       if (idx > -1) {
@@ -13340,7 +14394,7 @@
 
     // Call trySyncTransfers and Audits on poll
     const _origPoll = pollOrders;
-    pollOrders = async function() {
+    pollOrders = async function () {
       await _origPoll();
       trySyncAudits();
       trySyncTransfers();
