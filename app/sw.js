@@ -1,9 +1,15 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v8';
+const CACHE_NAME = 'pa-picker-v9';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  '../picker%20logo.png',
+  '../picker-logo.png',
+  '../apple-touch-icon.png',
+  '../android-chrome-192.png',
+  '../android-chrome-512.png',
+  '../favicon.svg'
 ];
 
 /* ── INSTALL ── */
