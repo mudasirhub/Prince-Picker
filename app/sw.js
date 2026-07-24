@@ -1,15 +1,24 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v9';
+const CACHE_NAME = 'pa-picker-v11';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './supabase/config.js',
+  './supabase/client.js',
+  './supabase/db.js',
+  './supabase/auth.js',
+  './supabase/products.js',
+  './supabase/inventory.js',
+  './supabase/sync.js',
   '../picker%20logo.png',
   '../picker-logo.png',
+  './picker-logo.png',
   '../apple-touch-icon.png',
   '../android-chrome-192.png',
   '../android-chrome-512.png',
-  '../favicon.svg'
+  '../favicon.svg',
+  '../favicon.ico'
 ];
 
 /* ── INSTALL ── */
@@ -18,7 +27,10 @@ self.addEventListener('install', e => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
-      .catch(() => self.skipWaiting())
+      .catch(err => {
+        console.warn('[SW] Caching static assets warning:', err);
+        self.skipWaiting();
+      })
   );
 });
 
