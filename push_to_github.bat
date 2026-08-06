@@ -6,8 +6,11 @@ echo Current Folder: %CD%
 echo ========================================================
 echo.
 
+echo Syncing PWA app icons...
+node copy_icons.js
+
 git add .
-git commit -m "feat: Add Supabase integration, offline IndexedDB sync, supplier QR parser, and PWA updates"
+git commit -m "feat: 10/10 Enterprise R2 image pipeline, Supabase sync, manual input, and PWA updates"
 git push
 
 echo.

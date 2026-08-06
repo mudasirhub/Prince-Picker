@@ -44,20 +44,89 @@
 
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
     if (!client) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+
+    console.log(`[SYNC] Processing ${queue.length} queued offline items...`);
 
     for (const item of queue) {
       try {
         if (item.type === 'update_inventory') {
+          console.log('[SYNC] Uploading queued inventory update:', item.payload);
           const { error } = await client
             .from('inventory')
             .upsert(item.payload);
 
           if (!error) {
             await window.PICKER_DB.removeSyncQueue(item.id);
+            console.log('[SYNC] Inventory queue item complete:', item.id);
+          } else {
+            console.error('[SYNC] Error uploading inventory queue item:', error);
+          }
+        } else if (item.type === 'save_product' || item.type === 'upsert_product') {
+          console.log('[SYNC] Upload queued product:', item.payload);
+          const { data, error } = await client
+            .from('products')
+            .upsert(item.payload, { onConflict: 'id' })
+            .select();
+
+          if (!error) {
+            await window.PICKER_DB.removeSyncQueue(item.id);
+            if (data && Array.isArray(data) && data.length > 0) {
+              await window.PICKER_DB.putProducts(data);
+            }
+            console.log('[SYNC] Queue complete for product:', item.payload.id || item.payload.sku);
+          } else {
+            console.error('[SYNC] Error uploading queued product:', error);
+            const isNetErr = window.SUPABASE_PRODUCTS?.isNetworkError
+              ? window.SUPABASE_PRODUCTS.isNetworkError(error)
+              : String(error.message || '').toLowerCase().includes('fetch');
+
+            if (!isNetErr) {
+              console.warn('[SYNC] Removing queue item due to non-retryable DB error (e.g. RLS/schema):', error);
+              await window.PICKER_DB.removeSyncQueue(item.id);
+            }
+          }
+        } else if (item.type === 'upload_image') {
+          console.log('[SYNC] Processing queued offline image upload:', item.storagePath);
+          if (window.IMAGE_UPLOADER && typeof window.IMAGE_UPLOADER.uploadSingleImage === 'function') {
+            const upRes = await window.IMAGE_UPLOADER.uploadSingleImage(item.dataUrl, item.productId, { checksum: item.checksum });
+            if (upRes && upRes.uploaded) {
+              // Transaction Step 2 & 3: Update Supabase & refresh IndexedDB product cache
+              if (item.productId && window.PICKER_DB && typeof window.PICKER_DB.getProductById === 'function') {
+                const prod = await window.PICKER_DB.getProductById(item.productId);
+                if (prod) {
+                  const updatedImages = Array.isArray(prod.images) ? [...prod.images] : [];
+                  const idx = updatedImages.findIndex(img => (img && (img.storagePath === item.storagePath || img.url === item.dataUrl)));
+                  const metaObj = {
+                    id: upRes.id || ('img_' + Date.now()),
+                    url: upRes.url,
+                    width: upRes.width || 0,
+                    height: upRes.height || 0,
+                    sizeBytes: upRes.sizeBytes || 0,
+                    mime: 'image/webp',
+                    checksum: item.checksum || '',
+                    createdAt: upRes.createdAt || new Date().toISOString()
+                  };
+                  if (idx >= 0) updatedImages[idx] = metaObj;
+                  else updatedImages.push(metaObj);
+
+                  prod.images = updatedImages;
+                  prod.image = updatedImages[0]?.url || prod.image || '';
+
+                  if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+                    await window.SUPABASE_PRODUCTS.saveProduct(prod);
+                  }
+                }
+              }
+
+              // Transaction Step 4: Remove queue item
+              await window.PICKER_DB.removeSyncQueue(item.id);
+              console.log('[SYNC] Queued image upload transaction complete:', upRes.url);
+            }
           }
         }
       } catch (e) {
-        console.warn('[Sync] Failed to process queue item:', item.id, e);
+        console.warn('[SYNC] Failed to process queue item:', item.id, e);
       }
     }
   }

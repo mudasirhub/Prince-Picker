@@ -51,6 +51,7 @@ if (fs.existsSync(oldIndex)) {
     console.log('✓ Installed premium marketing site at root (/)');
   }
 
+  try { require('./copy_icons.js'); } catch (e) { }
   console.log('--- Migration Complete! ---');
 } else {
   console.log('! Error: index.html not found in root. Migration may have already run.');

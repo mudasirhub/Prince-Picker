@@ -58,8 +58,137 @@
     }
   }
 
+  /**
+   * Save (upsert) a product to Supabase and update local IndexedDB cache.
+   * Logs every step, handles offline queueing, and differentiates network vs database errors.
+   */
+  async function saveProduct(product) {
+    if (!product) {
+      console.error('[SAVE_PRODUCT] Error: No product provided');
+      return { success: false, error: 'No product provided' };
+    }
+
+    const id = String(product.id || product.barcode || product.sku || '');
+    const barcode = String(product.barcode || product.sku || id);
+    const sku = String(product.sku || product.barcode || id);
+
+    const imagesList = Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : (product.image ? [{ id: 'img_primary', url: product.image, mime: 'image/webp' }] : []);
+
+    const primaryImageUrl = (imagesList[0] && (imagesList[0].url || imagesList[0])) || product.image || '';
+
+    const payload = {
+      id: id,
+      sku: sku,
+      barcode: barcode,
+      name: product.name || '',
+      brand: product.brand || '',
+      category: product.category || '',
+      location: product.location || product.loc || '',
+      loc: product.loc || product.location || '',
+      mrp: Number(product.mrp || 0),
+      sp: Number(product.sp || 0),
+      stock: Number(product.stock ?? product.qty ?? 0),
+      qty: Number(product.qty ?? product.stock ?? 0),
+      threshold: Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5),
+      fitment_group: product.fitment_group || '',
+      compatibility: Array.isArray(product.compatibility) ? product.compatibility : [],
+      images: imagesList,
+      image: primaryImageUrl,
+      updated_at: product.updated_at || new Date().toISOString()
+    };
+
+    console.log('[SAVE_PRODUCT] Product:', product);
+    console.log('[SAVE_PRODUCT] Payload:', payload);
+
+    // 1. Update local IndexedDB cache first
+    if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+      try {
+        await window.PICKER_DB.putProducts([payload]);
+      } catch (errDB) {
+        console.warn('[SAVE_PRODUCT] IndexedDB putProducts warning:', errDB);
+      }
+    }
+
+    const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
+
+    // Handle offline state or missing Supabase client
+    if (!client || !isOnline) {
+      console.log('[SAVE_PRODUCT] Offline or Supabase client unavailable. Queuing product upload...');
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('save_product', payload);
+        console.log('[SAVE_PRODUCT] Queued:', payload.id);
+      }
+      return { success: true, queued: true, synced: false };
+    }
+
+    // 2. Execute Supabase upsert request
+    console.log('[SAVE_PRODUCT] Sending upsert...');
+    try {
+      const { data, error } = await client
+        .from('products')
+        .upsert(payload, { onConflict: 'id' })
+        .select();
+
+      if (error) {
+        console.error('[SAVE_PRODUCT] Error:', error);
+
+        if (isNetworkError(error)) {
+          console.warn('[SAVE_PRODUCT] Network error detected. Queuing upload...');
+          if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+            await window.PICKER_DB.addSyncQueue('save_product', payload);
+            console.log('[SAVE_PRODUCT] Queued:', payload.id);
+          }
+          return { success: true, queued: true, synced: false, error };
+        } else {
+          console.error('[SAVE_PRODUCT] Database error (not queued):', error.message || error);
+          return { success: false, queued: false, synced: false, error };
+        }
+      }
+
+      console.log('[SAVE_PRODUCT] Success:', data);
+
+      // Refresh/update local cache with returned row data
+      if (data && Array.isArray(data) && data.length > 0) {
+        if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+          await window.PICKER_DB.putProducts(data);
+        }
+      }
+
+      return { success: true, queued: false, synced: true, data };
+    } catch (e) {
+      console.error('[SAVE_PRODUCT] Exception during upsert:', e);
+      if (isNetworkError(e)) {
+        console.warn('[SAVE_PRODUCT] Network exception. Queuing upload...');
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('save_product', payload);
+          console.log('[SAVE_PRODUCT] Queued:', payload.id);
+        }
+        return { success: true, queued: true, synced: false, error: e };
+      }
+      return { success: false, queued: false, synced: false, error: e };
+    }
+  }
+
+  function isNetworkError(err) {
+    if (!err) return false;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
+    const msg = String(err.message || err.details || err || '').toLowerCase();
+    if (msg.includes('fetch') || msg.includes('network') || msg.includes('failed to fetch') || msg.includes('timeout') || msg.includes('offline')) {
+      return true;
+    }
+    if (err.name === 'TypeError' || err.status === 0 || err.code === 'PGRST000') {
+      return true;
+    }
+    return false;
+  }
+
   window.SUPABASE_PRODUCTS = {
     downloadAllProducts,
-    syncProductsIncremental
+    syncProductsIncremental,
+    saveProduct,
+    isNetworkError
   };
 })(typeof window !== 'undefined' ? window : this);

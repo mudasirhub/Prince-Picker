@@ -10,6 +10,11 @@
   <script src="./supabase/products.js"></script>
   <script src="./supabase/inventory.js"></script>
   <script src="./supabase/sync.js"></script>
+  <script src="./supabase/image_utils.js"></script>
+  <script src="./supabase/image_optimizer.js"></script>
+  <script src="./supabase/image_cache.js"></script>
+  <script src="./supabase/image_uploader.js"></script>
+  <script src="./supabase/storage.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#ec5b13">
@@ -2910,7 +2915,10 @@
       justify-content: space-between
     }
 
-    .ctb-left {}
+    .ctb-left {
+      display: flex;
+      flex-direction: column;
+    }
 
     .ctb-label {
       font-size: 10px;
@@ -3482,7 +3490,8 @@
       outline: none;
       font-family: 'Plus Jakarta Sans', sans-serif;
       min-width: 0;
-      -moz-appearance: textfield
+      -moz-appearance: textfield;
+      appearance: textfield
     }
 
     .loc-sel-val::-webkit-inner-spin-button,
@@ -5690,41 +5699,109 @@
           </div>
         </div>
 
-        <!-- 12. Image -->
+        <!-- 12. Smart Product Images (Up to 4 Images) -->
+        <style>
+          .multi-img-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+          }
+          @media (max-width: 480px) {
+            .multi-img-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          .img-slot-card {
+            position: relative;
+            aspect-ratio: 1;
+            background: var(--bg2, #161a23);
+            border: 2px dashed var(--b2, #2d3748);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+          }
+          .img-slot-card.has-img {
+            border-style: solid;
+            border-color: rgba(236, 91, 19, 0.45);
+          }
+          .img-slot-card.drag-over {
+            border-color: var(--p, #ec5b13);
+            background: rgba(236, 91, 19, 0.15);
+            transform: scale(1.02);
+          }
+          .img-slot-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          .img-slot-badge {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            background: rgba(0,0,0,0.78);
+            color: #fff;
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(4px);
+          }
+          .img-slot-actions {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: flex;
+            gap: 4px;
+            z-index: 10;
+          }
+          .img-slot-btn {
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+          }
+        </style>
+
         <div class="ap-field">
-          <label class="ap-label">Product Image</label>
-          <div class="img-capture-wrap">
-            <div class="img-preview" id="apImgPreview" onclick="captureImage()">
-              <div class="img-preview-empty">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-                <span style="font-size:10px;font-weight:600">Tap</span>
-              </div>
-            </div>
-            <div class="img-capture-right">
-              <button class="btn-p" style="height:44px" onclick="captureImage()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
-                Take Photo
-              </button>
-              <button class="btn-s" style="height:40px;font-size:13px"
-                onclick="document.getElementById('apImgFile').click()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                Choose File
-              </button>
-              <div style="font-size:10px;color:var(--t3);font-weight:500" id="apImgInfo">256×256 · JPEG · ~15KB</div>
-            </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="ap-label" style="margin:0">Product Images (Max 4)</label>
+            <span style="font-size:11px;color:var(--p, #ec5b13);font-weight:700" id="apImgCountBadge">0 / 4</span>
           </div>
-          <input type="file" id="apImgFile" accept="image/*" style="display:none">
+          <div class="multi-img-grid" id="apMultiImgGrid">
+            <!-- Dynamically rendered by JS -->
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px" onclick="triggerMultiCamera()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-2px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Camera
+            </button>
+            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px" onclick="document.getElementById('apImgFile').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Gallery (Select)
+            </button>
+          </div>
+          <div style="font-size:10px;color:var(--t3);margin-top:6px;font-weight:500" id="apImgBatchStatus">
+            WebP Auto-Compression · Max 1400px · ≤ 700KB · Drag & Drop Supported
+          </div>
+          <input type="file" id="apImgFile" accept="image/*" multiple style="display:none">
           <input type="file" id="apCamFile" accept="image/*" capture="environment" style="display:none">
         </div>
 
@@ -9890,8 +9967,9 @@
     }
 
     function manualAdhocEntry() {
-      const v = prompt('Enter barcode or SKU:');
-      if (v && v.trim()) onAdhocDetect(v.trim());
+      openManualBarcodeModal((v) => {
+        if (v) onAdhocDetect(v);
+      }, 'Pick');
     }
 
     function renderAdhocConfirm(p) {
@@ -10205,6 +10283,14 @@
             <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.75); margin-top:4px;">Continuous batch scanning active</div>
           </div>
 
+          <!-- Bottom Action Bar with Manual Input Button (Matches Pick Mode) -->
+          <div style="position:absolute; bottom:24px; z-index:15; left:16px; right:16px; display:flex; justify-content:center; gap:10px; pointer-events:auto;">
+            <button class="btn-p" style="flex:1; max-width:320px; height:50px; background:var(--rd); color:#fff; border-radius:14px; font-weight:800; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(239,68,68,0.4); border:none; cursor:pointer;" onclick="dropManualProduct()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
+              MANUAL INPUT
+            </button>
+          </div>
+
           <!-- Camera Error / Fallback Card -->
           <div id="dropCameraErr" style="display:none; position:absolute; inset:0; z-index:20; background:var(--card); flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
             <div style="width:56px; height:56px; border-radius:50%; background:var(--or-lt); color:var(--or); display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:14px;">📷</div>
@@ -10227,9 +10313,66 @@
       }, 50);
     }
 
+    function openManualBarcodeModal(onConfirmCallback, modeName = 'Product') {
+      let modalEl = document.getElementById('manualBarcodeModal');
+      if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'manualBarcodeModal';
+        modalEl.className = 'm-bg';
+        modalEl.style.zIndex = '999999';
+        document.body.appendChild(modalEl);
+      }
+
+      modalEl.innerHTML = `
+        <div class="m-card" style="max-width:360px; padding:24px; text-align:center; border-radius:20px; background:var(--card); box-shadow:var(--sh3); border:1.5px solid var(--bd);">
+          <div style="width:48px; height:48px; border-radius:50%; background:var(--or-lt); color:var(--or); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
+          </div>
+          <div style="font-size:18px; font-weight:800; color:var(--t1); margin-bottom:6px;">Manual Barcode Entry</div>
+          <div style="font-size:13px; color:var(--t3); margin-bottom:16px;">Type or scan barcode / SKU manually for ${modeName} Mode</div>
+          <input id="mbmInput" class="ap-input" placeholder="Enter barcode or SKU..." style="width:100%; height:48px; font-size:16px; font-weight:700; text-align:center; margin-bottom:16px; border-radius:12px; border:2px solid var(--or);" autocomplete="off">
+          <div style="display:flex; gap:10px;">
+            <button class="btn-s" style="flex:1; height:46px;" onclick="closeManualBarcodeModal()">Cancel</button>
+            <button class="btn-p" style="flex:1.5; height:46px;" onclick="submitManualBarcodeModal()">Submit Barcode</button>
+          </div>
+        </div>
+      `;
+
+      modalEl.style.display = 'flex';
+      window._mbmCallback = onConfirmCallback;
+
+      const inputEl = document.getElementById('mbmInput');
+      if (inputEl) {
+        setTimeout(() => { inputEl.focus(); }, 100);
+        inputEl.onkeydown = function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            submitManualBarcodeModal();
+          }
+        };
+      }
+    }
+
+    function closeManualBarcodeModal() {
+      const modalEl = document.getElementById('manualBarcodeModal');
+      if (modalEl) modalEl.style.display = 'none';
+      window._mbmCallback = null;
+    }
+
+    function submitManualBarcodeModal() {
+      const inputEl = document.getElementById('mbmInput');
+      const val = inputEl ? inputEl.value.trim() : '';
+      const callback = window._mbmCallback;
+      closeManualBarcodeModal();
+      if (val && typeof callback === 'function') {
+        callback(val);
+      }
+    }
+
     function dropManualProduct() {
-      const val = prompt('Enter product barcode or SKU:');
-      if (val && val.trim()) onDropProductScan(val.trim());
+      openManualBarcodeModal((val) => {
+        if (val) onDropProductScan(val);
+      }, 'Drop');
     }
 
     function onDropProductScan(rawVal) {
@@ -11178,54 +11321,166 @@
     }
 
     // ══════════════════════════════════════════════════════════
-    //  IMAGE CAPTURE & COMPRESSION
+    //  SMART MULTI-IMAGE PIPELINE (MAX 4 IMAGES)
     // ══════════════════════════════════════════════════════════
-    function captureImage() {
-      document.getElementById('apCamFile').click();
+    let AP_PRODUCT_IMAGES = []; // Array of up to 4 image metadata objects
+
+    function triggerMultiCamera(slotIdx) {
+      const cam = document.getElementById('apCamFile');
+      if (cam) {
+        cam.dataset.targetSlot = slotIdx !== undefined ? slotIdx : '';
+        cam.click();
+      }
     }
 
-    function processImageFile(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          // Center-crop to square then resize to 256×256
-          const SIZE = 256;
-          const canvas = document.createElement('canvas');
-          canvas.width = canvas.height = SIZE;
-          const ctx = canvas.getContext('2d');
-          const s = Math.min(img.width, img.height);
-          const sx = (img.width - s) / 2;
-          const sy = (img.height - s) / 2;
-          ctx.drawImage(img, sx, sy, s, s, 0, 0, SIZE, SIZE);
-          // Compress — target 10-30KB
-          let quality = 0.6;
-          let dataUrl = canvas.toDataURL('image/jpeg', quality);
-          // If > 35KB, reduce quality
-          while (dataUrl.length > 48000 && quality > 0.1) {
-            quality -= 0.1;
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
+    async function handleMultiImageFiles(files, targetSlot) {
+      if (!files || files.length === 0) return;
+      const fileList = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+      if (fileList.length === 0) {
+        toast('Please select valid image files', 'err');
+        return;
+      }
+
+      const statusEl = document.getElementById('apImgBatchStatus');
+      if (statusEl) statusEl.textContent = `Optimizing ${fileList.length} image(s)...`;
+
+      try {
+        const prodId = AP_EDIT_ID || document.getElementById('apBarcode')?.value || 'temp_product';
+
+        // Run client-side validation, SHA-256 deduplication, WebP adaptive compression (max 1400px, <= 700KB), parallel storage upload & Cache API
+        const processedMeta = window.PRODUCT_STORAGE
+          ? await window.PRODUCT_STORAGE.processAndStoreImages(fileList, prodId, AP_PRODUCT_IMAGES)
+          : fileList.map(f => ({ url: URL.createObjectURL(f), mime: 'image/webp' }));
+
+        if (targetSlot !== undefined && targetSlot >= 0 && targetSlot < 4) {
+          if (processedMeta[0]) {
+            const oldImg = AP_PRODUCT_IMAGES[targetSlot];
+            if (oldImg && oldImg.url && window.PRODUCT_STORAGE && typeof window.PRODUCT_STORAGE.deleteProductImage === 'function') {
+              window.PRODUCT_STORAGE.deleteProductImage(oldImg.url);
+            }
+            AP_PRODUCT_IMAGES[targetSlot] = processedMeta[0];
           }
-          AP_IMG_DATA = dataUrl;
-          // Show preview
-          const prev = document.getElementById('apImgPreview');
-          if (prev) prev.innerHTML = `<img src="${dataUrl}" alt="product">`;
-          const info = document.getElementById('apImgInfo');
-          if (info) info.textContent = `256×256 · JPEG · ~${Math.round(dataUrl.length * 0.75 / 1024)}KB`;
-          toast('Image ready ✓', 'ok');
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+        } else {
+          for (const meta of processedMeta) {
+            if (AP_PRODUCT_IMAGES.length < 4) {
+              AP_PRODUCT_IMAGES.push(meta);
+            }
+          }
+        }
+
+        renderMultiImageGrid();
+        toast(`Optimized ${processedMeta.length} image(s) ✓`, 'ok');
+      } catch (err) {
+        console.error('[MultiImage] Optimization error:', err);
+        toast('Image error: ' + (err.message || 'Invalid file'), 'err');
+      } finally {
+        if (statusEl) statusEl.textContent = 'WebP Auto-Compression · Max 1400px · ≤ 700KB · Drag & Drop Supported';
+      }
+    }
+
+    async function removeImageSlot(idx) {
+      if (idx >= 0 && idx < AP_PRODUCT_IMAGES.length) {
+        const removed = AP_PRODUCT_IMAGES.splice(idx, 1)[0];
+        if (removed && removed.url && window.PRODUCT_STORAGE && typeof window.PRODUCT_STORAGE.deleteProductImage === 'function') {
+          window.PRODUCT_STORAGE.deleteProductImage(removed.url);
+        }
+        renderMultiImageGrid();
+        toast('Image removed');
+      }
+    }
+
+    function triggerSlotAdd(slotIdx) {
+      if (AP_PRODUCT_IMAGES.length >= 4 && !AP_PRODUCT_IMAGES[slotIdx]) {
+        toast('Maximum 4 images allowed per product', 'err');
+        return;
+      }
+      const fileIn = document.getElementById('apImgFile');
+      if (fileIn) {
+        fileIn.dataset.targetSlot = slotIdx;
+        fileIn.click();
+      }
+    }
+
+    function triggerSlotReplace(slotIdx) {
+      const fileIn = document.getElementById('apImgFile');
+      if (fileIn) {
+        fileIn.dataset.targetSlot = slotIdx;
+        fileIn.click();
+      }
+    }
+
+    function renderMultiImageGrid() {
+      const grid = document.getElementById('apMultiImgGrid');
+      const badge = document.getElementById('apImgCountBadge');
+      if (!grid) return;
+
+      if (badge) badge.textContent = `${AP_PRODUCT_IMAGES.length} / 4`;
+
+      let html = '';
+      for (let i = 0; i < 4; i++) {
+        const imgObj = AP_PRODUCT_IMAGES[i];
+        if (imgObj) {
+          const url = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
+          const sz = imgObj.sizeBytes ? `${Math.round(imgObj.sizeBytes / 1024)}KB` : 'WebP';
+          const dim = (imgObj.width && imgObj.height) ? `${imgObj.width}×${imgObj.height}` : '';
+          const infoStr = [sz, 'WebP', dim].filter(Boolean).join(' · ');
+          const isPrimary = i === 0;
+
+          html += `
+            <div class="img-slot-card has-img" id="imgSlot_${i}">
+              <img src="${url}" loading="${isPrimary ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${isPrimary ? 'high' : 'low'}" sizes="(max-width: 480px) 100vw, 96px" alt="Product Image ${i + 1}">
+              <div class="img-slot-actions">
+                <button type="button" class="img-slot-btn" onclick="triggerSlotReplace(${i})" title="Replace Image">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+                <button type="button" class="img-slot-btn" onclick="removeImageSlot(${i})" title="Delete Image" style="background:rgba(239,68,68,0.85)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="img-slot-badge">${infoStr}</div>
+            </div>`;
+        } else {
+          html += `
+            <div class="img-slot-card" id="imgSlot_${i}" onclick="triggerSlotAdd(${i})">
+              <div style="display:flex;flex-direction:column;align-items:center;color:var(--t3)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span style="font-size:10px;font-weight:600;margin-top:4px">${i === 0 ? 'Primary' : ('Slot ' + (i + 1))}</span>
+              </div>
+            </div>`;
+        }
+      }
+      grid.innerHTML = html;
+
+      // Attach Desktop Drag & Drop handlers for each slot
+      for (let i = 0; i < 4; i++) {
+        const slotEl = document.getElementById(`imgSlot_${i}`);
+        if (slotEl && window.IMAGE_UTILS && typeof window.IMAGE_UTILS.setupDragAndDrop === 'function') {
+          window.IMAGE_UTILS.setupDragAndDrop(slotEl, files => handleMultiImageFiles(files, i));
+        }
+      }
     }
 
     // Wire image file inputs after DOM ready
     function wireImageInputs() {
       const camIn = document.getElementById('apCamFile');
       const fileIn = document.getElementById('apImgFile');
-      if (camIn) camIn.addEventListener('change', e => processImageFile(e.target.files[0]));
-      if (fileIn) fileIn.addEventListener('change', e => processImageFile(e.target.files[0]));
+      if (camIn) {
+        camIn.addEventListener('change', e => {
+          const slot = camIn.dataset.targetSlot !== '' && camIn.dataset.targetSlot !== undefined ? Number(camIn.dataset.targetSlot) : undefined;
+          camIn.dataset.targetSlot = '';
+          handleMultiImageFiles(e.target.files, slot);
+          camIn.value = '';
+        });
+      }
+      if (fileIn) {
+        fileIn.addEventListener('change', e => {
+          const slot = fileIn.dataset.targetSlot !== '' && fileIn.dataset.targetSlot !== undefined ? Number(fileIn.dataset.targetSlot) : undefined;
+          fileIn.dataset.targetSlot = '';
+          handleMultiImageFiles(e.target.files, slot);
+          fileIn.value = '';
+        });
+      }
+      renderMultiImageGrid();
     }
 
     // ══════════════════════════════════════════════════════════
@@ -11262,6 +11517,8 @@
       const id = AP_EDIT_ID || barcode;
       const loc = getAPLoc();
 
+      const primaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
+
       const product = {
         id,
         name,
@@ -11279,7 +11536,8 @@
         compatibility: [...AP_COMPAT_SEL],
         barcode,
         sku: barcode,
-        image: AP_IMG_DATA ? ('images/' + id + '.jpg') : '',
+        images: [...AP_PRODUCT_IMAGES],
+        image: primaryUrl,
         updated_at: new Date().toISOString(),
       };
 
@@ -11287,15 +11545,6 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
       try {
-        // ── Save image to FS_IMAGES + IDB ──
-        if (AP_IMG_DATA) {
-          FS_IMAGES[id] = AP_IMG_DATA;
-          await fsSaveImages();
-          // Also IDB
-          if (!IDB) { try { await initIDB(); } catch (e) { } }
-          if (IDB) { try { await idbPut('images', { id, data: AP_IMG_DATA }); } catch (e) { } }
-        }
-
         // ── Update in-memory list ──
         const existing = FS_PRODUCTS.findIndex(p => p.barcode === barcode || p.id === id);
         if (existing >= 0) FS_PRODUCTS[existing] = product;
@@ -11310,6 +11559,14 @@
 
         // ── Write to disk / IDB / download ──
         const savedToDisk = await fsSave();
+
+        // ── Save to IndexedDB & Supabase ──
+        if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+          const res = await window.SUPABASE_PRODUCTS.saveProduct(product);
+          console.log('[Save] Supabase save result:', res);
+        } else if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+          await window.PICKER_DB.putProducts([product]);
+        }
 
         // Auto-increment bin
         const b = document.getElementById('apB');
@@ -11332,6 +11589,11 @@
 
       } catch (e) {
         console.error('[Save]', e);
+        // Atomic Rollback: Delete newly uploaded R2 images if database save fails
+        const newlyUploadedUrls = AP_PRODUCT_IMAGES.filter(img => img && img.uploaded && img.url).map(img => img.url);
+        if (newlyUploadedUrls.length > 0 && window.PRODUCT_STORAGE && typeof window.PRODUCT_STORAGE.rollbackOrphanedR2Images === 'function') {
+          window.PRODUCT_STORAGE.rollbackOrphanedR2Images(newlyUploadedUrls);
+        }
         toast('Save failed: ' + e.message, 'err');
         if (btn) { btn.disabled = false; btn.innerHTML = 'Save Product'; }
       }
@@ -11345,9 +11607,8 @@
         if (el) { el.value = ''; el.classList.remove('filled'); }
       });
       AP_COMPAT_SEL.clear();
-      AP_IMG_DATA = null;
-      const prev = document.getElementById('apImgPreview');
-      if (prev) prev.innerHTML = `<div class="img-preview-empty"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:10px;font-weight:600">Tap</span></div>`;
+      AP_PRODUCT_IMAGES = [];
+      if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
       const intact = document.getElementById('intactToggle');
       if (intact) { intact.classList.remove('on'); document.getElementById('intactGroup').style.display = 'none'; }
       renderCompatList();
@@ -11393,14 +11654,15 @@
         setAPLoc(p.location);
         AP_COMPAT_SEL = new Set(p.compatibility || []);
         renderCompatList();
-        // Load image
-        idbGet('images', id).then(img => {
-          if (img?.data) {
-            AP_IMG_DATA = img.data;
-            const prev = document.getElementById('apImgPreview');
-            if (prev) prev.innerHTML = `<img src="${img.data}" alt="product">`;
-          }
-        }).catch(() => { });
+        
+        if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+          AP_PRODUCT_IMAGES = [...p.images];
+        } else if (p.image) {
+          AP_PRODUCT_IMAGES = [{ id: 'img_primary', url: p.image, mime: 'image/webp' }];
+        } else {
+          AP_PRODUCT_IMAGES = [];
+        }
+        if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
         nav('s-add-product');
       });
     }
@@ -11493,12 +11755,12 @@
         const thresh = p.threshold ?? 5;
         const isLow = qty <= thresh;
         const loc = p.location || p.loc || '—';
-        const imgSrc = FS_IMAGES[p.id] || FS_IMAGES[p.barcode];
+        const imgSrc = (p.images && p.images[0] && (p.images[0].url || p.images[0])) || p.image || FS_IMAGES[p.id] || FS_IMAGES[p.barcode];
         const div = document.createElement('div');
         div.className = 'pr-card';
         div.style.animationDelay = i * 15 + 'ms';
         div.innerHTML = `
-      <div class="pr-img">${imgSrc ? `<img src="${imgSrc}">` : emoji(p.name || '')}</div>
+      <div class="pr-img">${imgSrc ? `<img src="${imgSrc}" loading="lazy" decoding="async" fetchpriority="low" sizes="(max-width: 480px) 100vw, 96px">` : emoji(p.name || '')}</div>
       <div class="pr-info">
         <div class="pr-loc">${loc}</div>
         <div class="pr-name">${p.name || '—'}</div>

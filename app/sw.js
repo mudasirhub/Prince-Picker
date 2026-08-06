@@ -1,5 +1,5 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v11';
+const CACHE_NAME = 'pa-picker-v12';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,11 @@ const STATIC_ASSETS = [
   './supabase/products.js',
   './supabase/inventory.js',
   './supabase/sync.js',
+  './supabase/image_utils.js',
+  './supabase/image_optimizer.js',
+  './supabase/image_cache.js',
+  './supabase/image_uploader.js',
+  './supabase/storage.js',
   '../picker%20logo.png',
   '../picker-logo.png',
   './picker-logo.png',

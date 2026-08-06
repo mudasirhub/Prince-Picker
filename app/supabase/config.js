@@ -10,14 +10,20 @@
   const storedUrl = localStorage.getItem('sp_project_url');
   const storedKey = localStorage.getItem('sp_anon_key');
 
+  const storedWorker = localStorage.getItem('sp_worker_endpoint');
+
   window.SUPABASE_CONFIG = {
     url: storedUrl || defaultConfig.url,
     anonKey: storedKey || defaultConfig.anonKey,
-    updateConfig: function(url, key) {
+    r2Endpoint: 'https://091b1d2070306c80f830d33d243cf4f0.r2.cloudflarestorage.com/prince',
+    workerEndpoint: storedWorker || 'https://prince-picker-image-worker.mudas.workers.dev/upload',
+    updateConfig: function(url, key, worker) {
       if (url) localStorage.setItem('sp_project_url', url);
       if (key) localStorage.setItem('sp_anon_key', key);
+      if (worker) localStorage.setItem('sp_worker_endpoint', worker);
       window.SUPABASE_CONFIG.url = url || window.SUPABASE_CONFIG.url;
       window.SUPABASE_CONFIG.anonKey = key || window.SUPABASE_CONFIG.anonKey;
+      window.SUPABASE_CONFIG.workerEndpoint = worker || window.SUPABASE_CONFIG.workerEndpoint;
     }
   };
 })(typeof window !== 'undefined' ? window : this);

@@ -162,16 +162,35 @@
 
   // Sync Queue Helpers
   async function addSyncQueue(type, payload) {
+    const queue = await getSyncQueue();
+    const existing = queue.find(q => {
+      if (q.type !== type) return false;
+      if (type === 'save_product' || type === 'upsert_product') {
+        const qId = q.payload?.id || q.payload?.sku || q.payload?.barcode;
+        const pId = payload?.id || payload?.sku || payload?.barcode;
+        return qId && pId && String(qId) === String(pId);
+      }
+      if (type === 'update_inventory') {
+        return q.payload?.sku && payload?.sku && String(q.payload.sku) === String(payload.sku);
+      }
+      return false;
+    });
+
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction('sync_queue', 'readwrite');
       const store = tx.objectStore('sync_queue');
-      const req = store.add({
+      const itemToSave = {
         type,
         payload,
         timestamp: new Date().toISOString(),
-        retries: 0
-      });
+        created_at: existing ? (existing.created_at || Date.now()) : Date.now(),
+        retries: existing ? (existing.retries || 0) : 0
+      };
+      if (existing && existing.id !== undefined) {
+        itemToSave.id = existing.id;
+      }
+      const req = store.put(itemToSave);
       req.onsuccess = () => resolve(req.result);
       req.onerror = (e) => reject(e.target.error);
     });
