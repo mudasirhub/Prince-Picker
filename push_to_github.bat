@@ -10,7 +10,7 @@ echo Syncing PWA app icons...
 node copy_icons.js
 
 git add .
-git commit -m "feat: 10/10 Enterprise R2 image pipeline, Supabase sync, manual input, and PWA updates"
+git commit -m "feat: 10/10 Enterprise Supabase Warehouse Architecture, RPCs, R2 image pipeline, and PWA updates"
 git push
 
 echo.

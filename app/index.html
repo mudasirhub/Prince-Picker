@@ -2689,6 +2689,36 @@
     }
 
     /* ══════════════════════════════════════════
+       BARCODE KEY INPUT MANUAL MODAL
+    ══════════════════════════════════════════ */
+    .manual-key-btn {
+      height: 44px;
+      background: var(--bg2);
+      border: 1.5px solid var(--bd2);
+      border-radius: 12px;
+      color: var(--t1);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+    .manual-key-btn:active {
+      background: var(--or-lt);
+      border-color: var(--or);
+      color: var(--or);
+      transform: scale(0.95);
+    }
+    .manual-key-btn.alt {
+      background: var(--card);
+      color: var(--or);
+    }
+
+    /* ══════════════════════════════════════════
    CART / PICKLIST SCREEN
 ══════════════════════════════════════════ */
     .pick-row {
@@ -5793,7 +5823,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-2px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               Camera
             </button>
-            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px" onclick="document.getElementById('apImgFile').click()">
+            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px" onclick="triggerGallerySelect()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Gallery (Select)
             </button>
@@ -6557,6 +6587,112 @@
       <div class="scan-demo" id="scanDemo"></div>
     </div>
   </div>
+
+  <!-- ══════ MANUAL BARCODE KEY INPUT MODAL ══════ -->
+  <div id="manual-input-modal" style="display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:16px;">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);" onclick="closeManualEntryModal()"></div>
+    <div style="position:relative;background:var(--card);border-radius:24px;width:100%;max-width:400px;box-shadow:var(--sh3);border:1.5px solid var(--bd2);overflow:hidden;animation:fadeUp .2s ease both;display:flex;flex-direction:column;max-height:90vh;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd);background:var(--card)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:12px;background:var(--or-lt);border:1.5px solid var(--or-md);color:var(--or);display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/>
+              <line x1="7" y1="8" x2="7" y2="16"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="17" y1="8" x2="17" y2="16"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:var(--t1)">Barcode Key Input</div>
+            <div style="font-size:11px;color:var(--t3);font-weight:600" id="manualModalSub">Type or use key pad below</div>
+          </div>
+        </div>
+        <button onclick="closeManualEntryModal()" style="width:34px;height:34px;border-radius:10px;border:none;background:var(--bg);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:16px 20px;overflow-y:auto;flex:1">
+        <!-- Barcode Visual Preview -->
+        <div style="background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:12px;text-align:center;margin-bottom:12px;position:relative;overflow:hidden">
+          <div style="display:flex;justify-content:center;align-items:center;gap:3px;height:28px;margin-bottom:6px;opacity:0.85">
+            <span style="width:3px;height:100%;background:var(--t1)"></span>
+            <span style="width:1px;height:100%;background:var(--t1)"></span>
+            <span style="width:4px;height:100%;background:var(--or)"></span>
+            <span style="width:2px;height:100%;background:var(--t1)"></span>
+            <span style="width:1px;height:100%;background:var(--t1)"></span>
+            <span style="width:5px;height:100%;background:var(--t1)"></span>
+            <span style="width:2px;height:100%;background:var(--or)"></span>
+            <span style="width:1px;height:100%;background:var(--t1)"></span>
+            <span style="width:3px;height:100%;background:var(--t1)"></span>
+            <span style="width:2px;height:100%;background:var(--t1)"></span>
+            <span style="width:4px;height:100%;background:var(--or)"></span>
+            <span style="width:1px;height:100%;background:var(--t1)"></span>
+            <span style="width:3px;height:100%;background:var(--t1)"></span>
+          </div>
+          <div id="manualBarcodePreview" style="font-family:'Courier New', Courier, monospace;font-size:14px;font-weight:800;letter-spacing:1.5px;color:var(--or);word-break:break-all">ENTER CODE BELOW</div>
+        </div>
+
+        <!-- Expected Code Hint Badge -->
+        <div id="manualExpectedHint" style="display:none;background:var(--or-lt);border:1px solid var(--or-md);color:var(--or);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;margin-bottom:12px;align-items:center;gap:6px">
+          <span>💡 Expected:</span> <strong id="manualExpectedVal" style="word-break:break-all"></strong>
+        </div>
+
+        <!-- Input Field -->
+        <div style="position:relative;margin-bottom:12px">
+          <input type="text" id="manualBarcodeInput" placeholder="Type barcode / SKU / Location..." autocomplete="off" autocorrect="off" autocapitalize="characters"
+                 oninput="onManualInputUpdate(this.value)" onkeydown="if(event.key==='Enter') submitManualEntry()"
+                 style="width:100%;height:48px;background:var(--bg);border:2px solid var(--bd2);border-radius:14px;padding:0 40px 0 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;color:var(--t1);outline:none;letter-spacing:.5px;transition:border-color .15s">
+          <button id="manualClearBtn" onclick="clearManualInput()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:var(--bd2);color:var(--t2);cursor:pointer;align-items:center;justify-content:center;font-size:13px">✕</button>
+        </div>
+
+        <!-- Suggestions -->
+        <div id="manualSuggestions" style="max-height:110px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+
+        <!-- Numeric Keypad -->
+        <div style="font-size:10px;font-weight:800;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+          <span>Barcode Keypad</span>
+          <button onclick="pasteToManualInput()" style="background:none;border:none;color:var(--or);font-size:11px;font-weight:700;cursor:pointer">📋 Paste</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;margin-bottom:6px">
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('1')">1</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('2')">2</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('3')">3</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('4')">4</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('5')">5</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('6')">6</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('7')">7</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('8')">8</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('9')">9</button>
+          <button class="manual-key-btn alt" onclick="appendKeyToManualInput('-')">-</button>
+          <button class="manual-key-btn" onclick="appendKeyToManualInput('0')">0</button>
+          <button class="manual-key-btn alt" onclick="backspaceManualInput()">⌫</button>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px" onclick="appendKeyToManualInput('R')">R (Rack)</button>
+          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px" onclick="appendKeyToManualInput('L')">L (Level)</button>
+          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px" onclick="appendKeyToManualInput('B')">B (Bin)</button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex;gap:10px;padding:12px 20px 16px;border-top:1px solid var(--bd);background:var(--card)">
+        <button class="btn-s" style="flex:1;height:46px;font-size:14px" onclick="closeManualEntryModal()">Cancel</button>
+        <button class="btn-p" style="flex:2;height:46px" onclick="submitManualEntry()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirm Barcode
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════ SCREEN: TRANSFER DASHBOARD ══════ -->
   <div class="S" id="s-transfer">
     <div class="tb">
@@ -9318,12 +9454,185 @@
     }
 
     function manualEntry() {
-      const val = prompt('Enter barcode or location code:');
-      if (val && val.trim()) {
-        const trimmed = val.trim();
-        const cb = SCAN.callback;
-        closeScanner();
-        if (cb) cb(trimmed);
+      openManualEntryModal();
+    }
+
+    function openManualEntryModal(onConfirmCallback, modeName) {
+      if (typeof onConfirmCallback === 'function') {
+        window._manualCustomCallback = onConfirmCallback;
+      } else {
+        window._manualCustomCallback = null;
+      }
+
+      const modal = document.getElementById('manual-input-modal');
+      const input = document.getElementById('manualBarcodeInput');
+      const hintContainer = document.getElementById('manualExpectedHint');
+      const hintVal = document.getElementById('manualExpectedVal');
+      const preview = document.getElementById('manualBarcodePreview');
+      const sub = document.getElementById('manualModalSub');
+
+      if (!modal || !input) return;
+
+      input.value = '';
+      if (preview) preview.textContent = 'ENTER CODE BELOW';
+      const clearBtn = document.getElementById('manualClearBtn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      const sugg = document.getElementById('manualSuggestions');
+      if (sugg) sugg.innerHTML = '';
+
+      const scanTitle = document.getElementById('scanTitle')?.textContent || '';
+      if (sub) {
+        if (modeName) {
+          sub.textContent = `${modeName} Mode · Type or use key pad below`;
+        } else {
+          sub.textContent = scanTitle ? scanTitle : 'Type or use key pad below';
+        }
+      }
+
+      let expectedCode = '';
+      if (STATE.session) {
+        const ci = STATE.session.items[STATE.session.currentIdx];
+        if (ci) {
+          if (pickStep === 'scan_loc') {
+            expectedCode = ci.product?.loc || '';
+          } else if (pickStep === 'scan_prod') {
+            expectedCode = ci.barcode || ci.product?.sku || '';
+          }
+        }
+      }
+
+      if (expectedCode && hintContainer && hintVal) {
+        hintVal.textContent = expectedCode;
+        hintContainer.style.display = 'flex';
+      } else if (hintContainer) {
+        hintContainer.style.display = 'none';
+      }
+
+      modal.style.display = 'flex';
+      setTimeout(function () { input.focus(); }, 100);
+    }
+
+    function closeManualEntryModal() {
+      const modal = document.getElementById('manual-input-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function onManualInputUpdate(val) {
+      const preview = document.getElementById('manualBarcodePreview');
+      const clearBtn = document.getElementById('manualClearBtn');
+
+      const trimmed = val.trim();
+      if (preview) preview.textContent = trimmed ? trimmed.toUpperCase() : 'ENTER CODE BELOW';
+      if (clearBtn) clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+
+      renderManualSuggestions(trimmed);
+    }
+
+    function clearManualInput() {
+      const input = document.getElementById('manualBarcodeInput');
+      if (input) {
+        input.value = '';
+        onManualInputUpdate('');
+        input.focus();
+      }
+    }
+
+    function appendKeyToManualInput(key) {
+      const input = document.getElementById('manualBarcodeInput');
+      if (input) {
+        input.value += key;
+        onManualInputUpdate(input.value);
+        if (navigator.vibrate) navigator.vibrate(15);
+      }
+    }
+
+    function backspaceManualInput() {
+      const input = document.getElementById('manualBarcodeInput');
+      if (input && input.value.length > 0) {
+        input.value = input.value.slice(0, -1);
+        onManualInputUpdate(input.value);
+        if (navigator.vibrate) navigator.vibrate(15);
+      }
+    }
+
+    async function pasteToManualInput() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          const input = document.getElementById('manualBarcodeInput');
+          if (input) {
+            input.value = text.trim();
+            onManualInputUpdate(input.value);
+            toast('Pasted from clipboard', 'ok');
+          }
+        }
+      } catch (e) {
+        toast('Clipboard access denied', 'err');
+      }
+    }
+
+    function renderManualSuggestions(q) {
+      const sugg = document.getElementById('manualSuggestions');
+      if (!sugg) return;
+      if (!q || q.length < 2 || !STATE.products) {
+        sugg.innerHTML = '';
+        return;
+      }
+
+      const ql = q.toLowerCase();
+      const matches = STATE.products.filter(p =>
+        (p.barcode && p.barcode.toLowerCase().includes(ql)) ||
+        (p.sku && p.sku.toLowerCase().includes(ql)) ||
+        (p.loc && p.loc.toLowerCase().includes(ql)) ||
+        (p.name && p.name.toLowerCase().includes(ql))
+      ).slice(0, 3);
+
+      if (!matches.length) {
+        sugg.innerHTML = '';
+        return;
+      }
+
+      sugg.innerHTML = matches.map(p => `
+        <div onclick="selectManualSuggestion('${p.barcode || p.loc}')" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--t1)">${p.name}</div>
+            <div style="font-size:10px;color:var(--t3)">Barcode: ${p.barcode} · Loc: ${p.loc}</div>
+          </div>
+          <span class="chip c-or" style="font-size:10px">Use Code</span>
+        </div>
+      `).join('');
+    }
+
+    function selectManualSuggestion(val) {
+      const input = document.getElementById('manualBarcodeInput');
+      if (input) {
+        input.value = val;
+        onManualInputUpdate(val);
+        submitManualEntry();
+      }
+    }
+
+    function submitManualEntry() {
+      const input = document.getElementById('manualBarcodeInput');
+      const val = input ? input.value.trim() : '';
+
+      if (!val) {
+        toast('Please enter a barcode or location code', 'err');
+        return;
+      }
+
+      const customCb = window._manualCustomCallback;
+      const cb = SCAN.callback;
+      closeManualEntryModal();
+      closeScanner();
+
+      if (typeof customCb === 'function') {
+        window._manualCustomCallback = null;
+        customCb(val);
+      } else if (typeof cb === 'function') {
+        cb(val);
+      } else {
+        onBarcodeSearch(val);
       }
     }
 
@@ -9522,6 +9831,7 @@
 
     // ── Wire file inputs at script execution time (DOM already parsed) ──
     wireFileInputs();
+    if (typeof wireImageInputs === 'function') wireImageInputs();
     initSlider();
     initNetworkMonitor();
     initPullToRefresh();
@@ -10314,59 +10624,15 @@
     }
 
     function openManualBarcodeModal(onConfirmCallback, modeName = 'Product') {
-      let modalEl = document.getElementById('manualBarcodeModal');
-      if (!modalEl) {
-        modalEl = document.createElement('div');
-        modalEl.id = 'manualBarcodeModal';
-        modalEl.className = 'm-bg';
-        modalEl.style.zIndex = '999999';
-        document.body.appendChild(modalEl);
-      }
-
-      modalEl.innerHTML = `
-        <div class="m-card" style="max-width:360px; padding:24px; text-align:center; border-radius:20px; background:var(--card); box-shadow:var(--sh3); border:1.5px solid var(--bd);">
-          <div style="width:48px; height:48px; border-radius:50%; background:var(--or-lt); color:var(--or); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
-          </div>
-          <div style="font-size:18px; font-weight:800; color:var(--t1); margin-bottom:6px;">Manual Barcode Entry</div>
-          <div style="font-size:13px; color:var(--t3); margin-bottom:16px;">Type or scan barcode / SKU manually for ${modeName} Mode</div>
-          <input id="mbmInput" class="ap-input" placeholder="Enter barcode or SKU..." style="width:100%; height:48px; font-size:16px; font-weight:700; text-align:center; margin-bottom:16px; border-radius:12px; border:2px solid var(--or);" autocomplete="off">
-          <div style="display:flex; gap:10px;">
-            <button class="btn-s" style="flex:1; height:46px;" onclick="closeManualBarcodeModal()">Cancel</button>
-            <button class="btn-p" style="flex:1.5; height:46px;" onclick="submitManualBarcodeModal()">Submit Barcode</button>
-          </div>
-        </div>
-      `;
-
-      modalEl.style.display = 'flex';
-      window._mbmCallback = onConfirmCallback;
-
-      const inputEl = document.getElementById('mbmInput');
-      if (inputEl) {
-        setTimeout(() => { inputEl.focus(); }, 100);
-        inputEl.onkeydown = function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            submitManualBarcodeModal();
-          }
-        };
-      }
+      openManualEntryModal(onConfirmCallback, modeName);
     }
 
     function closeManualBarcodeModal() {
-      const modalEl = document.getElementById('manualBarcodeModal');
-      if (modalEl) modalEl.style.display = 'none';
-      window._mbmCallback = null;
+      closeManualEntryModal();
     }
 
     function submitManualBarcodeModal() {
-      const inputEl = document.getElementById('mbmInput');
-      const val = inputEl ? inputEl.value.trim() : '';
-      const callback = window._mbmCallback;
-      closeManualBarcodeModal();
-      if (val && typeof callback === 'function') {
-        callback(val);
-      }
+      submitManualEntry();
     }
 
     function dropManualProduct() {
@@ -11326,10 +11592,26 @@
     let AP_PRODUCT_IMAGES = []; // Array of up to 4 image metadata objects
 
     function triggerMultiCamera(slotIdx) {
+      if (AP_PRODUCT_IMAGES.length >= 4 && (slotIdx === undefined || !AP_PRODUCT_IMAGES[slotIdx])) {
+        toast('Maximum 4 images allowed per product', 'err');
+        return;
+      }
       const cam = document.getElementById('apCamFile');
       if (cam) {
         cam.dataset.targetSlot = slotIdx !== undefined ? slotIdx : '';
         cam.click();
+      }
+    }
+
+    function triggerGallerySelect(slotIdx) {
+      if (AP_PRODUCT_IMAGES.length >= 4 && (slotIdx === undefined || !AP_PRODUCT_IMAGES[slotIdx])) {
+        toast('Maximum 4 images allowed per product', 'err');
+        return;
+      }
+      const fileIn = document.getElementById('apImgFile');
+      if (fileIn) {
+        fileIn.dataset.targetSlot = slotIdx !== undefined ? slotIdx : '';
+        fileIn.click();
       }
     }
 
@@ -11342,15 +11624,38 @@
       }
 
       const statusEl = document.getElementById('apImgBatchStatus');
-      if (statusEl) statusEl.textContent = `Optimizing ${fileList.length} image(s)...`;
+      if (statusEl) statusEl.textContent = `Processing ${fileList.length} image(s)...`;
 
       try {
         const prodId = AP_EDIT_ID || document.getElementById('apBarcode')?.value || 'temp_product';
 
-        // Run client-side validation, SHA-256 deduplication, WebP adaptive compression (max 1400px, <= 700KB), parallel storage upload & Cache API
-        const processedMeta = window.PRODUCT_STORAGE
-          ? await window.PRODUCT_STORAGE.processAndStoreImages(fileList, prodId, AP_PRODUCT_IMAGES)
-          : fileList.map(f => ({ url: URL.createObjectURL(f), mime: 'image/webp' }));
+        let processedMeta = [];
+        try {
+          if (window.PRODUCT_STORAGE && typeof window.PRODUCT_STORAGE.processAndStoreImages === 'function') {
+            processedMeta = await window.PRODUCT_STORAGE.processAndStoreImages(fileList, prodId, AP_PRODUCT_IMAGES);
+          }
+        } catch (storageErr) {
+          console.warn('[MultiImage] PRODUCT_STORAGE pipeline warning, using FileReader fallback:', storageErr);
+        }
+
+        // Fallback to Data URLs if PRODUCT_STORAGE returned empty or threw
+        if (!processedMeta || processedMeta.length === 0) {
+          processedMeta = await Promise.all(fileList.map(async f => {
+            const dataUrl = await new Promise(resolve => {
+              const r = new FileReader();
+              r.onload = e => resolve(e.target.result);
+              r.onerror = () => resolve(URL.createObjectURL(f));
+              r.readAsDataURL(f);
+            });
+            return {
+              id: 'img_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+              url: dataUrl,
+              dataUrl: dataUrl,
+              sizeBytes: f.size,
+              mime: f.type || 'image/webp'
+            };
+          }));
+        }
 
         if (targetSlot !== undefined && targetSlot >= 0 && targetSlot < 4) {
           if (processedMeta[0]) {
@@ -11369,9 +11674,9 @@
         }
 
         renderMultiImageGrid();
-        toast(`Optimized ${processedMeta.length} image(s) ✓`, 'ok');
+        toast(`Added ${processedMeta.length} image(s) ✓`, 'ok');
       } catch (err) {
-        console.error('[MultiImage] Optimization error:', err);
+        console.error('[MultiImage] Image error:', err);
         toast('Image error: ' + (err.message || 'Invalid file'), 'err');
       } finally {
         if (statusEl) statusEl.textContent = 'WebP Auto-Compression · Max 1400px · ≤ 700KB · Drag & Drop Supported';
@@ -11390,23 +11695,11 @@
     }
 
     function triggerSlotAdd(slotIdx) {
-      if (AP_PRODUCT_IMAGES.length >= 4 && !AP_PRODUCT_IMAGES[slotIdx]) {
-        toast('Maximum 4 images allowed per product', 'err');
-        return;
-      }
-      const fileIn = document.getElementById('apImgFile');
-      if (fileIn) {
-        fileIn.dataset.targetSlot = slotIdx;
-        fileIn.click();
-      }
+      triggerGallerySelect(slotIdx);
     }
 
     function triggerSlotReplace(slotIdx) {
-      const fileIn = document.getElementById('apImgFile');
-      if (fileIn) {
-        fileIn.dataset.targetSlot = slotIdx;
-        fileIn.click();
-      }
+      triggerGallerySelect(slotIdx);
     }
 
     function renderMultiImageGrid() {
@@ -11464,7 +11757,8 @@
     function wireImageInputs() {
       const camIn = document.getElementById('apCamFile');
       const fileIn = document.getElementById('apImgFile');
-      if (camIn) {
+      if (camIn && !camIn._wired) {
+        camIn._wired = true;
         camIn.addEventListener('change', e => {
           const slot = camIn.dataset.targetSlot !== '' && camIn.dataset.targetSlot !== undefined ? Number(camIn.dataset.targetSlot) : undefined;
           camIn.dataset.targetSlot = '';
@@ -11472,7 +11766,8 @@
           camIn.value = '';
         });
       }
-      if (fileIn) {
+      if (fileIn && !fileIn._wired) {
+        fileIn._wired = true;
         fileIn.addEventListener('change', e => {
           const slot = fileIn.dataset.targetSlot !== '' && fileIn.dataset.targetSlot !== undefined ? Number(fileIn.dataset.targetSlot) : undefined;
           fileIn.dataset.targetSlot = '';
@@ -11564,15 +11859,19 @@
         if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
           const res = await window.SUPABASE_PRODUCTS.saveProduct(product);
           console.log('[Save] Supabase save result:', res);
+          if (res && res.synced) {
+            toast('✓ Saved & Synced to Cloud', 'ok');
+          } else if (res && res.queued) {
+            toast('✓ Saved Locally (Queued for Sync)', 'ok');
+          } else {
+            toast('✓ Saved Locally', 'ok');
+          }
         } else if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
           await window.PICKER_DB.putProducts([product]);
+          toast('✓ Saved: ' + name.slice(0, 28), 'ok');
+        } else {
+          toast('✓ Saved: ' + name.slice(0, 28), 'ok');
         }
-
-        // Auto-increment bin
-        const b = document.getElementById('apB');
-        if (b) { b.value = Math.min(100, (Number(b.value) || 1) + 1); syncAPLoc(); }
-
-        toast('✓ Saved: ' + name.slice(0, 28), 'ok');
         AP_LAST_PRODUCT = { ...product };
         STATE.logs.unshift({
           orderId: AP_EDIT_ID ? 'EDIT-' + id : 'ADD-' + id,

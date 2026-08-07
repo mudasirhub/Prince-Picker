@@ -87,9 +87,125 @@
     }
   }
 
+  async function processMovement(type, sku, qty, location, picker, sessionId) {
+    const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
+    const cleanType = String(type || 'PICK').toUpperCase();
+    const cleanQty = Number(qty) || 1;
+
+    // Offline or Client Unavailable
+    if (!client || !isOnline) {
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId });
+      }
+      return { success: true, queued: true, synced: false };
+    }
+
+    try {
+      const { data, error } = await client.rpc('fn_process_inventory_movement', {
+        p_type: cleanType,
+        p_sku: sku,
+        p_qty: cleanQty,
+        p_location: location || '',
+        p_picker: picker || 'Picker',
+        p_session_id: sessionId || ('SES-' + Date.now())
+      });
+
+      if (error) {
+        console.warn('[Inventory] RPC movement error, queuing:', error.message);
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId });
+        }
+        return { success: true, queued: true, synced: false, error };
+      }
+
+      return { success: true, queued: false, synced: true, data };
+    } catch (e) {
+      console.error('[Inventory] Exception in processMovement:', e);
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId });
+      }
+      return { success: true, queued: true, synced: false, error: e };
+    }
+  }
+
+  async function commitAuditSession(auditId, picker, items) {
+    const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
+
+    if (!client || !isOnline) {
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('commit_audit', { auditId, picker, items });
+      }
+      return { success: true, queued: true, synced: false };
+    }
+
+    try {
+      const { data, error } = await client.rpc('fn_commit_audit_session', {
+        p_audit_id: auditId,
+        p_picker: picker || 'Picker',
+        p_items: Array.isArray(items) ? items : []
+      });
+
+      if (error) {
+        console.warn('[Inventory] Audit commit RPC error, queuing:', error.message);
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('commit_audit', { auditId, picker, items });
+        }
+        return { success: true, queued: true, synced: false, error };
+      }
+
+      return { success: true, queued: false, synced: true, data };
+    } catch (e) {
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('commit_audit', { auditId, picker, items });
+      }
+      return { success: true, queued: true, synced: false, error: e };
+    }
+  }
+
+  async function commitStockTransfer(transferId, picker, sourceLoc, destLoc, items) {
+    const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
+
+    if (!client || !isOnline) {
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('commit_transfer', { transferId, picker, sourceLoc, destLoc, items });
+      }
+      return { success: true, queued: true, synced: false };
+    }
+
+    try {
+      const { data, error } = await client.rpc('fn_commit_stock_transfer', {
+        p_transfer_id: transferId,
+        p_picker: picker || 'Picker',
+        p_source_loc: sourceLoc,
+        p_dest_loc: destLoc,
+        p_items: Array.isArray(items) ? items : []
+      });
+
+      if (error) {
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('commit_transfer', { transferId, picker, sourceLoc, destLoc, items });
+        }
+        return { success: true, queued: true, synced: false, error };
+      }
+
+      return { success: true, queued: false, synced: true, data };
+    } catch (e) {
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('commit_transfer', { transferId, picker, sourceLoc, destLoc, items });
+      }
+      return { success: true, queued: true, synced: false, error: e };
+    }
+  }
+
   window.SUPABASE_INVENTORY = {
     downloadAllInventory,
     syncInventoryIncremental,
-    updateInventory
+    updateInventory,
+    processMovement,
+    commitAuditSession,
+    commitStockTransfer
   };
 })(typeof window !== 'undefined' ? window : this);

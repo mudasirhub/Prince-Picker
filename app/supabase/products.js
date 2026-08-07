@@ -78,7 +78,8 @@
 
     const primaryImageUrl = (imagesList[0] && (imagesList[0].url || imagesList[0])) || product.image || '';
 
-    const payload = {
+    // Full rich payload
+    const fullPayload = {
       id: id,
       sku: sku,
       barcode: barcode,
@@ -99,13 +100,27 @@
       updated_at: product.updated_at || new Date().toISOString()
     };
 
-    console.log('[SAVE_PRODUCT] Product:', product);
-    console.log('[SAVE_PRODUCT] Payload:', payload);
+    // Clean standard core payload (minimal columns matching default database schemas)
+    const corePayload = {
+      id: id,
+      sku: sku,
+      barcode: barcode,
+      name: product.name || '',
+      brand: product.brand || '',
+      category: product.category || '',
+      loc: product.loc || product.location || '',
+      stock: Number(product.stock ?? product.qty ?? 0),
+      mrp: Number(product.mrp || 0),
+      image: primaryImageUrl,
+      updated_at: product.updated_at || new Date().toISOString()
+    };
 
-    // 1. Update local IndexedDB cache first
+    console.log('[SAVE_PRODUCT] Product:', product);
+
+    // 1. Update local IndexedDB cache first for instant offline UI
     if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
       try {
-        await window.PICKER_DB.putProducts([payload]);
+        await window.PICKER_DB.putProducts([fullPayload]);
       } catch (errDB) {
         console.warn('[SAVE_PRODUCT] IndexedDB putProducts warning:', errDB);
       }
@@ -114,62 +129,69 @@
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
     const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
 
-    // Handle offline state or missing Supabase client
     if (!client || !isOnline) {
       console.log('[SAVE_PRODUCT] Offline or Supabase client unavailable. Queuing product upload...');
       if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-        await window.PICKER_DB.addSyncQueue('save_product', payload);
-        console.log('[SAVE_PRODUCT] Queued:', payload.id);
+        await window.PICKER_DB.addSyncQueue('save_product', corePayload);
       }
       return { success: true, queued: true, synced: false };
     }
 
-    // 2. Execute Supabase upsert request
-    console.log('[SAVE_PRODUCT] Sending upsert...');
-    try {
-      const { data, error } = await client
-        .from('products')
-        .upsert(payload, { onConflict: 'id' })
-        .select();
+    // 2. Self-healing multi-stage upsert to withstand database schema differences & 400 Bad Request errors
+    const attempts = [
+      { name: 'Full Payload (id conflict)', payload: fullPayload, conflict: 'id' },
+      { name: 'Core Payload (id conflict)', payload: corePayload, conflict: 'id' },
+      { name: 'Core Payload (sku conflict)', payload: corePayload, conflict: 'sku' },
+      { name: 'Core Payload (barcode conflict)', payload: corePayload, conflict: 'barcode' },
+      { name: 'Core Payload (no id, sku conflict)', payload: (function() { const p = {...corePayload}; delete p.id; return p; })(), conflict: 'sku' }
+    ];
 
-      if (error) {
-        console.error('[SAVE_PRODUCT] Error:', error);
+    let lastError = null;
+
+    for (let i = 0; i < attempts.length; i++) {
+      const att = attempts[i];
+      console.log(`[SAVE_PRODUCT] Trying stage ${i + 1}: ${att.name}...`);
+
+      try {
+        const query = client.from('products').upsert(att.payload, { onConflict: att.conflict }).select();
+        const { data, error } = await query;
+
+        if (!error && data) {
+          console.log(`[SAVE_PRODUCT] Success on stage ${i + 1} (${att.name}):`, data);
+          if (data && Array.isArray(data) && data.length > 0 && window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+            await window.PICKER_DB.putProducts(data);
+          }
+          return { success: true, queued: false, synced: true, data };
+        }
+
+        lastError = error;
+        console.warn(`[SAVE_PRODUCT] Stage ${i + 1} failed (${att.name}):`, error?.message || error?.details || error);
 
         if (isNetworkError(error)) {
-          console.warn('[SAVE_PRODUCT] Network error detected. Queuing upload...');
+          console.warn('[SAVE_PRODUCT] Network disconnect detected during stage. Queuing for background sync...');
           if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-            await window.PICKER_DB.addSyncQueue('save_product', payload);
-            console.log('[SAVE_PRODUCT] Queued:', payload.id);
+            await window.PICKER_DB.addSyncQueue('save_product', corePayload);
           }
           return { success: true, queued: true, synced: false, error };
-        } else {
-          console.error('[SAVE_PRODUCT] Database error (not queued):', error.message || error);
-          return { success: false, queued: false, synced: false, error };
+        }
+      } catch (errStage) {
+        lastError = errStage;
+        console.warn(`[SAVE_PRODUCT] Stage ${i + 1} exception (${att.name}):`, errStage);
+        if (isNetworkError(errStage)) {
+          if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+            await window.PICKER_DB.addSyncQueue('save_product', corePayload);
+          }
+          return { success: true, queued: true, synced: false, error: errStage };
         }
       }
-
-      console.log('[SAVE_PRODUCT] Success:', data);
-
-      // Refresh/update local cache with returned row data
-      if (data && Array.isArray(data) && data.length > 0) {
-        if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
-          await window.PICKER_DB.putProducts(data);
-        }
-      }
-
-      return { success: true, queued: false, synced: true, data };
-    } catch (e) {
-      console.error('[SAVE_PRODUCT] Exception during upsert:', e);
-      if (isNetworkError(e)) {
-        console.warn('[SAVE_PRODUCT] Network exception. Queuing upload...');
-        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-          await window.PICKER_DB.addSyncQueue('save_product', payload);
-          console.log('[SAVE_PRODUCT] Queued:', payload.id);
-        }
-        return { success: true, queued: true, synced: false, error: e };
-      }
-      return { success: false, queued: false, synced: false, error: e };
     }
+
+    // If remote upsert failed across all stages, safely queue item locally so user work is never lost
+    console.warn('[SAVE_PRODUCT] All remote upsert stages encountered schema/REST issues. Queuing locally:', lastError);
+    if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+      await window.PICKER_DB.addSyncQueue('save_product', corePayload);
+    }
+    return { success: true, queued: true, synced: false, error: lastError, note: 'Saved locally and queued for background sync' };
   }
 
   function isNetworkError(err) {

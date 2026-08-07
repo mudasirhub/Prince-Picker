@@ -63,26 +63,21 @@
             console.error('[SYNC] Error uploading inventory queue item:', error);
           }
         } else if (item.type === 'save_product' || item.type === 'upsert_product') {
-          console.log('[SYNC] Upload queued product:', item.payload);
-          const { data, error } = await client
-            .from('products')
-            .upsert(item.payload, { onConflict: 'id' })
-            .select();
-
-          if (!error) {
-            await window.PICKER_DB.removeSyncQueue(item.id);
-            if (data && Array.isArray(data) && data.length > 0) {
-              await window.PICKER_DB.putProducts(data);
+          console.log('[SYNC] Upload queued product via saveProduct:', item.payload);
+          if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+            const res = await window.SUPABASE_PRODUCTS.saveProduct(item.payload);
+            if (res && (res.synced || res.success)) {
+              await window.PICKER_DB.removeSyncQueue(item.id);
+              console.log('[SYNC] Queue complete for product:', item.payload.id || item.payload.sku);
+            } else {
+              console.error('[SYNC] Failed to upload queued product:', res?.error);
+              if (res?.error && !window.SUPABASE_PRODUCTS.isNetworkError(res.error)) {
+                await window.PICKER_DB.removeSyncQueue(item.id);
+              }
             }
-            console.log('[SYNC] Queue complete for product:', item.payload.id || item.payload.sku);
           } else {
-            console.error('[SYNC] Error uploading queued product:', error);
-            const isNetErr = window.SUPABASE_PRODUCTS?.isNetworkError
-              ? window.SUPABASE_PRODUCTS.isNetworkError(error)
-              : String(error.message || '').toLowerCase().includes('fetch');
-
-            if (!isNetErr) {
-              console.warn('[SYNC] Removing queue item due to non-retryable DB error (e.g. RLS/schema):', error);
+            const { data, error } = await client.from('products').upsert(item.payload, { onConflict: 'id' }).select();
+            if (!error) {
               await window.PICKER_DB.removeSyncQueue(item.id);
             }
           }
