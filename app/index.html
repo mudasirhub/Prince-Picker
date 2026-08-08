@@ -6866,6 +6866,45 @@
     const LS_DISMISSED_NOTIFICATIONS = 'pa_dismissed_notifications';
 
     // ══════════════════════════════════════════
+    //  DEMO DATA (Top-Level)
+    // ══════════════════════════════════════════
+    var DEMO_PRODUCTS = [
+      { name: 'Rear Brake Cable Honda Activa 2015-22', barcode: '8901234560001', loc: 'R1L1B1', stock: 12, brand: 'Honda', mrp: 120, sku: 'RBC-HON-001' },
+      { name: 'Front Disk Pad Kit Bajaj Pulsar NS200', barcode: '8901234560002', loc: 'R1L1B2', stock: 4, brand: 'Bajaj', mrp: 450, sku: 'FDP-BAJ-002' },
+      { name: 'Engine Oil Filter Yamaha R15 V3/V4', barcode: '8901234560003', loc: 'R1L2B1', stock: 45, brand: 'Yamaha', mrp: 220, sku: 'EOF-YAM-003' },
+      { name: 'Clutch Plate Set Hero Splendor Plus', barcode: '8901234560004', loc: 'R2L1B1', stock: 2, brand: 'Hero', mrp: 890, sku: 'CPS-HER-004' },
+      { name: 'Air Filter Standard K&N Universal', barcode: '8901234560005', loc: 'R2L1B2', stock: 22, brand: 'K&N', mrp: 380, sku: 'AFS-KN-005' },
+      { name: 'Iridium Spark Plug NGK V6 Set', barcode: '8901234560006', loc: 'R2L2B1', stock: 6, brand: 'NGK', mrp: 320, sku: 'ISP-NGK-006' },
+      { name: 'Wiper Blade Bosch 22 inch Premium', barcode: '8901234560007', loc: 'R3L1B1', stock: 18, brand: 'Bosch', mrp: 280, sku: 'WBP-BSH-007' },
+      { name: 'Chain Sprocket Kit Honda CB Shine', barcode: '8901234560008', loc: 'R3L1B2', stock: 8, brand: 'Honda', mrp: 650, sku: 'CSK-HON-008' },
+      { name: 'Headlight Bulb 12V 35W H4 Philips', barcode: '8901234560009', loc: 'R3L2B1', stock: 30, brand: 'Philips', mrp: 95, sku: 'HLB-PHL-009' },
+      { name: 'Coolant Antifreeze Mobil 1L', barcode: '8901234560010', loc: 'R4L1B1', stock: 15, brand: 'Mobil', mrp: 350, sku: 'CAF-MOB-010' },
+      { name: 'Throttle Cable Bajaj Discover 125', barcode: '8901234560011', loc: 'R4L1B2', stock: 7, brand: 'Bajaj', mrp: 140, sku: 'TCB-BAJ-011' },
+      { name: 'Battery 12V 7Ah Amaron Sealed', barcode: '8901234560012', loc: 'R4L2B1', stock: 5, brand: 'Amaron', mrp: 1250, sku: 'BAT-AMA-012' },
+      { name: 'Brake Fluid Castrol DOT 4 500ml', barcode: '8901234560013', loc: 'R5L1B1', stock: 11, brand: 'Castrol', mrp: 220, sku: 'BFC-CAS-013' },
+      { name: 'Piston Ring Set Honda CB150', barcode: '8901234560014', loc: 'R5L1B2', stock: 3, brand: 'Honda', mrp: 780, sku: 'PRS-HON-014' },
+      { name: 'Gear Shift Cable Suzuki Access 125', barcode: '8901234560015', loc: 'R5L2B1', stock: 9, brand: 'Suzuki', mrp: 160, sku: 'GSC-SUZ-015' },
+    ];
+
+    var DEMO_ORDERS = [
+      {
+        order_id: '2045', status: 'pending', picker: null, items: [
+          { barcode: '8901234560001', qty: 2 }, { barcode: '8901234560003', qty: 1 }, { barcode: '8901234560006', qty: 3 }
+        ]
+      },
+      {
+        order_id: '2046', status: 'pending', picker: null, items: [
+          { barcode: '8901234560002', qty: 1 }, { barcode: '8901234560004', qty: 2 }, { barcode: '8901234560009', qty: 4 }
+        ]
+      },
+      {
+        order_id: '2047', status: 'pending', picker: null, items: [
+          { barcode: '8901234560005', qty: 2 }, { barcode: '8901234560007', qty: 1 }, { barcode: '8901234560012', qty: 1 }
+        ]
+      },
+    ];
+
+    // ══════════════════════════════════════════
     //  APP STATE
     // ══════════════════════════════════════════
     const STATE = {
@@ -6894,6 +6933,54 @@
       soundEnabled: true,
       vibeEnabled: true
     };
+
+    var DROP = {
+      sessionId: null,
+      cart: [],
+      isLocked: false,
+      unknownQueue: [],
+      lastScanTime: 0,
+      lastScanBarcode: null,
+      idleTimer: null,
+      verificationGroups: [],
+      currentLocIndex: 0,
+      completedStats: { productsProcessed: 0, totalUnits: 0, locationsVerified: 0 },
+
+      // Inline Continuous Scanner State
+      scannerActive: false,
+      video: null,
+      canvas: null,
+      ctx: null,
+      stream: null,
+      rafId: null,
+      detector: null,
+      toastTimer: null,
+      processingLocCommit: false
+    };
+
+    var CART = {
+      items: [],  // { _idx, name, barcode, loc, stock, brand, mrp, qty }
+    };
+
+    var SCAN = {
+      stream: null,
+      callback: null,
+      lastVal: null,
+      throttleT: null,
+      rafId: null,
+      detector: null,
+      torchOn: false,
+      torchSupported: false,
+      video: null,
+      canvas: null,
+      ctx: null,
+    };
+
+    var adhocState = {
+      mode: 'pick', itemsScanned: 0, timerInt: null, timerSec: 0, targetProd: null, confirmQty: 1
+    };
+
+    var ILS = { stream: null, rafId: null, video: null, canvas: null, ctx: null };
 
     // ══════════════════════════════════════════
     //  Audio & Haptics
@@ -7276,8 +7363,9 @@
           loadProducts(products);
         } else {
           // Fallback if catalog is empty or initial offline launch
-          loadProducts(DEMO_PRODUCTS);
-          if (window.PICKER_DB) await window.PICKER_DB.putProducts(DEMO_PRODUCTS);
+          const fallbackProds = (typeof DEMO_PRODUCTS !== 'undefined' && DEMO_PRODUCTS) ? DEMO_PRODUCTS : [];
+          loadProducts(fallbackProds);
+          if (window.PICKER_DB) await window.PICKER_DB.putProducts(fallbackProds);
         }
 
         if (window.PICKER_DB) await window.PICKER_DB.setMeta('lastSync', new Date().toISOString());
@@ -7423,8 +7511,10 @@
 
     function loginOffline() {
       const name = document.getElementById('pickerName').value.trim() || 'Demo Picker';
-      loadProducts(DEMO_PRODUCTS);
-      loadOrders({ orders: DEMO_ORDERS });
+      const prods = (typeof DEMO_PRODUCTS !== 'undefined' && DEMO_PRODUCTS) ? DEMO_PRODUCTS : [];
+      const ords = (typeof DEMO_ORDERS !== 'undefined' && DEMO_ORDERS) ? DEMO_ORDERS : [];
+      loadProducts(prods);
+      loadOrders({ orders: ords });
       doLoginWithName(name);
     }
 
@@ -9057,20 +9147,7 @@
     //  BarcodeDetector → jsQR → manual fallback
     //  Throttled to SCAN_THROTTLE ms
     // ══════════════════════════════════════════
-    const SCAN = {
-      stream: null,
-      callback: null,
-      lastVal: null,
-      throttleT: null,
-      rafId: null,
-      detector: null,
-      torchOn: false,
-      torchSupported: false,
-      // Cached DOM elements
-      video: null,
-      canvas: null,
-      ctx: null,
-    };
+    // SCAN state is initialized at top level near APP STATE
 
     // Init BarcodeDetector once
     if ('BarcodeDetector' in window) {
@@ -9735,8 +9812,10 @@
     }
 
     function loadDemoData() {
-      loadProducts(DEMO_PRODUCTS);
-      loadOrders({ orders: DEMO_ORDERS });
+      const prods = (typeof DEMO_PRODUCTS !== 'undefined' && DEMO_PRODUCTS) ? DEMO_PRODUCTS : [];
+      const ords = (typeof DEMO_ORDERS !== 'undefined' && DEMO_ORDERS) ? DEMO_ORDERS : [];
+      loadProducts(prods);
+      loadOrders({ orders: ords });
       renderOrders();
       renderSearch('');
       toast('✓ Demo data loaded', 'ok');
@@ -9857,9 +9936,7 @@
     // ══════════════════════════════════════════
     //  CART / PICKLIST STATE
     // ══════════════════════════════════════════
-    const CART = {
-      items: [],  // { _idx, name, barcode, loc, stock, brand, mrp, qty }
-    };
+    // CART state is initialized at top level near APP STATE
 
     function addItemToCart(prod, qty = 1, itemMode = null) {
       if (!prod) return;
@@ -10136,9 +10213,7 @@
     // ══════════════════════════════════════════
     //  ADHOC FREE SCAN MODULE
     // ══════════════════════════════════════════
-    let adhocState = {
-      mode: 'pick', itemsScanned: 0, timerInt: null, timerSec: 0, targetProd: null, confirmQty: 1
-    };
+    // adhocState is initialized at top level near APP STATE
 
     function switchToPickBatchScan() {
       if (typeof stopDropInlineScanner === 'function') stopDropInlineScanner();
@@ -10151,6 +10226,7 @@
     }
 
     function startAdhocScan() {
+      if (typeof adhocState === 'undefined' || !adhocState) return;
       if (STATE.currentMode === 'drop') {
         nav('s-drop');
         return;
@@ -10229,7 +10305,7 @@
       startInlineScanner();
     }
 
-    let ILS = { stream: null, rafId: null, video: null, canvas: null, ctx: null };
+    // ILS state is initialized at top level near APP STATE
 
     async function startInlineScanner() {
       stopInlineScanner();
@@ -10391,29 +10467,7 @@
       };
     }
 
-    const DROP = {
-      sessionId: null,
-      cart: [],
-      isLocked: false,
-      unknownQueue: [],
-      lastScanTime: 0,
-      lastScanBarcode: null,
-      idleTimer: null,
-      verificationGroups: [],
-      currentLocIndex: 0,
-      completedStats: { productsProcessed: 0, totalUnits: 0, locationsVerified: 0 },
-
-      // Inline Continuous Scanner State
-      scannerActive: false,
-      video: null,
-      canvas: null,
-      ctx: null,
-      stream: null,
-      rafId: null,
-      detector: null,
-      toastTimer: null,
-      processingLocCommit: false
-    };
+    // DROP state is initialized at top level near APP STATE
 
     function resetDropIdleTimer() {
       if (DROP.idleTimer) clearTimeout(DROP.idleTimer);
@@ -10532,6 +10586,7 @@
     }
 
     function stopDropInlineScanner() {
+      if (typeof DROP === 'undefined' || !DROP) return;
       DROP.scannerActive = false;
       if (DROP.rafId) { cancelAnimationFrame(DROP.rafId); DROP.rafId = null; }
       if (DROP.stream) {
@@ -13354,44 +13409,7 @@
       toast('Server URL saved', 'ok');
     }
 
-    // ══════════════════════════════════════════
-    //  DEMO DATA
-    // ══════════════════════════════════════════
-    const DEMO_PRODUCTS = [
-      { name: 'Rear Brake Cable Honda Activa 2015-22', barcode: '8901234560001', loc: 'R1L1B1', stock: 12, brand: 'Honda', mrp: 120, sku: 'RBC-HON-001' },
-      { name: 'Front Disk Pad Kit Bajaj Pulsar NS200', barcode: '8901234560002', loc: 'R1L1B2', stock: 4, brand: 'Bajaj', mrp: 450, sku: 'FDP-BAJ-002' },
-      { name: 'Engine Oil Filter Yamaha R15 V3/V4', barcode: '8901234560003', loc: 'R1L2B1', stock: 45, brand: 'Yamaha', mrp: 220, sku: 'EOF-YAM-003' },
-      { name: 'Clutch Plate Set Hero Splendor Plus', barcode: '8901234560004', loc: 'R2L1B1', stock: 2, brand: 'Hero', mrp: 890, sku: 'CPS-HER-004' },
-      { name: 'Air Filter Standard K&N Universal', barcode: '8901234560005', loc: 'R2L1B2', stock: 22, brand: 'K&N', mrp: 380, sku: 'AFS-KN-005' },
-      { name: 'Iridium Spark Plug NGK V6 Set', barcode: '8901234560006', loc: 'R2L2B1', stock: 6, brand: 'NGK', mrp: 320, sku: 'ISP-NGK-006' },
-      { name: 'Wiper Blade Bosch 22 inch Premium', barcode: '8901234560007', loc: 'R3L1B1', stock: 18, brand: 'Bosch', mrp: 280, sku: 'WBP-BSH-007' },
-      { name: 'Chain Sprocket Kit Honda CB Shine', barcode: '8901234560008', loc: 'R3L1B2', stock: 8, brand: 'Honda', mrp: 650, sku: 'CSK-HON-008' },
-      { name: 'Headlight Bulb 12V 35W H4 Philips', barcode: '8901234560009', loc: 'R3L2B1', stock: 30, brand: 'Philips', mrp: 95, sku: 'HLB-PHL-009' },
-      { name: 'Coolant Antifreeze Mobil 1L', barcode: '8901234560010', loc: 'R4L1B1', stock: 15, brand: 'Mobil', mrp: 350, sku: 'CAF-MOB-010' },
-      { name: 'Throttle Cable Bajaj Discover 125', barcode: '8901234560011', loc: 'R4L1B2', stock: 7, brand: 'Bajaj', mrp: 140, sku: 'TCB-BAJ-011' },
-      { name: 'Battery 12V 7Ah Amaron Sealed', barcode: '8901234560012', loc: 'R4L2B1', stock: 5, brand: 'Amaron', mrp: 1250, sku: 'BAT-AMA-012' },
-      { name: 'Brake Fluid Castrol DOT 4 500ml', barcode: '8901234560013', loc: 'R5L1B1', stock: 11, brand: 'Castrol', mrp: 220, sku: 'BFC-CAS-013' },
-      { name: 'Piston Ring Set Honda CB150', barcode: '8901234560014', loc: 'R5L1B2', stock: 3, brand: 'Honda', mrp: 780, sku: 'PRS-HON-014' },
-      { name: 'Gear Shift Cable Suzuki Access 125', barcode: '8901234560015', loc: 'R5L2B1', stock: 9, brand: 'Suzuki', mrp: 160, sku: 'GSC-SUZ-015' },
-    ];
-
-    const DEMO_ORDERS = [
-      {
-        order_id: '2045', status: 'pending', picker: null, items: [
-          { barcode: '8901234560001', qty: 2 }, { barcode: '8901234560003', qty: 1 }, { barcode: '8901234560006', qty: 3 }
-        ]
-      },
-      {
-        order_id: '2046', status: 'pending', picker: null, items: [
-          { barcode: '8901234560002', qty: 1 }, { barcode: '8901234560004', qty: 2 }, { barcode: '8901234560009', qty: 4 }
-        ]
-      },
-      {
-        order_id: '2047', status: 'pending', picker: null, items: [
-          { barcode: '8901234560005', qty: 2 }, { barcode: '8901234560007', qty: 1 }, { barcode: '8901234560012', qty: 1 }
-        ]
-      },
-    ];
+    // DEMO DATA is initialized at top level under CONSTANTS & CONFIG
 
     // ══════════════════════════════════════════
     //  PICKER DASHBOARD
