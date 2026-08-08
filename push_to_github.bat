@@ -10,7 +10,7 @@ echo Syncing PWA app icons...
 node copy_icons.js
 
 git add .
-git commit -m "fix: resolve multiple TDZ initialization crashes and clean navigation routing in index.html"
+git commit -m "fix: resolve products tab data preservation, save product multi-store sync & Cloudflare R2 pipeline"
 git push
 
 echo.

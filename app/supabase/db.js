@@ -87,21 +87,57 @@
       const tx = db.transaction('products', 'readwrite');
       const store = tx.objectStore('products');
       products.forEach(p => {
+        if (!p) return;
+        const skuKey = String(p.sku || p.barcode || p.id || '');
+        if (!skuKey) return;
         const item = {
-          sku: String(p.sku || p.barcode || p.id),
+          ...p,
+          id: String(p.id || p.barcode || skuKey),
+          sku: skuKey,
           name: p.name || '(No Name)',
-          barcode: String(p.barcode || p.sku || ''),
+          barcode: String(p.barcode || skuKey),
           loc: p.loc || p.location || '',
+          location: p.location || p.loc || '',
           category: p.category || p.brand || '',
           brand: p.brand || '',
           mrp: Number(p.mrp || p.price || 0),
-          stock: Number(p.stock || p.available_qty || 0),
+          sp: Number(p.sp || p.mrp || 0),
+          stock: Number(p.stock ?? p.qty ?? p.available_qty ?? 0),
+          qty: Number(p.qty ?? p.stock ?? p.available_qty ?? 0),
+          threshold: Number(p.threshold !== undefined && p.threshold !== null ? p.threshold : 5),
+          fitment_group: p.fitment_group || '',
+          compatibility: Array.isArray(p.compatibility) ? p.compatibility : [],
+          images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image ? [{ id: 'img_primary', url: p.image, mime: 'image/webp' }] : []),
+          image: p.image || (Array.isArray(p.images) && p.images[0] ? (p.images[0].url || p.images[0]) : ''),
           updated_at: p.updated_at || new Date().toISOString()
         };
         store.put(item);
       });
       tx.oncomplete = () => resolve(true);
       tx.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  async function getProductById(id) {
+    if (!id) return null;
+    const db = await openDB();
+    const cleanId = String(id).trim();
+    return new Promise((resolve) => {
+      const tx = db.transaction('products', 'readonly');
+      const store = tx.objectStore('products');
+      const req = store.get(cleanId);
+      req.onsuccess = () => {
+        if (req.result) return resolve(req.result);
+        try {
+          const idx = store.index('barcode');
+          const idxReq = idx.get(cleanId);
+          idxReq.onsuccess = () => resolve(idxReq.result || null);
+          idxReq.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
     });
   }
 
@@ -236,6 +272,7 @@
     getMeta,
     setMeta,
     getAllProducts,
+    getProductById,
     putProducts,
     getAllInventory,
     putInventory,

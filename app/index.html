@@ -7274,15 +7274,16 @@
 
     function loadProducts(raw, version = null) {
       if (!Array.isArray(raw)) {
-        raw = raw.data || raw.items || raw.products || raw.inventory || Object.values(raw);
+        raw = raw?.data || raw?.items || raw?.products || raw?.inventory || (typeof raw === 'object' && raw ? Object.values(raw) : []);
       }
       STATE.products = raw.map(normalizeProduct);
       STATE.inventoryVersion = version || `INV-${new Date().toISOString().replace(/T/, '-').replace(/\..+/, '')}`;
       // Build barcode index
       STATE.barcodeIndex.clear();
       for (const p of STATE.products) {
-        if (p.barcode) STATE.barcodeIndex.set(p.barcode.trim(), p);
-        if (p.sku) STATE.barcodeIndex.set(p.sku.trim(), p);
+        if (p.barcode) STATE.barcodeIndex.set(String(p.barcode).trim(), p);
+        if (p.sku) STATE.barcodeIndex.set(String(p.sku).trim(), p);
+        if (p.id) STATE.barcodeIndex.set(String(p.id).trim(), p);
       }
       STATE.warehouseMap = buildWarehouseMap(STATE.products);
 
@@ -7291,7 +7292,10 @@
       for (const p of STATE.products) {
         const key = p.id || p.barcode;
         if (!key) continue;
-        if (!existingIds.has(key)) {
+        const idx = FS_PRODUCTS.findIndex(fp => (fp.id || fp.barcode) === key);
+        if (idx >= 0) {
+          FS_PRODUCTS[idx] = { ...FS_PRODUCTS[idx], ...p };
+        } else {
           FS_PRODUCTS.push(p);
           existingIds.add(key);
         }
@@ -7304,16 +7308,41 @@
 
     // ── Normalize product from any JSON field names ──
     function normalizeProduct(r, idx) {
+      if (!r || typeof r !== 'object') return { _idx: idx, name: '(Invalid)', barcode: String(idx) };
       const f = (...keys) => { for (const k of keys) { const v = r[k]; if (v !== undefined && v !== null && v !== '') return v; } return null; };
+      const barcodeKey = String(f('barcode', 'Barcode', 'bar_code', 'ean', 'EAN', 'upc') || f('sku', 'item_code', 'code', 'id') || idx);
+      const skuKey = String(f('sku', 'SKU', 'item_code', 'ItemCode', 'code', 'Code', 'id') || barcodeKey);
+      const idKey = String(r.id || barcodeKey);
+      const locStr = f('loc', 'location', 'Location', 'rack', 'bin', 'shelf', 'LOC') || '';
+      const stockNum = Number(f('stock', 'qty', 'quantity', 'Quantity', 'QTY', 'qty_on_hand', 'available', 'balance') ?? 0);
+      const mrpNum = Number(f('mrp', 'MRP', 'price', 'Price', 'rate', 'cost') ?? 0);
+
+      const imagesList = Array.isArray(r.images) && r.images.length > 0
+        ? r.images
+        : (r.image ? [{ id: 'img_primary', url: r.image, mime: 'image/webp' }] : []);
+      const primaryImg = r.image || (imagesList[0] ? (imagesList[0].url || imagesList[0]) : '');
+
       return {
+        ...r,
         _idx: idx,
+        id: idKey,
         name: f('name', 'product_name', 'item_name', 'ProductName', 'title', 'description', 'Name') || '(No Name)',
-        barcode: String(f('barcode', 'Barcode', 'bar_code', 'ean', 'EAN', 'upc') || f('sku', 'item_code', 'code', 'id') || idx),
-        sku: String(f('sku', 'SKU', 'item_code', 'ItemCode', 'code', 'Code', 'id') || idx),
-        loc: f('loc', 'location', 'Location', 'rack', 'bin', 'shelf', 'LOC') || '',
-        stock: Number(f('stock', 'qty', 'quantity', 'Quantity', 'QTY', 'qty_on_hand', 'available', 'balance') ?? 0),
+        barcode: barcodeKey,
+        sku: skuKey,
+        loc: locStr,
+        location: locStr,
+        stock: stockNum,
+        qty: stockNum,
         brand: f('brand', 'Brand', 'manufacturer', 'Manufacturer', 'make') || '',
-        mrp: Number(f('mrp', 'MRP', 'price', 'Price', 'rate', 'sp', 'cost') ?? 0),
+        category: f('category', 'Category', 'cat', 'Cat') || '',
+        mrp: mrpNum,
+        sp: Number(f('sp', 'SP', 'selling_price', 'SellingPrice') ?? mrpNum),
+        threshold: Number(f('threshold', 'Threshold') ?? 5),
+        fitment_group: f('fitment_group', 'FitmentGroup') || '',
+        compatibility: Array.isArray(r.compatibility) ? r.compatibility : [],
+        images: imagesList,
+        image: primaryImg,
+        updated_at: r.updated_at || new Date().toISOString()
       };
     }
 
@@ -11510,10 +11539,17 @@
     }
 
     // ── Check duplicate + regenerate once ──
-    function isIdDuplicate(id) {
-      // Check FS_PRODUCTS and STATE.products
-      return FS_PRODUCTS.some(p => p.id === id || p.barcode === id) ||
-        STATE.products.some(p => p.id === id || p.barcode === id);
+    function isIdDuplicate(id, ignoreEditId = null) {
+      if (!id) return false;
+      const clean = String(id).trim();
+      const isMatch = p => {
+        if (!p) return false;
+        if (ignoreEditId && (p.id === ignoreEditId || p.barcode === ignoreEditId || p.sku === ignoreEditId)) {
+          return false;
+        }
+        return p.id === clean || p.barcode === clean || p.sku === clean;
+      };
+      return FS_PRODUCTS.some(isMatch) || STATE.products.some(isMatch);
     }
 
     function generateUniqueId(brand, category) {
@@ -11885,7 +11921,7 @@
       if (!name) { toast('Enter product name', 'err'); document.getElementById('apName')?.focus(); return; }
       if (!barcode) { toast('Enter or generate barcode', 'err'); return; }
 
-      if (barcode !== AP_EDIT_ID && isIdDuplicate(barcode)) {
+      if (isIdDuplicate(barcode, AP_EDIT_ID)) {
         toast('Barcode already exists!', 'err');
         alert('A product with this barcode already exists. Please use a unique barcode.');
         return;
@@ -11965,6 +12001,7 @@
         try { localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50))); } catch (ee) { }
         AP_EDIT_ID = null;
         clearFormFields();
+        if (typeof renderProductsList === 'function') renderProductsList('');
 
         if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
 
@@ -12019,33 +12056,60 @@
     }
 
     // ── Edit product ──
-    function editProduct(id) {
-      idbGet('products', id).then(p => {
-        if (!p) return;
-        AP_EDIT_ID = id;
-        document.getElementById('apTitle').textContent = 'Edit Product';
-        document.getElementById('apName').value = p.name || '';
-        document.getElementById('apBrand').value = p.brand || '';
-        document.getElementById('apCat').value = p.category || '';
-        document.getElementById('apQty').value = p.qty || '';
-        document.getElementById('apThreshold').value = p.threshold || '';
-        document.getElementById('apMRP').value = p.mrp || '';
-        document.getElementById('apSP').value = p.sp || '';
-        document.getElementById('apBarcode').value = p.barcode || '';
-        setAPLoc(p.location);
-        AP_COMPAT_SEL = new Set(p.compatibility || []);
-        renderCompatList();
-        
-        if (p.images && Array.isArray(p.images) && p.images.length > 0) {
-          AP_PRODUCT_IMAGES = [...p.images];
-        } else if (p.image) {
-          AP_PRODUCT_IMAGES = [{ id: 'img_primary', url: p.image, mime: 'image/webp' }];
-        } else {
-          AP_PRODUCT_IMAGES = [];
-        }
-        if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
-        nav('s-add-product');
-      });
+    async function editProduct(id) {
+      if (!id) return;
+      id = String(id);
+      let p = FS_PRODUCTS.find(x => x.id === id || x.barcode === id || x.sku === id);
+      if (!p) p = STATE.products.find(x => x.id === id || x.barcode === id || x.sku === id);
+      if (!p && STATE.barcodeIndex) p = STATE.barcodeIndex.get(id);
+      if (!p && typeof idbGet === 'function') {
+        try { p = await idbGet('products', id); } catch (e) { }
+      }
+      if (!p && window.PICKER_DB && typeof window.PICKER_DB.getProductById === 'function') {
+        try { p = await window.PICKER_DB.getProductById(id); } catch (e) { }
+      }
+      if (!p) { toast('Product details not found', 'err'); return; }
+
+      AP_EDIT_ID = p.id || p.barcode || id;
+      const titleEl = document.getElementById('apTitle');
+      if (titleEl) titleEl.textContent = 'Edit Product';
+
+      const setVal = (fid, val) => {
+        const el = document.getElementById(fid);
+        if (el) { el.value = val !== undefined && val !== null ? val : ''; if (el.value) el.classList.add('filled'); else el.classList.remove('filled'); }
+      };
+
+      setVal('apName', p.name || '');
+      setVal('apBrand', p.brand || '');
+      setVal('apCat', p.category || '');
+      setVal('apQty', p.qty ?? p.stock ?? '');
+      setVal('apThreshold', p.threshold !== undefined && p.threshold !== null ? p.threshold : 5);
+      setVal('apMRP', p.mrp || '');
+      setVal('apSP', p.sp || '');
+      setVal('apBarcode', p.barcode || p.sku || id);
+
+      setAPLoc(p.location || p.loc);
+
+      if (p.fitment_group) {
+        const intact = document.getElementById('intactToggle');
+        const intactGroup = document.getElementById('intactGroup');
+        if (intact) intact.classList.add('on');
+        if (intactGroup) intactGroup.style.display = 'block';
+        setVal('apFG', p.fitment_group);
+      }
+
+      AP_COMPAT_SEL = new Set(p.compatibility || []);
+      renderCompatList();
+
+      if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+        AP_PRODUCT_IMAGES = [...p.images];
+      } else if (p.image) {
+        AP_PRODUCT_IMAGES = [{ id: 'img_primary', url: p.image, mime: 'image/webp' }];
+      } else {
+        AP_PRODUCT_IMAGES = [];
+      }
+      if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
+      nav('s-add-product');
     }
 
     // ══════════════════════════════════════════════════════════
