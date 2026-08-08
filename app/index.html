@@ -6982,6 +6982,14 @@
 
     var ILS = { stream: null, rafId: null, video: null, canvas: null, ctx: null };
 
+    var FS_PROD_HANDLE = null;   // file handle for products.json
+    var FS_IMG_HANDLE = null;   // file handle for images.json
+    var FS_PRODUCTS = [];     // in-memory products
+    var FS_IMAGES = {};     // { "PA-HO-CL-xxx": "data:image/jpeg;base64,..." }
+
+    var _pdmId = null;      // product detail modal active product ID
+    var AP_PRODUCT_IMAGES = []; // Array of up to 4 image metadata objects for add product
+
     // ══════════════════════════════════════════
     //  Audio & Haptics
     // ══════════════════════════════════════════
@@ -8687,7 +8695,27 @@
       if (screen === 's-map') { mapPath = mapPath || []; renderMap(mapPath); }
       if (screen === 's-search') renderSearch(document.getElementById('homeQ').value.trim());
       if (screen === 's-orders') renderOrders();
-      if (screen === 's-logs') renderLogs();
+      if (screen === 's-logs') {
+        renderLogs();
+        if (typeof _logsActiveTab !== 'undefined' && _logsActiveTab === 'pos' && window.LogsUI && typeof window.LogsUI.render === 'function') {
+          setTimeout(function () { window.LogsUI.render(); }, 50);
+        }
+      }
+      if (screen === 's-dashboard') {
+        if (typeof renderDashboard === 'function') {
+          setTimeout(function () { renderDashboard(); }, 50);
+        }
+      }
+      if (screen === 's-audit') {
+        if (typeof renderAuditDashboard === 'function') {
+          setTimeout(function () { renderAuditDashboard(); }, 50);
+        }
+      }
+      if (screen === 's-transfer') {
+        if (typeof renderTransferDashboard === 'function') {
+          setTimeout(function () { renderTransferDashboard(); }, 50);
+        }
+      }
       if (screen === 's-cart') renderCart();
       if (screen === 's-drop') initDrop();
       if (screen === 's-products') renderProductsList(document.getElementById('prodQ')?.value.trim() || '');
@@ -11644,7 +11672,6 @@
     // ══════════════════════════════════════════════════════════
     //  SMART MULTI-IMAGE PIPELINE (MAX 4 IMAGES)
     // ══════════════════════════════════════════════════════════
-    let AP_PRODUCT_IMAGES = []; // Array of up to 4 image metadata objects
 
     function triggerMultiCamera(slotIdx) {
       if (AP_PRODUCT_IMAGES.length >= 4 && (slotIdx === undefined || !AP_PRODUCT_IMAGES[slotIdx])) {
@@ -12236,11 +12263,6 @@
     // ══════════════════════════════════════════════════════════
     // ══════════════════════════════════════════════════════════
     //  FILE STORE — products.json + images.json on disk
-    // ══════════════════════════════════════════════════════════
-    let FS_PROD_HANDLE = null;   // file handle for products.json
-    let FS_IMG_HANDLE = null;   // file handle for images.json
-    let FS_PRODUCTS = [];     // in-memory products
-    let FS_IMAGES = {};     // { "PA-HO-CL-xxx": "data:image/jpeg;base64,..." }
 
     // ── Generic file helpers ──
     async function _readHandle(handle) {
@@ -12680,7 +12702,6 @@
     // ══════════════════════════════════════════
     //  PRODUCT DETAIL MODAL
     // ══════════════════════════════════════════
-    let _pdmId = null;
 
     async function openProdDetail(id) {
       if (!id) return;
@@ -13771,24 +13792,6 @@
       }
     };
 
-    // ── Auto-render POS panel when logs screen is opened ──
-    (function () {
-      var _origNav = window.nav;
-      if (typeof _origNav === 'function') {
-        window.nav = function (id) {
-          _origNav(id);
-          if (id === 's-logs' && _logsActiveTab === 'pos') {
-            setTimeout(function () { LogsUI.render(); }, 50);
-          }
-          if (id === 's-dashboard') {
-            setTimeout(function () { renderDashboard(); }, 50);
-          }
-          if (id === 's-audit') {
-            setTimeout(function () { renderAuditDashboard(); }, 50);
-          }
-        };
-      }
-    })();
 
     // ══════════════════════════════════════════
     //  INVENTORY AUDIT MODULE

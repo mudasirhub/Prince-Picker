@@ -10,7 +10,7 @@ echo Syncing PWA app icons...
 node copy_icons.js
 
 git add .
-git commit -m "fix: resolve Temporal Dead Zone (TDZ) initialization crashes for DROP, DEMO_PRODUCTS, and adhocState in index.html"
+git commit -m "fix: resolve multiple TDZ initialization crashes and clean navigation routing in index.html"
 git push
 
 echo.
