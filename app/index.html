@@ -7601,28 +7601,24 @@
         try {
           const data = await fetchJSON(`${STATE.serverUrl}/picking_orders.json`);
           loadOrders(data);
-          if (!STATE.online) {
-            STATE.online = true;
-            document.getElementById('orderOnline').style.display = 'inline-flex';
-            document.getElementById('orderOffline').style.display = 'none';
-          }
+          STATE.online = true;
+          document.getElementById('orderOnline').style.display = 'inline-flex';
+          document.getElementById('orderOffline').style.display = 'none';
           if (document.getElementById('s-orders').classList.contains('on')) renderOrders();
           return;
         } catch (e) {
           // Static file fetch failed — fall through to bridge check
         }
       }
-      // Check bridge connectivity as fallback
+      const isNetOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
       const bridgeConnected = window.PICKER_BRIDGE && window.PICKER_BRIDGE.connected;
-      if (bridgeConnected && !STATE.online) {
-        STATE.online = true;
-        document.getElementById('orderOnline').style.display = 'inline-flex';
-        document.getElementById('orderOffline').style.display = 'none';
-      } else if (!bridgeConnected && STATE.online) {
-        STATE.online = false;
-        document.getElementById('orderOnline').style.display = 'none';
-        document.getElementById('orderOffline').style.display = 'inline-flex';
-      }
+      STATE.online = isNetOnline || bridgeConnected;
+
+      const onEl = document.getElementById('orderOnline');
+      const offEl = document.getElementById('orderOffline');
+      if (onEl) onEl.style.display = STATE.online ? 'inline-flex' : 'none';
+      if (offEl) offEl.style.display = STATE.online ? 'none' : 'inline-flex';
+
       if (document.getElementById('s-orders').classList.contains('on')) renderOrders();
     }
 
@@ -7641,12 +7637,14 @@
     function renderOrders() {
       const el = document.getElementById('ordersList');
       const cnt = document.getElementById('orderCount');
-      // Check bridge connectivity as well as STATE.online
+      const isNetOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
       const bridgeConnected = window.PICKER_BRIDGE && window.PICKER_BRIDGE.connected;
-      const isOnline = STATE.online || bridgeConnected;
-      if (bridgeConnected && !STATE.online) STATE.online = true;
-      document.getElementById('orderOnline').style.display = isOnline ? 'inline-flex' : 'none';
-      document.getElementById('orderOffline').style.display = !isOnline ? 'inline-flex' : 'none';
+      const isOnline = isNetOnline || bridgeConnected;
+      STATE.online = isOnline;
+      const onEl = document.getElementById('orderOnline');
+      const offEl = document.getElementById('orderOffline');
+      if (onEl) onEl.style.display = isOnline ? 'inline-flex' : 'none';
+      if (offEl) offEl.style.display = !isOnline ? 'inline-flex' : 'none';
 
       if (!STATE.orders.length) {
         el.innerHTML = `
