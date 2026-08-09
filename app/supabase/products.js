@@ -165,7 +165,7 @@
         }
 
         lastError = error;
-        console.warn(`[SAVE_PRODUCT] Stage ${i + 1} failed (${att.name}):`, error?.message || error?.details || error);
+        console.warn(`[SAVE_PRODUCT] Stage ${i + 1} failed (${att.name}):`, error?.message || error?.details || error, error);
 
         if (isNetworkError(error)) {
           console.warn('[SAVE_PRODUCT] Network disconnect detected during stage. Queuing for background sync...');

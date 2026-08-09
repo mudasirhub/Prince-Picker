@@ -143,7 +143,7 @@
           }
           return { success: true, queued: true, synced: false, error };
         } else {
-          console.error('[SAVE_PRODUCT] Database error (not queued):', error.message || error);
+          console.error('[SAVE_PRODUCT] Database error (not queued):', error.message || error, error);
           return { success: false, queued: false, synced: false, error };
         }
       }
