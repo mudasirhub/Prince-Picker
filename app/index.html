@@ -16,8 +16,8 @@
   <script src="./supabase/image_uploader.js"></script>
   <script src="./supabase/storage.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#ec5b13">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#c84a0d">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -66,7 +66,7 @@
    DESIGN TOKENS
 ══════════════════════════════════════════ */
     :root {
-      --or: #ec5b13;
+      --or: #c84a0d;
       --or2: #ff7133;
       --or-lt: #fdf0e8;
       --or-md: #f9dcc9;
@@ -5415,28 +5415,28 @@
         <div class="tb-title left">Products</div>
         <div class="tb-sub" id="prodFileLbl">Not linked to file</div>
       </div>
-      <button class="ib notification-bell" onclick="openNotificationCenter()">
+      <button class="ib notification-bell" aria-label="Open notifications" onclick="openNotificationCenter()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
         <span class="notification-badge"></span>
       </button>
-      <button class="ib" title="Import products.json" onclick="importProductsFile()">
+      <button class="ib" title="Import products.json" aria-label="Import products.json" onclick="importProductsFile()">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="17 8 12 3 7 8" />
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
       </button>
-      <button class="ib" title="Export products.json" onclick="exportProductsFile()">
+      <button class="ib" title="Export products.json" aria-label="Export products.json" onclick="exportProductsFile()">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="7 10 12 15 17 10" />
           <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
       </button>
-      <button class="ib" title="Import images.json" onclick="importImagesFile()">
+      <button class="ib" title="Import images.json" aria-label="Import images.json" onclick="importImagesFile()">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
