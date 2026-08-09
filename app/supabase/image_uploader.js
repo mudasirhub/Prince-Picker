@@ -8,7 +8,7 @@
  * - Version 1 Metadata Parsing + Latency Telemetry
  * - Atomic R2 Cleanup helper (deleteR2Image)
  */
-(function(window) {
+(function (window) {
   function generateUUID() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
       return crypto.randomUUID();
@@ -16,8 +16,8 @@
     return 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
   }
 
-  const DEFAULT_WORKER_ENDPOINT = 'https://prince-picker-image-worker.mudas.workers.dev/upload';
-  const FALLBACK_R2_URL = 'https://091b1d2070306c80f830d33d243cf4f0.r2.cloudflarestorage.com/prince';
+  const DEFAULT_WORKER_ENDPOINT = 'https://prince-picker-image-worker.prince-picker.workers.dev/upload';
+  const FALLBACK_R2_URL = 'https://pub-091b1d2070306c80f830d33d243cf4f0.r2.dev';
   const MAX_RETRIES = 3;
   const RETRY_DELAYS = [1000, 3000, 5000];
 

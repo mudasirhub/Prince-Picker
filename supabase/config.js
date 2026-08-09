@@ -16,7 +16,7 @@
     url: storedUrl || defaultConfig.url,
     anonKey: storedKey || defaultConfig.anonKey,
     r2Endpoint: 'https://091b1d2070306c80f830d33d243cf4f0.r2.cloudflarestorage.com/prince',
-    workerEndpoint: storedWorker || 'https://prince-picker-image-worker.mudas.workers.dev/upload',
+    workerEndpoint: storedWorker || 'https://prince-picker-image-worker.prince-picker.workers.dev/upload',
     updateConfig: function(url, key, worker) {
       if (url) localStorage.setItem('sp_project_url', url);
       if (key) localStorage.setItem('sp_anon_key', key);

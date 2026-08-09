@@ -1,0 +1,12 @@
+name = "prince-picker-image-worker"
+main = "image_upload_worker.js"
+compatibility_date = "2024-01-01"
+
+# Cloudflare R2 Bucket Binding
+[[r2_buckets]]
+binding = "PRINCE_BUCKET"
+bucket_name = "prince"
+
+# Public R2 Domain / CDN URL (Replace with your custom domain or pub-xxxx.r2.dev URL)
+[vars]
+PUBLIC_R2_URL = "https://pub-091b1d2070306c80f830d33d243cf4f0.r2.dev"
