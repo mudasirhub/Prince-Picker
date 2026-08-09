@@ -12010,6 +12010,8 @@
         sp: gn('apSP'),
         fitment_group: document.getElementById('intactToggle')?.classList.contains('on')
           ? gv('apFG') : '',
+        intact: document.getElementById('intactToggle')?.classList.contains('on') || false,
+        is_intact: document.getElementById('intactToggle')?.classList.contains('on') || false,
         compatibility: [...AP_COMPAT_SEL],
         barcode,
         sku: barcode,

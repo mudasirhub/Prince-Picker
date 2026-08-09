@@ -93,6 +93,8 @@
       qty: Number(product.qty ?? product.stock ?? 0),
       threshold: Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5),
       fitment_group: product.fitment_group || '',
+      intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
+      is_intact: Boolean(product.is_intact ?? product.intact ?? (product.fitment_group ? true : false)),
       compatibility: Array.isArray(product.compatibility) ? product.compatibility : [],
       images: imagesList,
       image: primaryImageUrl,
