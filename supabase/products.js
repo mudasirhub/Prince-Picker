@@ -135,6 +135,22 @@
       if (error) {
         console.error('[SAVE_PRODUCT] Error:', error);
 
+        // Fallback if 'loc' is a generated column in PostgreSQL
+        const errMsg = String(error.message || error.details || '');
+        if (errMsg.includes('loc') && payload.loc) {
+          console.warn('[SAVE_PRODUCT] Retrying upsert without generated "loc" column...');
+          const payloadNoLoc = { ...payload };
+          delete payloadNoLoc.loc;
+          const retryRes = await client.from('products').upsert(payloadNoLoc, { onConflict: 'id' }).select();
+          if (!retryRes.error && retryRes.data) {
+            console.log('[SAVE_PRODUCT] Retry without loc success:', retryRes.data);
+            if (retryRes.data.length > 0 && window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+              await window.PICKER_DB.putProducts(retryRes.data);
+            }
+            return { success: true, queued: false, synced: true, data: retryRes.data };
+          }
+        }
+
         if (isNetworkError(error)) {
           console.warn('[SAVE_PRODUCT] Network error detected. Queuing upload...');
           if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {

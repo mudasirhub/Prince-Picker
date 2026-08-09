@@ -743,15 +743,18 @@
       min-width: 96px;
       transition: transform 0.15s ease, background-color 0.2s ease;
     }
+
     .drop-float-cart:active {
       transform: scale(0.94);
     }
+
     .drop-float-cart .dfc-title {
       font-size: 15px;
       font-weight: 800;
       line-height: 1.1;
       letter-spacing: -0.2px;
     }
+
     .drop-float-cart .dfc-sub {
       font-size: 12px;
       font-weight: 700;
@@ -778,10 +781,19 @@
       max-width: 85%;
       animation: dropToastIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+
     @keyframes dropToastIn {
-      from { opacity: 0; transform: translate(-50%, -20px) scale(0.9); }
-      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translate(-50%, -20px) scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
     }
+
     .drop-success-toast .dst-icon {
       font-size: 13px;
       font-weight: 800;
@@ -790,6 +802,7 @@
       letter-spacing: 1px;
       margin-bottom: 2px;
     }
+
     .drop-success-toast .dst-name {
       font-size: 15px;
       font-weight: 800;
@@ -799,6 +812,7 @@
       text-overflow: ellipsis;
       max-width: 240px;
     }
+
     .drop-success-toast .dst-qty {
       font-size: 13px;
       font-weight: 700;
@@ -2707,12 +2721,14 @@
       transition: all 0.12s ease;
       user-select: none;
     }
+
     .manual-key-btn:active {
       background: var(--or-lt);
       border-color: var(--or);
       color: var(--or);
       transform: scale(0.95);
     }
+
     .manual-key-btn.alt {
       background: var(--card);
       color: var(--or);
@@ -4680,7 +4696,8 @@
   <!-- ══════ SPLASH ══════ -->
   <div class="S on" id="s-splash">
     <div class="splash-logo" style="background:transparent;box-shadow:none;width:88px;height:88px;margin-bottom:16px;">
-      <img src="../picker%20logo.png" alt="Prince Logo" style="width:100%;height:100%;object-fit:cover;border-radius:20px;box-shadow:0 10px 30px rgba(255,106,0,0.55);border:2px solid rgba(255,255,255,0.2)">
+      <img src="../picker%20logo.png" alt="Prince Logo"
+        style="width:100%;height:100%;object-fit:cover;border-radius:20px;box-shadow:0 10px 30px rgba(255,106,0,0.55);border:2px solid rgba(255,255,255,0.2)">
     </div>
     <div class="splash-title" style="font-weight:900;letter-spacing:-0.5px">Prince Picker</div>
     <div class="splash-status" id="splashStatus">Prince Picker</div>
@@ -4699,8 +4716,10 @@
     </div>
     <div class="sc p">
       <div class="login-body">
-        <div class="login-icon" style="background:transparent;width:84px;height:84px;margin-bottom:14px;box-shadow:none">
-          <img src="../picker%20logo.png" alt="Prince Logo" style="width:100%;height:100%;object-fit:cover;border-radius:18px;box-shadow:0 8px 24px rgba(255,106,0,0.38)">
+        <div class="login-icon"
+          style="background:transparent;width:84px;height:84px;margin-bottom:14px;box-shadow:none">
+          <img src="../picker%20logo.png" alt="Prince Logo"
+            style="width:100%;height:100%;object-fit:cover;border-radius:18px;box-shadow:0 8px 24px rgba(255,106,0,0.38)">
         </div>
         <div class="login-title">Who's picking?</div>
         <div class="login-sub">Enter your name to start picking</div>
@@ -5328,8 +5347,8 @@
   <!-- ══════ DROP MODE ══════ -->
   <div class="S" id="s-drop">
     <div class="tb">
-      <button class="ib" onclick="stopDropInlineScanner(); nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5">
+      <button class="ib" onclick="stopDropInlineScanner(); nav('s-orders')"><svg width="20" height="20"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
       <div class="tb-title c">Drop Mode</div>
@@ -5368,20 +5387,21 @@
     <div class="sc" id="dropBody" style="position:relative; flex:1; overflow-y:auto;"></div>
 
     <!-- Persistent Floating Cart Button -->
-    <div id="dropFloatCart" class="drop-float-cart" style="display:none;" onclick="stopDropInlineScanner(); renderDropCart();">
+    <div id="dropFloatCart" class="drop-float-cart" style="display:none;"
+      onclick="stopDropInlineScanner(); renderDropCart();">
       <div class="dfc-title">Cart</div>
       <div class="dfc-sub" id="dfcSkus">0 SKUs</div>
       <div class="dfc-sub" id="dfcUnits">0 Units</div>
     </div>
 
     <div class="bn">
-      <button class="bnt" onclick="stopDropInlineScanner(); nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <button class="bnt" onclick="stopDropInlineScanner(); nav('s-orders')"><svg width="20" height="20"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 11l3 3L22 4" />
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
         </svg>Orders</button>
-      <button class="bnt on" onclick="stopDropInlineScanner(); nav('s-cart')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <button class="bnt on" onclick="stopDropInlineScanner(); nav('s-cart')"><svg width="20" height="20"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="9" cy="21" r="1" />
           <circle cx="20" cy="21" r="1" />
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -5392,14 +5412,14 @@
             <line x1="7" y1="8" x2="7" y2="16" />
             <line x1="14" y1="8" x2="14" y2="16" />
           </svg></button><span class="bnt-disc-lbl" style="color:var(--or)">Scan</span></div>
-      <button class="bnt" onclick="stopDropInlineScanner(); nav('s-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <button class="bnt" onclick="stopDropInlineScanner(); nav('s-search')"><svg width="20" height="20"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="3" width="20" height="5" rx="1" />
           <rect x="2" y="10" width="20" height="5" rx="1" />
           <rect x="2" y="17" width="20" height="5" rx="1" />
         </svg>Inventory</button>
-      <button class="bnt" onclick="stopDropInlineScanner(); openMore()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <button class="bnt" onclick="stopDropInlineScanner(); openMore()"><svg width="20" height="20" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="5" r="1" />
           <circle cx="19" cy="5" r="1" />
           <circle cx="5" cy="5" r="1" />
@@ -5737,11 +5757,13 @@
             gap: 8px;
             margin-top: 4px;
           }
+
           @media (max-width: 480px) {
             .multi-img-grid {
               grid-template-columns: repeat(2, 1fr);
             }
           }
+
           .img-slot-card {
             position: relative;
             aspect-ratio: 1;
@@ -5757,26 +5779,30 @@
             transition: all 0.2s ease;
             user-select: none;
           }
+
           .img-slot-card.has-img {
             border-style: solid;
             border-color: rgba(236, 91, 19, 0.45);
           }
+
           .img-slot-card.drag-over {
             border-color: var(--p, #ec5b13);
             background: rgba(236, 91, 19, 0.15);
             transform: scale(1.02);
           }
+
           .img-slot-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
           }
+
           .img-slot-badge {
             position: absolute;
             bottom: 4px;
             left: 4px;
             right: 4px;
-            background: rgba(0,0,0,0.78);
+            background: rgba(0, 0, 0, 0.78);
             color: #fff;
             font-size: 9px;
             padding: 2px 4px;
@@ -5787,6 +5813,7 @@
             text-overflow: ellipsis;
             backdrop-filter: blur(4px);
           }
+
           .img-slot-actions {
             position: absolute;
             top: 4px;
@@ -5795,8 +5822,9 @@
             gap: 4px;
             z-index: 10;
           }
+
           .img-slot-btn {
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             color: #fff;
             border: none;
             border-radius: 50%;
@@ -5806,7 +5834,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
           }
         </style>
 
@@ -5819,12 +5847,23 @@
             <!-- Dynamically rendered by JS -->
           </div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px" onclick="triggerMultiCamera()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-2px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px"
+              onclick="triggerMultiCamera()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="margin-right:4px;vertical-align:-2px">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
               Camera
             </button>
-            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px" onclick="triggerGallerySelect()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <button type="button" class="btn-s" style="flex:1;height:38px;font-size:12px"
+              onclick="triggerGallerySelect()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="margin-right:4px;vertical-align:-2px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
               Gallery (Select)
             </button>
           </div>
@@ -6589,29 +6628,37 @@
   </div>
 
   <!-- ══════ MANUAL BARCODE KEY INPUT MODAL ══════ -->
-  <div id="manual-input-modal" style="display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:16px;">
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);" onclick="closeManualEntryModal()"></div>
-    <div style="position:relative;background:var(--card);border-radius:24px;width:100%;max-width:400px;box-shadow:var(--sh3);border:1.5px solid var(--bd2);overflow:hidden;animation:fadeUp .2s ease both;display:flex;flex-direction:column;max-height:90vh;">
+  <div id="manual-input-modal"
+    style="display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:16px;">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);"
+      onclick="closeManualEntryModal()"></div>
+    <div
+      style="position:relative;background:var(--card);border-radius:24px;width:100%;max-width:400px;box-shadow:var(--sh3);border:1.5px solid var(--bd2);overflow:hidden;animation:fadeUp .2s ease both;display:flex;flex-direction:column;max-height:90vh;">
       <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd);background:var(--card)">
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd);background:var(--card)">
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:38px;height:38px;border-radius:12px;background:var(--or-lt);border:1.5px solid var(--or-md);color:var(--or);display:flex;align-items:center;justify-content:center">
+          <div
+            style="width:38px;height:38px;border-radius:12px;background:var(--or-lt);border:1.5px solid var(--or-md);color:var(--or);display:flex;align-items:center;justify-content:center">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/>
-              <line x1="7" y1="8" x2="7" y2="16"/>
-              <line x1="12" y1="8" x2="12" y2="16"/>
-              <line x1="17" y1="8" x2="17" y2="16"/>
+              <path
+                d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+              <line x1="7" y1="8" x2="7" y2="16" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="17" y1="8" x2="17" y2="16" />
             </svg>
           </div>
           <div>
             <div style="font-size:16px;font-weight:800;color:var(--t1)">Barcode Key Input</div>
-            <div style="font-size:11px;color:var(--t3);font-weight:600" id="manualModalSub">Type or use key pad below</div>
+            <div style="font-size:11px;color:var(--t3);font-weight:600" id="manualModalSub">Type or use key pad below
+            </div>
           </div>
         </div>
-        <button onclick="closeManualEntryModal()" style="width:34px;height:34px;border-radius:10px;border:none;background:var(--bg);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <button onclick="closeManualEntryModal()"
+          style="width:34px;height:34px;border-radius:10px;border:none;background:var(--bg);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </div>
@@ -6619,8 +6666,10 @@
       <!-- Body -->
       <div style="padding:16px 20px;overflow-y:auto;flex:1">
         <!-- Barcode Visual Preview -->
-        <div style="background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:12px;text-align:center;margin-bottom:12px;position:relative;overflow:hidden">
-          <div style="display:flex;justify-content:center;align-items:center;gap:3px;height:28px;margin-bottom:6px;opacity:0.85">
+        <div
+          style="background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:12px;text-align:center;margin-bottom:12px;position:relative;overflow:hidden">
+          <div
+            style="display:flex;justify-content:center;align-items:center;gap:3px;height:28px;margin-bottom:6px;opacity:0.85">
             <span style="width:3px;height:100%;background:var(--t1)"></span>
             <span style="width:1px;height:100%;background:var(--t1)"></span>
             <span style="width:4px;height:100%;background:var(--or)"></span>
@@ -6635,29 +6684,38 @@
             <span style="width:1px;height:100%;background:var(--t1)"></span>
             <span style="width:3px;height:100%;background:var(--t1)"></span>
           </div>
-          <div id="manualBarcodePreview" style="font-family:'Courier New', Courier, monospace;font-size:14px;font-weight:800;letter-spacing:1.5px;color:var(--or);word-break:break-all">ENTER CODE BELOW</div>
+          <div id="manualBarcodePreview"
+            style="font-family:'Courier New', Courier, monospace;font-size:14px;font-weight:800;letter-spacing:1.5px;color:var(--or);word-break:break-all">
+            ENTER CODE BELOW</div>
         </div>
 
         <!-- Expected Code Hint Badge -->
-        <div id="manualExpectedHint" style="display:none;background:var(--or-lt);border:1px solid var(--or-md);color:var(--or);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;margin-bottom:12px;align-items:center;gap:6px">
+        <div id="manualExpectedHint"
+          style="display:none;background:var(--or-lt);border:1px solid var(--or-md);color:var(--or);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;margin-bottom:12px;align-items:center;gap:6px">
           <span>💡 Expected:</span> <strong id="manualExpectedVal" style="word-break:break-all"></strong>
         </div>
 
         <!-- Input Field -->
         <div style="position:relative;margin-bottom:12px">
-          <input type="text" id="manualBarcodeInput" placeholder="Type barcode / SKU / Location..." autocomplete="off" autocorrect="off" autocapitalize="characters"
-                 oninput="onManualInputUpdate(this.value)" onkeydown="if(event.key==='Enter') submitManualEntry()"
-                 style="width:100%;height:48px;background:var(--bg);border:2px solid var(--bd2);border-radius:14px;padding:0 40px 0 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;color:var(--t1);outline:none;letter-spacing:.5px;transition:border-color .15s">
-          <button id="manualClearBtn" onclick="clearManualInput()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:var(--bd2);color:var(--t2);cursor:pointer;align-items:center;justify-content:center;font-size:13px">✕</button>
+          <input type="text" id="manualBarcodeInput" placeholder="Type barcode / SKU / Location..." autocomplete="off"
+            autocorrect="off" autocapitalize="characters" oninput="onManualInputUpdate(this.value)"
+            onkeydown="if(event.key==='Enter') submitManualEntry()"
+            style="width:100%;height:48px;background:var(--bg);border:2px solid var(--bd2);border-radius:14px;padding:0 40px 0 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;color:var(--t1);outline:none;letter-spacing:.5px;transition:border-color .15s">
+          <button id="manualClearBtn" onclick="clearManualInput()"
+            style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:var(--bd2);color:var(--t2);cursor:pointer;align-items:center;justify-content:center;font-size:13px">✕</button>
         </div>
 
         <!-- Suggestions -->
-        <div id="manualSuggestions" style="max-height:110px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div id="manualSuggestions"
+          style="max-height:110px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
 
         <!-- Numeric Keypad -->
-        <div style="font-size:10px;font-weight:800;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+        <div
+          style="font-size:10px;font-weight:800;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
           <span>Barcode Keypad</span>
-          <button onclick="pasteToManualInput()" style="background:none;border:none;color:var(--or);font-size:11px;font-weight:700;cursor:pointer">📋 Paste</button>
+          <button onclick="pasteToManualInput()"
+            style="background:none;border:none;color:var(--or);font-size:11px;font-weight:700;cursor:pointer">📋
+            Paste</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;margin-bottom:6px">
           <button class="manual-key-btn" onclick="appendKeyToManualInput('1')">1</button>
@@ -6674,18 +6732,22 @@
           <button class="manual-key-btn alt" onclick="backspaceManualInput()">⌫</button>
         </div>
         <div style="display:flex;gap:6px">
-          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px" onclick="appendKeyToManualInput('R')">R (Rack)</button>
-          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px" onclick="appendKeyToManualInput('L')">L (Level)</button>
-          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px" onclick="appendKeyToManualInput('B')">B (Bin)</button>
+          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px"
+            onclick="appendKeyToManualInput('R')">R (Rack)</button>
+          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px"
+            onclick="appendKeyToManualInput('L')">L (Level)</button>
+          <button class="manual-key-btn alt" style="flex:1;height:34px;font-size:11px"
+            onclick="appendKeyToManualInput('B')">B (Bin)</button>
         </div>
       </div>
 
       <!-- Action Buttons -->
       <div style="display:flex;gap:10px;padding:12px 20px 16px;border-top:1px solid var(--bd);background:var(--card)">
-        <button class="btn-s" style="flex:1;height:46px;font-size:14px" onclick="closeManualEntryModal()">Cancel</button>
+        <button class="btn-s" style="flex:1;height:46px;font-size:14px"
+          onclick="closeManualEntryModal()">Cancel</button>
         <button class="btn-p" style="flex:2;height:46px" onclick="submitManualEntry()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
+            <polyline points="20 6 9 17 4 12" />
           </svg>
           Confirm Barcode
         </button>
@@ -6814,12 +6876,15 @@
   <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;
      background:var(--t1);color:#fff;padding:14px 16px;align-items:center;gap:12px;
      box-shadow:0 -4px 20px rgba(0,0,0,.3)">
-    <div style="width:42px;height:42px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
-      <img src="../picker%20logo.png" onerror="this.onerror=null;this.src='../picker-logo.png';" alt="Prince Logo" style="width:100%;height:100%;object-fit:cover;border-radius:10px">
+    <div
+      style="width:42px;height:42px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+      <img src="../picker%20logo.png" onerror="this.onerror=null;this.src='../picker-logo.png';" alt="Prince Logo"
+        style="width:100%;height:100%;object-fit:cover;border-radius:10px">
     </div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700">Install Prince Picker</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:1px">Add to home screen for offline warehouse use</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:1px">Add to home screen for offline warehouse use
+      </div>
     </div>
     <button onclick="window.showInstallApp()"
       style="background:var(--or);border:none;color:#fff;padding:8px 16px;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Install</button>
@@ -7240,7 +7305,7 @@
       return effectiveQty;
     }
 
-    window.updateProductStock = async function(sku, newQty) {
+    window.updateProductStock = async function (sku, newQty) {
       const product = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
       if (product) {
         product.stock = Number(newQty);
@@ -7416,7 +7481,7 @@
       }
     }
 
-    window.resetAppAndPicker = async function() {
+    window.resetAppAndPicker = async function () {
       if (confirm('Reset application data and switch picker? This will clear local database cache.')) {
         localStorage.removeItem(LS_PICKER);
         localStorage.removeItem('picker_id');
@@ -9180,7 +9245,7 @@
         const isPickMode = itemMode === 'pick';
         const isSuccess = it.status === 'picked' || isFlat;
         const t = it.itemStart ? new Date(it.itemStart).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : (s.timestamp ? new Date(s.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '–');
-        
+
         const badgeLabel = isDropMode ? 'DROPPED' : isPickMode ? 'PICKED' : (isSuccess ? 'PICKED' : 'SKIPPED');
         const badgeClass = isDropMode ? 'r' : (isSuccess ? 'g' : 'r');
 

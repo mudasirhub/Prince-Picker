@@ -108,6 +108,7 @@
       name: product.name || '',
       brand: product.brand || '',
       category: product.category || '',
+      location: product.location || product.loc || '',
       loc: product.loc || product.location || '',
       stock: Number(product.stock ?? product.qty ?? 0),
       mrp: Number(product.mrp || 0),
@@ -138,12 +139,19 @@
     }
 
     // 2. Self-healing multi-stage upsert to withstand database schema differences & 400 Bad Request errors
+    const fullNoLoc = { ...fullPayload }; delete fullNoLoc.loc;
+    const coreNoLoc = { ...corePayload }; delete coreNoLoc.loc;
+    const coreNoIdNoLoc = { ...corePayload }; delete coreNoIdNoLoc.id; delete coreNoIdNoLoc.loc;
+
     const attempts = [
       { name: 'Full Payload (id conflict)', payload: fullPayload, conflict: 'id' },
+      { name: 'Full Payload (no loc, id conflict)', payload: fullNoLoc, conflict: 'id' },
       { name: 'Core Payload (id conflict)', payload: corePayload, conflict: 'id' },
+      { name: 'Core Payload (no loc, id conflict)', payload: coreNoLoc, conflict: 'id' },
       { name: 'Core Payload (sku conflict)', payload: corePayload, conflict: 'sku' },
+      { name: 'Core Payload (no loc, sku conflict)', payload: coreNoLoc, conflict: 'sku' },
       { name: 'Core Payload (barcode conflict)', payload: corePayload, conflict: 'barcode' },
-      { name: 'Core Payload (no id, sku conflict)', payload: (function() { const p = {...corePayload}; delete p.id; return p; })(), conflict: 'sku' }
+      { name: 'Core Payload (no id, no loc, sku conflict)', payload: coreNoIdNoLoc, conflict: 'sku' }
     ];
 
     let lastError = null;
