@@ -231,6 +231,29 @@
     });
   }
 
+  async function purgeDemoProducts() {
+    try {
+      const db = await openDB();
+      const demoSkus = [
+        'RBC-HON-001','FDP-BAJ-002','EOF-YAM-003','CPS-HER-004','AFS-KN-005',
+        'ISP-NGK-006','WBP-BSH-007','CSK-HON-008','HLB-PHL-009','CAF-MOB-010',
+        'TCB-BAJ-011','BAT-AMA-012','BFC-CAS-013','PRS-HON-014','GSC-SUZ-015',
+        '8901234560001','8901234560002','8901234560003','8901234560004','8901234560005',
+        '8901234560006','8901234560007','8901234560008','8901234560009','8901234560010',
+        '8901234560011','8901234560012','8901234560013','8901234560014','8901234560015'
+      ];
+      return new Promise((resolve) => {
+        const tx = db.transaction('products', 'readwrite');
+        const store = tx.objectStore('products');
+        demoSkus.forEach(key => store.delete(key));
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
   window.PICKER_DB = {
     openDB,
     getMeta,
@@ -243,6 +266,7 @@
     addSyncQueue,
     getSyncQueue,
     removeSyncQueue,
-    clearDatabase
+    clearDatabase,
+    purgeDemoProducts
   };
 })(typeof window !== 'undefined' ? window : this);

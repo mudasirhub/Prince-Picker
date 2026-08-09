@@ -7138,6 +7138,9 @@
       // ── Offline-First Startup with IndexedDB & Supabase Sync ──
       try {
         setSplash('Loading local database...', 20);
+        if (window.PICKER_DB && typeof window.PICKER_DB.purgeDemoProducts === 'function') {
+          await window.PICKER_DB.purgeDemoProducts();
+        }
         const cachedProducts = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
         const savedPicker = window.SUPABASE_AUTH ? await window.SUPABASE_AUTH.getSavedPicker() : null;
 
@@ -7399,10 +7402,8 @@
         if (products && products.length > 0) {
           loadProducts(products);
         } else {
-          // Fallback if catalog is empty or initial offline launch
-          const fallbackProds = (typeof DEMO_PRODUCTS !== 'undefined' && DEMO_PRODUCTS) ? DEMO_PRODUCTS : [];
-          loadProducts(fallbackProds);
-          if (window.PICKER_DB) await window.PICKER_DB.putProducts(fallbackProds);
+          const cachedProds = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
+          loadProducts(cachedProds || []);
         }
 
         if (window.PICKER_DB) await window.PICKER_DB.setMeta('lastSync', new Date().toISOString());
@@ -7546,11 +7547,11 @@
       goTo('s-search');
     }
 
-    function loginOffline() {
-      const name = document.getElementById('pickerName').value.trim() || 'Demo Picker';
-      const prods = (typeof DEMO_PRODUCTS !== 'undefined' && DEMO_PRODUCTS) ? DEMO_PRODUCTS : [];
+    async function loginOffline() {
+      const name = document.getElementById('pickerName').value.trim() || 'Offline Picker';
+      const cachedProds = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
       const ords = (typeof DEMO_ORDERS !== 'undefined' && DEMO_ORDERS) ? DEMO_ORDERS : [];
-      loadProducts(prods);
+      loadProducts(cachedProds || []);
       loadOrders({ orders: ords });
       doLoginWithName(name);
     }
