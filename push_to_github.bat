@@ -10,7 +10,7 @@ echo Syncing PWA app icons...
 node copy_icons.js
 
 git add .
-git commit -m "fix: resolve products tab data preservation, save product multi-store sync & Cloudflare R2 pipeline"
+git commit -m "fix: update Cloudflare R2 public URL & single source of truth Drop stock sync"
 git push
 
 echo.

@@ -7306,14 +7306,30 @@
     }
 
     window.updateProductStock = async function (sku, newQty) {
+      if (!sku) return;
+      const cleanQty = Number(newQty);
+      if (isNaN(cleanQty)) return;
+
       const product = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
       if (product) {
-        product.stock = Number(newQty);
+        product.stock = cleanQty;
+        product.qty = cleanQty;
       }
+
+      // 1. Sync IndexedDB & Supabase Inventory table (available_qty)
       if (window.SUPABASE_INVENTORY) {
-        await window.SUPABASE_INVENTORY.updateInventory(sku, newQty);
+        await window.SUPABASE_INVENTORY.updateInventory(sku, cleanQty);
       } else if (window.PICKER_DB) {
-        await window.PICKER_DB.updateInventoryItem(sku, newQty);
+        await window.PICKER_DB.updateInventoryItem(sku, cleanQty);
+      }
+
+      // 2. Sync Supabase Products table (stock) if product object exists
+      if (product && window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+        try {
+          await window.SUPABASE_PRODUCTS.saveProduct(product);
+        } catch (e) {
+          console.warn('[updateProductStock] saveProduct warning:', e);
+        }
       }
     };
 
@@ -8224,14 +8240,15 @@
       ci.picked = confirmQty;
       ci.pickTime = Math.round((Date.now() - (ci.itemStart || Date.now())) / 1000);
 
-      // Adjust stock
+      // Single Source of Truth Inventory Transaction
       if (ci.product) {
-        if (STATE.currentMode === 'pick') {
-          ci.product.stock = Math.max(0, (ci.product.stock || 0) - ci.picked);
-        } else if (STATE.currentMode === 'drop') {
-          ci.product.stock = (ci.product.stock || 0) + ci.picked;
-        }
-        if (typeof fsSave === 'function') fsSave().catch(function () { });
+        inventoryTransaction({
+          type: (STATE.currentMode || 'pick').toUpperCase(),
+          sku: ci.product.sku || ci.barcode,
+          qty: ci.picked,
+          location: ci.product.loc || '',
+          sessionId: STATE.session?.id || ('SES-' + Date.now())
+        });
       }
 
       // Add to CART
@@ -9519,12 +9536,13 @@
               ci.pickTime = Math.round((Date.now() - (ci.itemStart || Date.now())) / 1000);
 
               if (ci.product) {
-                if (STATE.currentMode === 'pick' || !STATE.currentMode) {
-                  ci.product.stock = Math.max(0, (ci.product.stock || 0) - ci.picked);
-                } else if (STATE.currentMode === 'drop') {
-                  ci.product.stock = (ci.product.stock || 0) + ci.picked;
-                }
-                if (typeof fsSave === 'function') fsSave().catch(function () { });
+                inventoryTransaction({
+                  type: (STATE.currentMode || 'pick').toUpperCase(),
+                  sku: ci.product.sku || ci.barcode,
+                  qty: ci.picked,
+                  location: ci.product.loc || '',
+                  sessionId: STATE.session?.id || ('SES-' + Date.now())
+                });
               }
 
               const pBatchToCart = ci.product || STATE.barcodeIndex.get(ci.barcode) || STATE.products.find(p => p.barcode === ci.barcode || p.sku === ci.barcode);
@@ -10527,17 +10545,22 @@
     function confirmAdhocPick() {
       playSound('tap');
       const p = adhocState.targetProd, q = adhocState.confirmQty;
-      STATE.logs.push({ type: adhocState.mode, sku: p.barcode, qty: q, location: p.loc || '', timestamp: new Date() });
+      const mode = (adhocState.mode || 'pick').toUpperCase();
 
-      if (adhocState.mode === 'drop') p.stock = (p.stock || 0) + q;
-      else p.stock = Math.max(0, (p.stock || 0) - q);
-
-      // Add to CART
-      if (p) addItemToCart(p, q);
+      if (p) {
+        inventoryTransaction({
+          type: mode,
+          sku: p.sku || p.barcode,
+          qty: q,
+          location: p.loc || '',
+          sessionId: 'ADHOC-' + Date.now()
+        });
+        addItemToCart(p, q);
+      }
 
       adhocState.itemsScanned += q;
       document.getElementById('adhocCntTxt').textContent = adhocState.itemsScanned + ' Items';
-      toast('✓ ' + (adhocState.mode === 'pick' ? 'Picked ' : 'Dropped ') + q + ' units', 'ok');
+      toast('✓ ' + (mode === 'PICK' ? 'Picked ' : 'Dropped ') + q + ' units', 'ok');
       renderAdhocScanner();
     }
 
@@ -10549,27 +10572,52 @@
         if (!opts) return;
         const type = (opts.type || 'DROP').toUpperCase();
         const sku = opts.sku || opts.barcode || '';
-        const qty = Number(opts.qty) || 1;
+        const qty = Number(opts.qty);
+        if (!sku || isNaN(qty) || qty <= 0) return;
+
         const location = opts.location || '';
-        const sessionId = opts.sessionId || ('DROP-' + Date.now());
+        const sessionId = opts.sessionId || (type + '-' + Date.now());
+        const operator = opts.operator || STATE.pickerName || 'Picker';
 
         const prod = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
         if (prod) {
+          const currentStock = Number(prod.stock ?? prod.qty ?? 0) || 0;
+          let newStock = 0;
           if (type === 'DROP') {
-            prod.stock = (prod.stock || 0) + qty;
+            newStock = currentStock + qty;
           } else if (type === 'PICK') {
-            prod.stock = Math.max(0, (prod.stock || 0) - qty);
+            newStock = Math.max(0, currentStock - qty);
+          } else {
+            newStock = Math.max(0, currentStock - qty);
           }
-          prod.qty = prod.stock;
+
+          prod.stock = newStock;
+          prod.qty = newStock;
+
           const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
           if (fpIdx >= 0) {
-            FS_PRODUCTS[fpIdx].stock = prod.stock;
-            FS_PRODUCTS[fpIdx].qty = prod.stock;
+            FS_PRODUCTS[fpIdx].stock = newStock;
+            FS_PRODUCTS[fpIdx].qty = newStock;
           }
           if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
           if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
+
+          // E. Persist local IndexedDB & Sync Supabase Inventory & Products table
+          if (typeof window.updateProductStock === 'function') {
+            window.updateProductStock(prod.sku || prod.barcode || sku, newStock).catch(function (err) {
+              console.warn('[inventoryTransaction] updateProductStock warning:', err);
+            });
+          }
+
+          // F. Log exactly ONE movement record via processMovement()
+          if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.processMovement === 'function') {
+            window.SUPABASE_INVENTORY.processMovement(type, prod.sku || prod.barcode || sku, qty, location, operator, sessionId).catch(function (err) {
+              console.warn('[inventoryTransaction] processMovement warning:', err);
+            });
+          }
         }
 
+        // G. Local activity log
         STATE.logs.unshift({
           orderId: sessionId,
           type: type.toLowerCase(),

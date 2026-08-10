@@ -81,6 +81,28 @@
               await window.PICKER_DB.removeSyncQueue(item.id);
             }
           }
+        } else if (item.type === 'process_movement') {
+          console.log('[SYNC] Processing queued inventory movement:', item.payload);
+          const p = item.payload || {};
+          const { error } = await client.rpc('fn_process_inventory_movement', {
+            p_type: String(p.type || 'PICK').toUpperCase(),
+            p_sku: p.sku || '',
+            p_qty: Number(p.qty) || 1,
+            p_location: p.location || '',
+            p_picker: p.picker || 'Picker',
+            p_session_id: p.sessionId || ('SES-' + Date.now())
+          });
+          if (!error) {
+            await window.PICKER_DB.removeSyncQueue(item.id);
+            console.log('[SYNC] Movement queue item complete:', item.id);
+          } else {
+            console.error('[SYNC] Error processing queued movement RPC:', error);
+            const isNetErr = window.SUPABASE_PRODUCTS?.isNetworkError ? window.SUPABASE_PRODUCTS.isNetworkError(error) : false;
+            if (error && !isNetErr && error.code !== 'FETCH_ERROR') {
+              console.warn('[SYNC] Permanent error on queued movement. Removing item:', item.id);
+              await window.PICKER_DB.removeSyncQueue(item.id);
+            }
+          }
         } else if (item.type === 'upload_image') {
           console.log('[SYNC] Processing queued offline image upload:', item.storagePath);
           if (window.IMAGE_UPLOADER && typeof window.IMAGE_UPLOADER.uploadSingleImage === 'function') {

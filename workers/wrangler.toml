@@ -9,4 +9,4 @@ bucket_name = "prince"
 
 # Public R2 Domain / CDN URL (Replace with your custom domain or pub-xxxx.r2.dev URL)
 [vars]
-PUBLIC_R2_URL = "https://pub-091b1d2070306c80f830d33d243cf4f0.r2.dev"
+PUBLIC_R2_URL = "https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev"
