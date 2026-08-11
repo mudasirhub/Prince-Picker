@@ -7117,24 +7117,43 @@
         .replace(/'/g, '&#39;');
     }
 
+    function formatImageUrl(url) {
+      if (!url || typeof url !== 'string') return '';
+      url = url.trim();
+      if (!url) return '';
+
+      if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      if (url.startsWith('/') && !url.startsWith('//')) return url;
+
+      const R2_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+      const cleanKey = url.startsWith('/') ? url.slice(1) : url;
+      return `${R2_BASE}/${cleanKey}`;
+    }
+
     function getProductImageSrc(p) {
       if (!p) return '';
+      let raw = '';
       if (Array.isArray(p.images) && p.images.length > 0) {
         for (const img of p.images) {
-          if (typeof img === 'string' && img.trim()) return img.trim();
+          if (typeof img === 'string' && img.trim()) { raw = img.trim(); break; }
           if (img && typeof img === 'object') {
-            if (img.url && typeof img.url === 'string' && img.url.trim()) return img.url.trim();
-            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) return img.dataUrl.trim();
+            if (img.url && typeof img.url === 'string' && img.url.trim()) { raw = img.url.trim(); break; }
+            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) { raw = img.dataUrl.trim(); break; }
           }
         }
       }
-      if (typeof p.image === 'string' && p.image.trim()) return p.image.trim();
-      if (p.image && typeof p.image === 'object' && p.image.url && typeof p.image.url === 'string' && p.image.url.trim()) return p.image.url.trim();
-      const idKey = p.id || '';
-      const bcKey = p.barcode || p.sku || '';
-      if (idKey && FS_IMAGES[idKey]) return FS_IMAGES[idKey];
-      if (bcKey && FS_IMAGES[bcKey]) return FS_IMAGES[bcKey];
-      return '';
+      if (!raw && typeof p.image === 'string' && p.image.trim()) raw = p.image.trim();
+      if (!raw && p.image && typeof p.image === 'object' && p.image.url && typeof p.image.url === 'string') raw = p.image.url.trim();
+
+      if (!raw) {
+        const idKey = p.id || '';
+        const bcKey = p.barcode || p.sku || '';
+        if (idKey && FS_IMAGES[idKey]) raw = FS_IMAGES[idKey];
+        else if (bcKey && FS_IMAGES[bcKey]) raw = FS_IMAGES[bcKey];
+      }
+
+      return formatImageUrl(raw);
     }
 
     function renderProductImgHtml(p, containerClass = 'pr-img', extraImgStyle = '') {

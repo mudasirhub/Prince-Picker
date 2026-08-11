@@ -34,10 +34,12 @@
     function loadSocketIO(callback) {
         if (typeof io !== 'undefined') { callback(); return; }
 
-        // Primary: bridge server's built-in socket.io endpoint
         var bridgeSrc = BRIDGE_URL + '/socket.io/socket.io.js';
-        // Fallback: reliable CDN
         var cdnSrc = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+        var isLocalEnv = host === 'localhost' || host === '127.0.0.1' || /^192\.168\./.test(host);
+
+        var primarySrc = isLocalEnv ? bridgeSrc : cdnSrc;
+        var fallbackSrc = isLocalEnv ? cdnSrc : bridgeSrc;
 
         function tryLoad(src, fallback) {
             var s = document.createElement('script');
@@ -48,20 +50,18 @@
             };
             s.onerror = function() {
                 if (fallback) {
-                    console.warn('[PickerBridge] ' + src + ' failed, trying fallback...');
                     tryLoad(fallback, null);
                 } else {
                     scriptLoadFailed = true;
                     console.warn('[PickerBridge] Could not load socket.io. Bridge offline.');
                     updatePickerAppStatus(false);
-                    // Retry every 15 seconds
                     setTimeout(function() { loadSocketIO(initBridge); }, 15000);
                 }
             };
             document.head.appendChild(s);
         }
 
-        tryLoad(bridgeSrc, cdnSrc);
+        tryLoad(primarySrc, fallbackSrc);
     }
 
     loadSocketIO(initBridge);
