@@ -7130,7 +7130,7 @@
       if (url.startsWith('/') && !url.startsWith('//')) return url;
 
       const R2_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
-      const cleanKey = url.startsWith('/') ? url.slice(1) : url;
+      const cleanKey = url.replace(/^\/+/, '');
       return `${R2_BASE}/${cleanKey}`;
     }
 

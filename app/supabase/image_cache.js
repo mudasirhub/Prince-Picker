@@ -69,7 +69,14 @@
             const tx = db.transaction('images', 'readonly');
             const store = tx.objectStore('images');
             const req = store.get(key);
-            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+            req.onsuccess = () => {
+              const resData = req.result ? req.result.data : null;
+              if (typeof resData === 'string' && resData.startsWith('blob:')) {
+                resolve(null);
+              } else {
+                resolve(resData);
+              }
+            };
             req.onerror = () => resolve(null);
           });
         }
