@@ -7107,6 +7107,16 @@
     var _pdmId = null;      // product detail modal active product ID
     var AP_PRODUCT_IMAGES = []; // Array of up to 4 image metadata objects for add product
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function getProductImageSrc(p) {
       if (!p) return '';
       if (Array.isArray(p.images) && p.images.length > 0) {
