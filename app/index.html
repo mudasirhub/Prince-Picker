@@ -7107,6 +7107,36 @@
     var _pdmId = null;      // product detail modal active product ID
     var AP_PRODUCT_IMAGES = []; // Array of up to 4 image metadata objects for add product
 
+    function getProductImageSrc(p) {
+      if (!p) return '';
+      if (Array.isArray(p.images) && p.images.length > 0) {
+        for (const img of p.images) {
+          if (typeof img === 'string' && img.trim()) return img.trim();
+          if (img && typeof img === 'object') {
+            if (img.url && typeof img.url === 'string' && img.url.trim()) return img.url.trim();
+            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) return img.dataUrl.trim();
+          }
+        }
+      }
+      if (typeof p.image === 'string' && p.image.trim()) return p.image.trim();
+      if (p.image && typeof p.image === 'object' && p.image.url && typeof p.image.url === 'string' && p.image.url.trim()) return p.image.url.trim();
+      const idKey = p.id || '';
+      const bcKey = p.barcode || p.sku || '';
+      if (idKey && FS_IMAGES[idKey]) return FS_IMAGES[idKey];
+      if (bcKey && FS_IMAGES[bcKey]) return FS_IMAGES[bcKey];
+      return '';
+    }
+
+    function renderProductImgHtml(p, containerClass = 'pr-img', extraImgStyle = '') {
+      const src = getProductImageSrc(p);
+      const em = emoji(p?.name || '');
+      const cls = containerClass ? `class="${containerClass}"` : '';
+      if (src) {
+        return `<div ${cls}><img src="${src}" alt="${escapeHtml(p?.name || 'Product')}" style="${extraImgStyle}" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size:24px\\'>${em}</span>';"></div>`;
+      }
+      return `<div ${cls}><span style="font-size:24px">${em}</span></div>`;
+    }
+
     // ══════════════════════════════════════════
     //  Audio & Haptics
     // ══════════════════════════════════════════
@@ -8425,6 +8455,7 @@
       try { localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50))); } catch (e) { }
 
       STATE.session = null;
+      clearCartSilent();
       renderSummary(sessLog);
       nav('s-summary');
     }
@@ -8557,9 +8588,7 @@
           </div>
           <div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:6px">${p.barcode}</div>
         </div>
-        <div class="pr-img">
-          ${(FS_IMAGES[p.id] || FS_IMAGES[p.barcode]) ? '<img src="' + (FS_IMAGES[p.id] || FS_IMAGES[p.barcode]) + '">' : '<span>' + emoji(p.name) + '</span>'}
-        </div>
+        ${renderProductImgHtml(p, 'pr-img')}
       </div>
       ${cartBtnHtml}`;
         list.appendChild(div);
@@ -9660,7 +9689,7 @@
     }
 
     function syncTorchButtons(on) {
-      ['torchBtn', 'floatingTorchBtn', 'dropTorchBtn', 'adhocTorchBtn'].forEach(id => {
+      ['torchBtn', 'floatingTorchBtn', 'dropTorchBtn', 'dropFloatingTorchBtn', 'adhocTorchBtn', 'adhocFloatingTorchBtn'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.classList.toggle('on', !!on);
       });
@@ -9688,7 +9717,7 @@
     function _initTorch() {
       SCAN.torchSupported = true;
       syncTorchButtons(false);
-      ['torchBtn', 'floatingTorchBtn', 'dropTorchBtn', 'adhocTorchBtn'].forEach(id => {
+      ['torchBtn', 'floatingTorchBtn', 'dropTorchBtn', 'dropFloatingTorchBtn', 'adhocTorchBtn', 'adhocFloatingTorchBtn'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.style.display = '';
       });
@@ -10239,11 +10268,17 @@
     function clearCart() {
       if (!CART.items.length) return;
       if (confirm('Clear all items from cart?')) {
-        CART.items = [];
-        updateCartBadge();
-        renderCart();
-        renderSearch(document.getElementById('homeQ').value.trim());
+        clearCartSilent();
       }
+    }
+
+    function clearCartSilent() {
+      CART.items = [];
+      updateCartBadge();
+      if (typeof renderCart === 'function') renderCart();
+      if (typeof updateFloatingCartButton === 'function') updateFloatingCartButton();
+      const qInput = document.getElementById('homeQ');
+      if (qInput && typeof renderSearch === 'function') renderSearch(qInput.value.trim());
     }
 
     function updateCartBadge() {
@@ -10314,13 +10349,11 @@
       data.forEach((item, i) => {
         const effStock = getEffectiveInventory(item.id || item.barcode, item.loc);
         const sc = effStock >= 10 ? 'c-gr' : effStock >= 5 ? 'c-yl' : 'c-rd';
-        const imgSrc = FS_IMAGES[item.id] || FS_IMAGES[item.barcode];
-        const thumbHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : `<span>${emoji(item.name)}</span>`;
         const row = document.createElement('div');
         row.className = 'pick-row';
         row.style.animationDelay = i * 20 + 'ms';
         row.innerHTML = `
-      <div class="pick-thumb" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${thumbHtml}</div>
+      ${renderProductImgHtml(item, 'pick-thumb', 'width:100%;height:100%;object-fit:cover;border-radius:8px;')}
       <div class="pick-info">
         <div class="pick-name">${item.name}</div>
         <div class="pick-loc">${item.loc || '—'}</div>
@@ -10484,6 +10517,14 @@
       <div style="position:relative;width:100%;height:320px">
         <video id="adhocScanVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
         <canvas id="adhocScanCanvas" style="display:none"></canvas>
+        <button class="floating-torch-btn" id="adhocFloatingTorchBtn" onclick="toggleTorch(ILS.stream)" title="Toggle Flashlight">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z"/>
+            <line x1="12" y1="2" x2="12" y2="4"/>
+            <line x1="10" y1="17" x2="14" y2="17"/>
+            <line x1="10" y1="20" x2="14" y2="20"/>
+          </svg>
+        </button>
         <div class="scan-overlay">
           <div class="scan-frame" style="width:80%;height:70%">
             <div class="sfc tl"></div><div class="sfc tr"></div><div class="sfc bl"></div><div class="sfc br"></div>
@@ -10502,6 +10543,14 @@
       document.getElementById('adhocStepBtns').innerHTML = `
     <button class="btn-s" style="flex:1" onclick="closeAdhocScan()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back
+    </button>
+    <button class="btn-scan-torch" id="adhocTorchBtn" onclick="toggleTorch(ILS.stream)" title="Flashlight">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z"/>
+        <line x1="12" y1="2" x2="12" y2="4"/>
+        <line x1="10" y1="17" x2="14" y2="17"/>
+        <line x1="10" y1="20" x2="14" y2="20"/>
+      </svg>
     </button>
     <button class="btn-p" style="flex:2" onclick="manualAdhocEntry()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg> MANUAL INPUT
@@ -10749,6 +10798,7 @@
       DROP.currentLocIndex = 0;
       DROP.processingLocCommit = false;
       DROP.completedStats = { productsProcessed: 0, totalUnits: 0, locationsVerified: 0 };
+      if (typeof clearCartSilent === 'function') clearCartSilent();
       updateFloatingCartButton();
     }
 
@@ -10882,6 +10932,14 @@
           <div id="dropScannerFeed" style="position:absolute; inset:0; width:100%; height:100%;">
             <video id="dropVideoEl" playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
             <canvas id="dropCanvasEl" style="display:none;"></canvas>
+            <button class="floating-torch-btn" id="dropFloatingTorchBtn" onclick="toggleTorch(DROP.stream)" title="Toggle Flashlight">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z"/>
+                <line x1="12" y1="2" x2="12" y2="4"/>
+                <line x1="10" y1="17" x2="14" y2="17"/>
+                <line x1="10" y1="20" x2="14" y2="20"/>
+              </svg>
+            </button>
           </div>
 
           <!-- Target Reticle & HUD -->
@@ -10898,6 +10956,14 @@
 
           <!-- Bottom Action Bar with Manual Input Button (Matches Pick Mode) -->
           <div style="position:absolute; bottom:24px; z-index:15; left:16px; right:16px; display:flex; justify-content:center; gap:10px; pointer-events:auto;">
+            <button class="btn-scan-torch" id="dropTorchBtn" onclick="toggleTorch(DROP.stream)" title="Flashlight" style="height:50px;width:50px;padding:0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z"/>
+                <line x1="12" y1="2" x2="12" y2="4"/>
+                <line x1="10" y1="17" x2="14" y2="17"/>
+                <line x1="10" y1="20" x2="14" y2="20"/>
+              </svg>
+            </button>
             <button class="btn-p" style="flex:1; max-width:320px; height:50px; background:var(--rd); color:#fff; border-radius:14px; font-weight:800; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(239,68,68,0.4); border:none; cursor:pointer;" onclick="dropManualProduct()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
               MANUAL INPUT
@@ -12393,12 +12459,11 @@
         const thresh = p.threshold ?? 5;
         const isLow = qty <= thresh;
         const loc = p.location || p.loc || '—';
-        const imgSrc = (p.images && p.images[0] && (p.images[0].url || p.images[0])) || p.image || FS_IMAGES[p.id] || FS_IMAGES[p.barcode];
         const div = document.createElement('div');
         div.className = 'pr-card';
         div.style.animationDelay = i * 15 + 'ms';
         div.innerHTML = `
-      <div class="pr-img">${imgSrc ? `<img src="${imgSrc}" loading="lazy" decoding="async" fetchpriority="low" sizes="(max-width: 480px) 100vw, 96px">` : emoji(p.name || '')}</div>
+      ${renderProductImgHtml(p, 'pr-img')}
       <div class="pr-info">
         <div class="pr-loc">${loc}</div>
         <div class="pr-name">${p.name || '—'}</div>
@@ -12972,9 +13037,9 @@
       if (!p) { toast('Product not found', 'err'); return; }
       _pdmId = p.id || p.barcode || id;
 
-      var imgSrc = FS_IMAGES[p.id] || FS_IMAGES[p.barcode];
+      var imgSrc = getProductImageSrc(p);
       var imgEl = document.getElementById('pdmImg');
-      if (imgEl) imgEl.innerHTML = imgSrc ? '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover">' : '<span style="font-size:30px">' + emoji(p.name || '') + '</span>';
+      if (imgEl) imgEl.innerHTML = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size:30px\\'>${emoji(p.name || '')}</span>';">` : '<span style="font-size:30px">' + emoji(p.name || '') + '</span>';
 
       var ne = document.getElementById('pdmName'); if (ne) ne.textContent = p.name || '—';
       var le = document.getElementById('pdmLoc'); if (le) le.textContent = p.location || p.loc || '—';

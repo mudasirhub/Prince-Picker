@@ -91,7 +91,6 @@
       mrp: Number(product.mrp || 0),
       sp: Number(product.sp || 0),
       stock: Number(product.stock ?? product.qty ?? 0),
-      qty: Number(product.qty ?? product.stock ?? 0),
       threshold: Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5),
       fitment_group: product.fitment_group || '',
       intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),

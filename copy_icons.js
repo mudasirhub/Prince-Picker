@@ -30,6 +30,17 @@ if (fs.existsSync(src)) {
       console.error('Failed to copy to', t, e.message);
     }
   });
+
+  const bridgeSrc = path.join(root, 'picker-bridge.js');
+  const bridgeDest = path.join(appDir, 'picker-bridge.js');
+  if (fs.existsSync(bridgeSrc)) {
+    try {
+      fs.copyFileSync(bridgeSrc, bridgeDest);
+      console.log('✓ Copied picker-bridge.js to:', bridgeDest);
+    } catch (e) {
+      console.error('Failed to copy picker-bridge.js:', e.message);
+    }
+  }
 } else {
   console.error('Source logo not found:', src);
 }
