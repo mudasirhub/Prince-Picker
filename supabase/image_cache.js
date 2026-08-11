@@ -56,8 +56,7 @@
         const cache = await window.caches.open(CACHE_NAME);
         const matched = await cache.match(key);
         if (matched) {
-          const blob = await matched.blob();
-          return URL.createObjectURL(blob);
+          return key;
         }
       }
     } catch (e) { }

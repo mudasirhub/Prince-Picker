@@ -110,6 +110,16 @@
           }
         } else if (item.type === 'upload_image') {
           console.log('[SYNC] Processing queued offline image upload:', item.storagePath);
+          if (item.dataUrl && item.dataUrl.startsWith('blob:')) {
+            try {
+              const chk = await fetch(item.dataUrl);
+              if (!chk.ok) throw new Error('Revoked blob URL');
+            } catch (eBlob) {
+              console.warn('[SYNC] Revoked blob URL in sync queue. Removing item:', item.id);
+              await window.PICKER_DB.removeSyncQueue(item.id);
+              continue;
+            }
+          }
           if (window.IMAGE_UPLOADER && typeof window.IMAGE_UPLOADER.uploadSingleImage === 'function') {
             const upRes = await window.IMAGE_UPLOADER.uploadSingleImage(item.dataUrl, item.productId, { checksum: item.checksum });
             if (upRes && upRes.uploaded) {

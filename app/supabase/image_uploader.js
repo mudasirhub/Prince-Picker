@@ -124,10 +124,20 @@
       }
     }
 
+    function blobToDataUrl(b) {
+      return new Promise(resolve => {
+        if (!b || !(b instanceof Blob)) return resolve('');
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result || '');
+        r.onerror = () => resolve('');
+        r.readAsDataURL(b);
+      });
+    }
+
     // 2. Offline / Local Fallback Queueing
     let fallbackUrl = typeof blobOrDataUrl === 'string' ? blobOrDataUrl : '';
-    if (!fallbackUrl && blob instanceof Blob) {
-      fallbackUrl = URL.createObjectURL(blob);
+    if ((!fallbackUrl || fallbackUrl.startsWith('blob:')) && blob instanceof Blob) {
+      fallbackUrl = await blobToDataUrl(blob);
     }
 
     const defaultUrl = `${getR2PublicBaseUrl()}/${storagePath}`;
