@@ -7122,7 +7122,10 @@
       url = url.trim();
       if (!url) return '';
 
-      if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+      // Strict enforcement: Never render a blob: URL as a persistent image URL
+      if (url.startsWith('blob:')) return '';
+
+      if (url.startsWith('data:')) return url;
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
       if (url.startsWith('/') && !url.startsWith('//')) return url;
 
@@ -7152,37 +7155,23 @@
       if (idKey && FS_IMAGES[idKey]) candidates.push(FS_IMAGES[idKey]);
       if (bcKey && FS_IMAGES[bcKey]) candidates.push(FS_IMAGES[bcKey]);
 
-      let bestUrl = '';
+      // Filter out any stale/ephemeral blob: URLs entirely
+      const validCandidates = candidates.filter(item => typeof item === 'string' && !item.trim().startsWith('blob:'));
 
       // Pass 1: Permanent HTTP/HTTPS or Base64 data: URLs
-      for (const item of candidates) {
+      for (const item of validCandidates) {
         if (item.startsWith('http://') || item.startsWith('https://') || item.startsWith('data:')) {
-          bestUrl = item;
-          break;
+          return item;
         }
       }
 
       // Pass 2: Relative object keys (e.g. "products/...", "Test_img/...")
-      if (!bestUrl) {
-        for (const item of candidates) {
-          if (!item.startsWith('blob:') && item.length > 0) {
-            bestUrl = formatImageUrl(item);
-            break;
-          }
-        }
+      for (const item of validCandidates) {
+        const formatted = formatImageUrl(item);
+        if (formatted) return formatted;
       }
 
-      // Pass 3: Transient blob: URLs (only if no other candidate exists)
-      if (!bestUrl) {
-        for (const item of candidates) {
-          if (item.startsWith('blob:')) {
-            bestUrl = item;
-            break;
-          }
-        }
-      }
-
-      return formatImageUrl(bestUrl);
+      return '';
     }
 
     function renderProductImgHtml(p, containerClass = 'pr-img', extraImgStyle = '') {
@@ -12077,7 +12066,7 @@
             const dataUrl = await new Promise(resolve => {
               const r = new FileReader();
               r.onload = e => resolve(e.target.result);
-              r.onerror = () => resolve(URL.createObjectURL(f));
+              r.onerror = () => resolve('');
               r.readAsDataURL(f);
             });
             return {

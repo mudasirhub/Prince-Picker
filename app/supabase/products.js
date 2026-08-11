@@ -72,11 +72,32 @@
     const barcode = String(product.barcode || product.sku || id);
     const sku = String(product.sku || product.barcode || id);
 
-    const imagesList = Array.isArray(product.images) && product.images.length > 0
+    const rawImagesList = Array.isArray(product.images) && product.images.length > 0
       ? product.images
       : (product.image ? [{ id: 'img_primary', url: product.image, mime: 'image/webp' }] : []);
 
-    const primaryImageUrl = (imagesList[0] && (imagesList[0].url || imagesList[0])) || product.image || '';
+    const imagesList = rawImagesList.map(img => {
+      if (typeof img === 'string') {
+        return img.startsWith('blob:') ? '' : img;
+      }
+      if (img && typeof img === 'object') {
+        const u = typeof img.url === 'string' ? img.url : '';
+        if (u.startsWith('blob:')) {
+          const fallback = (img.dataUrl && !img.dataUrl.startsWith('blob:')) ? img.dataUrl : '';
+          return { ...img, url: fallback };
+        }
+      }
+      return img;
+    }).filter(img => {
+      if (!img) return false;
+      if (typeof img === 'string') return img.length > 0;
+      if (typeof img === 'object') return Boolean(img.url || img.dataUrl);
+      return false;
+    });
+
+    let rawPrimary = (imagesList[0] && (imagesList[0].url || (typeof imagesList[0] === 'string' ? imagesList[0] : ''))) || (typeof product.image === 'string' ? product.image : '');
+    if (typeof rawPrimary === 'string' && rawPrimary.startsWith('blob:')) rawPrimary = '';
+    const primaryImageUrl = rawPrimary;
 
     // Full rich payload
     const fullPayload = {
