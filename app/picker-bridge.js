@@ -44,18 +44,27 @@
         function tryLoad(src, fallback) {
             var s = document.createElement('script');
             s.src = src;
+            var timer = setTimeout(function() {
+                if (s.onerror) s.onerror();
+            }, 6000);
+
             s.onload = function() {
+                clearTimeout(timer);
                 scriptLoadFailed = false;
                 callback();
             };
             s.onerror = function() {
+                clearTimeout(timer);
+                s.onload = null;
+                s.onerror = null;
+                if (s.parentNode) s.parentNode.removeChild(s);
+
                 if (fallback) {
                     tryLoad(fallback, null);
                 } else {
                     scriptLoadFailed = true;
-                    console.warn('[PickerBridge] Could not load socket.io. Bridge offline.');
                     updatePickerAppStatus(false);
-                    setTimeout(function() { loadSocketIO(initBridge); }, 15000);
+                    setTimeout(function() { loadSocketIO(initBridge); }, 30000);
                 }
             };
             document.head.appendChild(s);

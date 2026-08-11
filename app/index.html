@@ -7133,27 +7133,56 @@
 
     function getProductImageSrc(p) {
       if (!p) return '';
-      let raw = '';
+
+      const candidates = [];
       if (Array.isArray(p.images) && p.images.length > 0) {
         for (const img of p.images) {
-          if (typeof img === 'string' && img.trim()) { raw = img.trim(); break; }
-          if (img && typeof img === 'object') {
-            if (img.url && typeof img.url === 'string' && img.url.trim()) { raw = img.url.trim(); break; }
-            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) { raw = img.dataUrl.trim(); break; }
+          if (typeof img === 'string' && img.trim()) candidates.push(img.trim());
+          else if (img && typeof img === 'object') {
+            if (img.url && typeof img.url === 'string' && img.url.trim()) candidates.push(img.url.trim());
+            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) candidates.push(img.dataUrl.trim());
           }
         }
       }
-      if (!raw && typeof p.image === 'string' && p.image.trim()) raw = p.image.trim();
-      if (!raw && p.image && typeof p.image === 'object' && p.image.url && typeof p.image.url === 'string') raw = p.image.url.trim();
+      if (typeof p.image === 'string' && p.image.trim()) candidates.push(p.image.trim());
+      if (p.image && typeof p.image === 'object' && p.image.url && typeof p.image.url === 'string') candidates.push(p.image.url.trim());
 
-      if (!raw) {
-        const idKey = p.id || '';
-        const bcKey = p.barcode || p.sku || '';
-        if (idKey && FS_IMAGES[idKey]) raw = FS_IMAGES[idKey];
-        else if (bcKey && FS_IMAGES[bcKey]) raw = FS_IMAGES[bcKey];
+      const idKey = p.id || '';
+      const bcKey = p.barcode || p.sku || '';
+      if (idKey && FS_IMAGES[idKey]) candidates.push(FS_IMAGES[idKey]);
+      if (bcKey && FS_IMAGES[bcKey]) candidates.push(FS_IMAGES[bcKey]);
+
+      let bestUrl = '';
+
+      // Pass 1: Permanent HTTP/HTTPS or Base64 data: URLs
+      for (const item of candidates) {
+        if (item.startsWith('http://') || item.startsWith('https://') || item.startsWith('data:')) {
+          bestUrl = item;
+          break;
+        }
       }
 
-      return formatImageUrl(raw);
+      // Pass 2: Relative object keys (e.g. "products/...", "Test_img/...")
+      if (!bestUrl) {
+        for (const item of candidates) {
+          if (!item.startsWith('blob:') && item.length > 0) {
+            bestUrl = formatImageUrl(item);
+            break;
+          }
+        }
+      }
+
+      // Pass 3: Transient blob: URLs (only if no other candidate exists)
+      if (!bestUrl) {
+        for (const item of candidates) {
+          if (item.startsWith('blob:')) {
+            bestUrl = item;
+            break;
+          }
+        }
+      }
+
+      return formatImageUrl(bestUrl);
     }
 
     function renderProductImgHtml(p, containerClass = 'pr-img', extraImgStyle = '') {
