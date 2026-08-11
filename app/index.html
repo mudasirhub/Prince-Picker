@@ -2666,32 +2666,76 @@
     }
 
     .btn-scan-torch {
-      width: 46px;
       height: 46px;
-      border-radius: 12px;
-      border: 1.5px solid rgba(255, 255, 255, .2);
-      background: none;
+      padding: 0 16px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(255, 255, 255, .25);
+      background: rgba(255, 255, 255, .08);
       color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .btn-scan-torch:hover {
+      background: rgba(255, 255, 255, .16);
+      border-color: rgba(255, 255, 255, .4);
+    }
+
+    .btn-scan-torch:active {
+      transform: scale(.94);
+      background: rgba(255, 255, 255, .22);
+    }
+
+    .btn-scan-torch.on {
+      background: linear-gradient(135deg, #FF6A00 0%, #EC5B13 100%);
+      border-color: #FF6A00;
+      color: #fff;
+      box-shadow: 0 0 18px rgba(255, 106, 0, 0.6);
+    }
+
+    .btn-scan-torch.on svg {
+      stroke: #fff;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+    }
+
+    .floating-torch-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 12;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.45);
+      color: #ffffff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all .15s;
-      flex-shrink: 0
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
     }
 
-    .btn-scan-torch:active {
-      background: rgba(255, 255, 255, .15)
+    .floating-torch-btn:active {
+      transform: scale(0.9);
     }
 
-    .btn-scan-torch.on {
-      background: var(--or);
-      border-color: var(--or);
-      box-shadow: 0 0 12px rgba(236, 91, 19, .5)
-    }
-
-    .btn-scan-torch.on svg {
-      stroke: #fff
+    .floating-torch-btn.on {
+      background: linear-gradient(135deg, #FF6A00 0%, #EC5B13 100%);
+      border-color: #FF8833;
+      box-shadow: 0 0 16px rgba(255, 106, 0, 0.7);
     }
 
     .scan-demo {
@@ -6572,6 +6616,14 @@
     </div>
     <div class="scan-video-wrap">
       <div id="scanFlash" style="position:absolute;inset:0;pointer-events:none;z-index:5;"></div>
+      <button class="floating-torch-btn" id="floatingTorchBtn" onclick="toggleTorch()" title="Toggle Flashlight">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z"/>
+          <line x1="12" y1="2" x2="12" y2="4"/>
+          <line x1="10" y1="17" x2="14" y2="17"/>
+          <line x1="10" y1="20" x2="14" y2="20"/>
+        </svg>
+      </button>
       <video id="scanVideo" autoplay playsinline muted></video>
       <canvas id="scanCanvas"></canvas>
       <div class="scan-overlay">
@@ -6611,11 +6663,11 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z" />
-            <line x1="12" y1="2" x2="12" y2="1" />
-            <line x1="8" y1="14" x2="16" y2="14" />
-            <line x1="9" y1="17" x2="15" y2="17" />
+            <line x1="12" y1="2" x2="12" y2="4" />
+            <line x1="10" y1="17" x2="14" y2="17" />
             <line x1="10" y1="20" x2="14" y2="20" />
           </svg>
+          <span>Torch</span>
         </button>
         <button class="btn-scan-ok" id="scanOkBtn" onclick="confirmScan()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -9607,6 +9659,13 @@
       if (val && cb) cb(val);
     }
 
+    function syncTorchButtons(on) {
+      ['torchBtn', 'floatingTorchBtn', 'dropTorchBtn', 'adhocTorchBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.toggle('on', !!on);
+      });
+    }
+
     function closeScanner() {
       clearTimeout(SCAN.throttleT);
       SCAN.throttleT = null;
@@ -9623,48 +9682,55 @@
       SCAN.lastVal = null;
       SCAN.torchOn = false;
       SCAN.torchSupported = false;
-      // Reset torch button state
-      const btn = document.getElementById('torchBtn');
-      if (btn) btn.classList.remove('on');
+      syncTorchButtons(false);
     }
 
     function _initTorch() {
-      // Always show the torch button — test support on first tap
       SCAN.torchSupported = true;
-      // Pre-check capability if available (non-blocking)
+      syncTorchButtons(false);
+      ['torchBtn', 'floatingTorchBtn', 'dropTorchBtn', 'adhocTorchBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = '';
+      });
+
       try {
-        const track = SCAN.stream && SCAN.stream.getVideoTracks()[0];
+        const targetStream = SCAN.stream || (typeof DROP !== 'undefined' && DROP.stream) || (typeof ILS !== 'undefined' && ILS.stream);
+        const track = targetStream && targetStream.getVideoTracks()[0];
         if (track && track.getCapabilities) {
           const caps = track.getCapabilities();
-          // If torch explicitly false, mark unsupported
           if (caps.torch === false) SCAN.torchSupported = false;
         }
       } catch (e) { }
     }
 
-    async function _setTorch(on) {
+    async function _setTorch(on, streamObj) {
       try {
-        const track = SCAN.stream && SCAN.stream.getVideoTracks()[0];
+        const targetStream = streamObj || SCAN.stream || (typeof DROP !== 'undefined' && DROP.stream) || (typeof ILS !== 'undefined' && ILS.stream);
+        const track = targetStream && targetStream.getVideoTracks()[0];
         if (!track) return false;
-        await track.applyConstraints({ advanced: [{ torch: on }] });
-        SCAN.torchOn = on;
+        await track.applyConstraints({ advanced: [{ torch: !!on }] });
+        SCAN.torchOn = !!on;
+        syncTorchButtons(on);
         return true;
       } catch (e) {
         console.warn('[Torch] failed:', e.message);
         SCAN.torchOn = false;
+        syncTorchButtons(false);
         return false;
       }
     }
 
-    function toggleTorch() {
+    function toggleTorch(streamObj) {
       const next = !SCAN.torchOn;
-      _setTorch(next).then(ok => {
-        const btn = document.getElementById('torchBtn');
+      _setTorch(next, streamObj).then(ok => {
         if (ok) {
-          if (btn) btn.classList.toggle('on', next);
+          if (navigator.vibrate) navigator.vibrate(25);
         } else {
-          toast('Flashlight not supported');
-          if (btn) btn.style.display = 'none';
+          toast('Flashlight not supported on this camera device', 'err');
+          ['torchBtn', 'floatingTorchBtn'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.style.display = 'none';
+          });
         }
       });
     }
@@ -10567,74 +10633,87 @@
     // ══════════════════════════════════════════
     //  DROP MODE V1 (HIGH-SPEED WAREHOUSE WORKFLOW)
     // ══════════════════════════════════════════
-    if (typeof window.inventoryTransaction !== 'function') {
-      window.inventoryTransaction = function (opts) {
-        if (!opts) return;
-        const type = (opts.type || 'DROP').toUpperCase();
-        const sku = opts.sku || opts.barcode || '';
-        const qty = Number(opts.qty);
-        if (!sku || isNaN(qty) || qty <= 0) return;
+    window.inventoryTransaction = function (opts) {
+      if (!opts) return;
+      const type = (opts.type || 'DROP').toUpperCase();
+      const sku = opts.sku || opts.barcode || '';
+      const qty = Number(opts.qty);
+      if (!sku || isNaN(qty) || qty <= 0) return;
 
-        const location = opts.location || '';
-        const sessionId = opts.sessionId || (type + '-' + Date.now());
-        const operator = opts.operator || STATE.pickerName || 'Picker';
+      const location = opts.location || '';
+      const sessionId = opts.sessionId || (type + '-' + Date.now());
+      const operator = opts.operator || STATE.pickerName || 'Picker';
 
-        const prod = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
-        if (prod) {
-          const currentStock = Number(prod.stock ?? prod.qty ?? 0) || 0;
-          let newStock = 0;
-          if (type === 'DROP') {
-            newStock = currentStock + qty;
-          } else if (type === 'PICK') {
-            newStock = Math.max(0, currentStock - qty);
-          } else {
-            newStock = Math.max(0, currentStock - qty);
-          }
+      // Deduplication guard against double processing same sessionId + sku + qty + type transaction
+      const txKey = `${sessionId}_${sku}_${qty}_${type}`;
+      if (!window._processedTxSet) {
+        window._processedTxSet = new Set();
+      }
+      if (window._processedTxSet.has(txKey)) {
+        console.warn('[inventoryTransaction] Duplicate transaction prevented:', txKey);
+        return;
+      }
+      window._processedTxSet.add(txKey);
+      if (window._processedTxSet.size > 500) {
+        const first = window._processedTxSet.values().next().value;
+        window._processedTxSet.delete(first);
+      }
 
-          prod.stock = newStock;
-          prod.qty = newStock;
-
-          const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
-          if (fpIdx >= 0) {
-            FS_PRODUCTS[fpIdx].stock = newStock;
-            FS_PRODUCTS[fpIdx].qty = newStock;
-          }
-          if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
-          if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
-
-          // E. Persist local IndexedDB & Sync Supabase Inventory & Products table
-          if (typeof window.updateProductStock === 'function') {
-            window.updateProductStock(prod.sku || prod.barcode || sku, newStock).catch(function (err) {
-              console.warn('[inventoryTransaction] updateProductStock warning:', err);
-            });
-          }
-
-          // F. Log exactly ONE movement record via processMovement()
-          if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.processMovement === 'function') {
-            window.SUPABASE_INVENTORY.processMovement(type, prod.sku || prod.barcode || sku, qty, location, operator, sessionId).catch(function (err) {
-              console.warn('[inventoryTransaction] processMovement warning:', err);
-            });
-          }
+      const prod = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
+      if (prod) {
+        const currentStock = Number(prod.stock ?? prod.qty ?? 0) || 0;
+        let newStock = 0;
+        if (type === 'DROP') {
+          newStock = currentStock + qty;
+        } else if (type === 'PICK') {
+          newStock = Math.max(0, currentStock - qty);
+        } else {
+          newStock = Math.max(0, currentStock - qty);
         }
 
-        // G. Local activity log
-        STATE.logs.unshift({
-          orderId: sessionId,
-          type: type.toLowerCase(),
-          sku: sku,
-          qty: qty,
-          location: location,
-          timestamp: new Date()
-        });
+        prod.stock = newStock;
+        prod.qty = newStock;
 
-        if (typeof fsSave === 'function') {
-          fsSave().catch(function () { });
+        const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
+        if (fpIdx >= 0) {
+          FS_PRODUCTS[fpIdx].stock = newStock;
+          FS_PRODUCTS[fpIdx].qty = newStock;
         }
-        try {
-          localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50)));
-        } catch (e) { }
-      };
-    }
+        if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
+        if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
+
+        // E. Persist local IndexedDB & Sync Supabase Inventory & Products table
+        if (typeof window.updateProductStock === 'function') {
+          window.updateProductStock(prod.sku || prod.barcode || sku, newStock).catch(function (err) {
+            console.warn('[inventoryTransaction] updateProductStock warning:', err);
+          });
+        }
+
+        // F. Log exactly ONE movement record via processMovement()
+        if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.processMovement === 'function') {
+          window.SUPABASE_INVENTORY.processMovement(type, prod.sku || prod.barcode || sku, qty, location, operator, sessionId).catch(function (err) {
+            console.warn('[inventoryTransaction] processMovement warning:', err);
+          });
+        }
+      }
+
+      // G. Local activity log
+      STATE.logs.unshift({
+        orderId: sessionId,
+        type: type.toLowerCase(),
+        sku: sku,
+        qty: qty,
+        location: location,
+        timestamp: new Date()
+      });
+
+      if (typeof fsSave === 'function') {
+        fsSave().catch(function () { });
+      }
+      try {
+        localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50)));
+      } catch (e) { }
+    };
 
     // DROP state is initialized at top level near APP STATE
 

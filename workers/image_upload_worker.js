@@ -188,7 +188,7 @@ export default {
           });
         }
 
-        const domainBase = env.PUBLIC_R2_URL || 'https://091b1d2070306c80f830d33d243cf4f0.r2.cloudflarestorage.com/prince';
+        const domainBase = env.PUBLIC_R2_URL || 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
         const cleanDomain = domainBase.replace(/\/+$/, '');
         const publicUrl = `${cleanDomain}/${keyPath}`;
         const latencyMs = Date.now() - startTime;

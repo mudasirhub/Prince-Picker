@@ -15,7 +15,8 @@
   window.SUPABASE_CONFIG = {
     url: storedUrl || defaultConfig.url,
     anonKey: storedKey || defaultConfig.anonKey,
-    r2Endpoint: 'https://091b1d2070306c80f830d33d243cf4f0.r2.cloudflarestorage.com/prince',
+    r2Endpoint: 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev',
+    r2PublicUrl: 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev',
     workerEndpoint: storedWorker || 'https://prince-picker-image-worker.prince-picker.workers.dev/upload',
     updateConfig: function(url, key, worker) {
       if (url) localStorage.setItem('sp_project_url', url);
