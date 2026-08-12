@@ -5880,6 +5880,202 @@
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
           }
+
+          /* ── Product Detail Modal Multi-Image Gallery ── */
+          .pdm-gallery-container {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--bg, #0f131a);
+            border: 1.5px solid var(--bd, #272d3b);
+            box-shadow: var(--sh, 0 4px 12px rgba(0,0,0,0.15));
+          }
+          .pdm-gallery-viewport {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: pan-y;
+            cursor: pointer;
+          }
+          .pdm-gallery-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+          }
+          .pdm-gallery-counter {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+            z-index: 5;
+            pointer-events: none;
+          }
+          .pdm-gallery-dots {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 0 6px;
+          }
+          .pdm-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--t4, rgba(255,255,255,0.3));
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          .pdm-dot.active {
+            width: 20px;
+            border-radius: 4px;
+            background: var(--or, #ec5b13);
+          }
+          .pdm-gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border: none;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 6;
+            opacity: 0.85;
+            transition: opacity 0.2s ease;
+          }
+          .pdm-gallery-arrow:hover { opacity: 1; }
+          .pdm-gallery-arrow.prev { left: 8px; }
+          .pdm-gallery-arrow.next { right: 8px; }
+
+          /* ── Instagram-Style Fullscreen Image Viewer ── */
+          .pdm-fullscreen-viewer {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            user-select: none;
+            animation: pdmFadeIn 0.2s ease;
+          }
+          @keyframes pdmFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          .pdm-fullscreen-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            z-index: 510;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+          }
+          .pdm-fullscreen-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+          }
+          .pdm-fullscreen-counter {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 12px;
+            border-radius: 14px;
+            backdrop-filter: blur(8px);
+          }
+          .pdm-fullscreen-viewport {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: pan-y;
+          }
+          .pdm-fullscreen-image {
+            max-width: 95vw;
+            max-height: 85vh;
+            object-fit: contain;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+          }
+          .pdm-fullscreen-dots {
+            position: absolute;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            z-index: 510;
+            padding-bottom: env(safe-area-inset-bottom);
+          }
+          .pdm-fullscreen-dots .pdm-dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.35);
+          }
+          .pdm-fullscreen-dots .pdm-dot.active {
+            width: 24px;
+            background: #fff;
+          }
+          .pdm-fullscreen-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: none;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 515;
+            backdrop-filter: blur(8px);
+          }
+          .pdm-fullscreen-arrow.prev { left: 16px; }
+          .pdm-fullscreen-arrow.next { right: 16px; }
         </style>
 
         <div class="ap-field">
@@ -6026,6 +6222,20 @@
       <div style="display:flex;justify-content:center;padding:10px 0 2px">
         <div style="width:36px;height:4px;border-radius:2px;background:var(--bd2)"></div>
       </div>
+
+      <!-- Multi-Image Swipe Gallery Wrap -->
+      <div id="pdmGalleryWrap" style="display:none;position:relative;padding:8px 16px 4px;flex-shrink:0">
+        <div id="pdmGalleryContainer" class="pdm-gallery-container">
+          <div id="pdmGalleryViewport" class="pdm-gallery-viewport">
+            <img id="pdmGalleryImg" class="pdm-gallery-image" src="" alt="Product Image" onclick="openPdmFullscreen()" onerror="onPdmGalleryImageError(this.src)">
+            <button type="button" class="pdm-gallery-arrow prev" onclick="event.stopPropagation(); setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1)">‹</button>
+            <button type="button" class="pdm-gallery-arrow next" onclick="event.stopPropagation(); setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1)">›</button>
+            <div id="pdmGalleryCounter" class="pdm-gallery-counter">1 / 1</div>
+          </div>
+          <div id="pdmGalleryDots" class="pdm-gallery-dots"></div>
+        </div>
+      </div>
+
       <div style="display:flex;align-items:flex-start;gap:14px;padding:8px 16px 12px;flex-shrink:0">
         <div id="pdmImg"
           style="width:68px;height:68px;min-width:68px;border-radius:16px;background:var(--bg);border:1.5px solid var(--bd);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">
@@ -6064,6 +6274,26 @@
       </div>
     </div>
   </div>
+
+  <!-- ══ INSTAGRAM-STYLE FULLSCREEN IMAGE VIEWER ══ -->
+  <div id="pdmFullscreenViewer" class="pdm-fullscreen-viewer" style="display:none;">
+    <div class="pdm-fullscreen-header">
+      <button class="pdm-fullscreen-close" onclick="closePdmFullscreen()" title="Close Fullscreen">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div id="pdmFullscreenCounter" class="pdm-fullscreen-counter">1 / 1</div>
+    </div>
+    <div id="pdmFullscreenViewport" class="pdm-fullscreen-viewport">
+      <img id="pdmFullscreenImg" class="pdm-fullscreen-image" src="" alt="Full Product Image" onerror="onPdmGalleryImageError(this.src)">
+      <button type="button" class="pdm-fullscreen-arrow prev" onclick="setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1)">‹</button>
+      <button type="button" class="pdm-fullscreen-arrow next" onclick="setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1)">›</button>
+    </div>
+    <div id="pdmFullscreenDots" class="pdm-fullscreen-dots"></div>
+  </div>
+
 
 
   <!-- ══════ SCREEN: QR PRINT ══════ -->
@@ -8682,6 +8912,389 @@
         toast('✓ Added ' + p.name + ' to cart', 'ok');
       }
       nav('s-search');
+    }
+
+    // ══════════════════════════════════════════
+    //  PRODUCT DETAIL MODAL & MULTI-IMAGE GALLERY
+    // ══════════════════════════════════════════
+    const PRODUCT_GALLERY = {
+      product: null,
+      images: [],        // Filtered, formatted image URLs
+      currentIndex: 0,   // Active image index
+      touchStartX: 0,
+      touchEndX: 0,
+      isDragging: false,
+      viewerOpen: false,
+      prevBodyOverflow: ''
+    };
+
+    function openProdDetail(pOrId) {
+      const p = typeof pOrId === 'object' ? pOrId : (STATE.barcodeIndex.get(pOrId) || STATE.products.find(x => x.id === pOrId || x.barcode === pOrId || x.sku === pOrId));
+      if (!p) { toast('Product details not found', 'err'); return; }
+
+      PRODUCT_GALLERY.product = p;
+      PRODUCT_GALLERY.currentIndex = 0;
+      PRODUCT_GALLERY.viewerOpen = false;
+
+      // Resolve candidate images
+      let rawImages = [];
+      if (Array.isArray(p.images) && p.images.length > 0) {
+        rawImages = p.images.map(img => (typeof img === 'object' ? (img.url || img.dataUrl) : img)).filter(Boolean);
+      }
+      if (!rawImages.length && p.image) rawImages.push(p.image);
+      if (!rawImages.length && FS_IMAGES[p.id]) rawImages.push(FS_IMAGES[p.id]);
+      if (!rawImages.length && FS_IMAGES[p.barcode]) rawImages.push(FS_IMAGES[p.barcode]);
+
+      // Filter out blob: URLs and invalid formats, then run through formatImageUrl()
+      const validImages = [];
+      const seen = new Set();
+
+      for (const rawUrl of rawImages) {
+        if (!rawUrl || typeof rawUrl !== 'string') continue;
+        if (rawUrl.trim().startsWith('blob:')) continue; // Ignore persistent blob: URLs
+        const formatted = formatImageUrl(rawUrl);
+        if (formatted && !seen.has(formatted)) {
+          seen.add(formatted);
+          validImages.push(formatted);
+        }
+      }
+
+      PRODUCT_GALLERY.images = validImages;
+
+      // Populate basic modal text
+      const nameEl = document.getElementById('pdmName');
+      const locEl = document.getElementById('pdmLoc');
+      const metaEl = document.getElementById('pdmMeta');
+      if (nameEl) nameEl.textContent = p.name || '—';
+      if (locEl) locEl.textContent = p.loc ? `📍 ${p.loc}` : '—';
+      if (metaEl) metaEl.textContent = [p.sku ? `SKU: ${p.sku}` : '', p.brand ? `Brand: ${p.brand}` : '', p.barcode ? `Barcode: ${p.barcode}` : ''].filter(Boolean).join(' · ');
+
+      // Update Product Strip (Stock, MRP, SP, Category)
+      const stripEl = document.getElementById('pdmStrip');
+      if (stripEl) {
+        const effStock = getEffectiveInventory(p.id || p.barcode, p.loc);
+        const sc = effStock >= 20 ? 'c-gr' : effStock >= 5 ? 'c-yl' : 'c-rd';
+        stripEl.innerHTML = `
+          <span class="chip ${sc}" style="font-size:11px;padding:4px 10px">Stock: ${effStock}</span>
+          ${p.mrp > 0 ? `<span class="chip c-or" style="font-size:11px;padding:4px 10px">MRP: ₹${p.mrp}</span>` : ''}
+          ${p.sp > 0 && p.sp !== p.mrp ? `<span class="chip c-gr" style="font-size:11px;padding:4px 10px">SP: ₹${p.sp}</span>` : ''}
+          ${p.category ? `<span class="chip" style="font-size:11px;padding:4px 10px;background:var(--bg2);color:var(--t2)">${p.category}</span>` : ''}
+        `;
+      }
+
+      // Populate Body
+      const bodyEl = document.getElementById('pdmBody');
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <div style="background:var(--bg);border-radius:14px;padding:12px;margin-bottom:10px;font-size:12px;color:var(--t2);line-height:1.5">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">Barcode</span><strong>${p.barcode || '—'}</strong></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">SKU</span><strong>${p.sku || '—'}</strong></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">Location</span><strong>${p.loc || '—'}</strong></div>
+            ${p.threshold ? `<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">Low Stock Alert</span><strong>≤ ${p.threshold}</strong></div>` : ''}
+            ${p.fitment_group ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Fitment Group</span><strong>${p.fitment_group}</strong></div>` : ''}
+          </div>
+          ${Array.isArray(p.compatibility) && p.compatibility.length > 0 ? `
+            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Compatibility</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              ${p.compatibility.map(c => `<span class="chip" style="font-size:10px;background:var(--bg2);color:var(--t1)">${c}</span>`).join('')}
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // Render Image Gallery
+      renderPdmGalleryView();
+
+      const modal = document.getElementById('prodDetailModal');
+      if (modal) modal.style.display = 'flex';
+
+      initPdmGalleryGestures();
+      initPdmFullscreenGestures();
+    }
+
+    function closeProdDetail() {
+      if (PRODUCT_GALLERY.viewerOpen) {
+        closePdmFullscreen();
+      }
+      const modal = document.getElementById('prodDetailModal');
+      if (modal) modal.style.display = 'none';
+      PRODUCT_GALLERY.product = null;
+      PRODUCT_GALLERY.images = [];
+      PRODUCT_GALLERY.currentIndex = 0;
+    }
+
+    function pdmEdit() {
+      const p = PRODUCT_GALLERY.product;
+      closeProdDetail();
+      if (!p) return;
+      nav('s-add-product');
+      setTimeout(function () {
+        if (typeof populateAPForm === 'function') populateAPForm(p);
+      }, 100);
+    }
+
+    function pdmDelete() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      if (confirm(`Delete product "${p.name}"? This action cannot be undone.`)) {
+        closeProdDetail();
+        const idx = STATE.products.findIndex(x => x.id === p.id || x.barcode === p.barcode);
+        if (idx >= 0) STATE.products.splice(idx, 1);
+        if (p.barcode) STATE.barcodeIndex.delete(p.barcode);
+        if (p.sku) STATE.barcodeIndex.delete(p.sku);
+        if (window.PICKER_DB && typeof window.PICKER_DB.deleteProduct === 'function') {
+          window.PICKER_DB.deleteProduct(p.id || p.barcode);
+        }
+        toast(`Deleted ${p.name}`, 'ok');
+        renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+      }
+    }
+
+    function renderPdmGalleryView() {
+      const wrapEl = document.getElementById('pdmGalleryWrap');
+      const imgBoxEl = document.getElementById('pdmImg');
+      const imgEl = document.getElementById('pdmGalleryImg');
+      const counterEl = document.getElementById('pdmGalleryCounter');
+      const dotsEl = document.getElementById('pdmGalleryDots');
+      const prevBtn = wrapEl?.querySelector('.pdm-gallery-arrow.prev');
+      const nextBtn = wrapEl?.querySelector('.pdm-gallery-arrow.next');
+
+      const N = PRODUCT_GALLERY.images.length;
+      const idx = PRODUCT_GALLERY.currentIndex;
+
+      if (N > 1) {
+        // Multi-Image Gallery Mode
+        if (wrapEl) wrapEl.style.display = 'block';
+        if (imgBoxEl) imgBoxEl.style.display = 'none';
+
+        if (imgEl && PRODUCT_GALLERY.images[idx]) {
+          imgEl.src = PRODUCT_GALLERY.images[idx];
+        }
+
+        if (counterEl) counterEl.textContent = `${idx + 1} / ${N}`;
+
+        if (prevBtn) prevBtn.style.display = N > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = N > 1 ? 'flex' : 'none';
+
+        if (dotsEl) {
+          dotsEl.style.display = 'flex';
+          dotsEl.innerHTML = PRODUCT_GALLERY.images.map((_, i) =>
+            `<div class="pdm-dot ${i === idx ? 'active' : ''}" onclick="setPdmGalleryIndex(${i})"></div>`
+          ).join('');
+        }
+      } else if (N === 1) {
+        // Single Image Mode
+        if (wrapEl) wrapEl.style.display = 'block';
+        if (imgBoxEl) imgBoxEl.style.display = 'none';
+
+        if (imgEl) imgEl.src = PRODUCT_GALLERY.images[0];
+        if (counterEl) counterEl.textContent = '1 / 1';
+
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (dotsEl) dotsEl.style.display = 'none';
+      } else {
+        // Fallback Emoji Mode
+        if (wrapEl) wrapEl.style.display = 'none';
+        if (imgBoxEl) {
+          imgBoxEl.style.display = 'flex';
+          const p = PRODUCT_GALLERY.product || {};
+          const imgSrc = getProductImageSrc(p);
+          imgBoxEl.innerHTML = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover" onclick="openPdmFullscreen()">` : emoji(p.name || '');
+        }
+      }
+
+      // Also sync full-screen viewer if open
+      if (PRODUCT_GALLERY.viewerOpen) {
+        syncPdmFullscreenView();
+      }
+    }
+
+    function setPdmGalleryIndex(newIdx) {
+      const N = PRODUCT_GALLERY.images.length;
+      if (N <= 0) return;
+      let target = newIdx;
+      if (target < 0) target = N - 1;
+      if (target >= N) target = 0;
+
+      PRODUCT_GALLERY.currentIndex = target;
+      renderPdmGalleryView();
+    }
+
+    function openPdmFullscreen() {
+      const N = PRODUCT_GALLERY.images.length;
+      if (N === 0) return; // No image to expand
+
+      // Fullscreen Body Lock
+      PRODUCT_GALLERY.prevBodyOverflow = document.body.style.overflow || '';
+      document.body.style.overflow = 'hidden';
+
+      PRODUCT_GALLERY.viewerOpen = true;
+
+      const fsViewer = document.getElementById('pdmFullscreenViewer');
+      if (fsViewer) {
+        fsViewer.style.display = 'flex';
+      }
+
+      syncPdmFullscreenView();
+    }
+
+    function closePdmFullscreen() {
+      PRODUCT_GALLERY.viewerOpen = false;
+
+      // Restore Body Lock
+      document.body.style.overflow = PRODUCT_GALLERY.prevBodyOverflow || '';
+
+      const fsViewer = document.getElementById('pdmFullscreenViewer');
+      if (fsViewer) {
+        fsViewer.style.display = 'none';
+      }
+
+      // Ensure modal gallery reflects active image
+      renderPdmGalleryView();
+    }
+
+    function syncPdmFullscreenView() {
+      const N = PRODUCT_GALLERY.images.length;
+      const idx = PRODUCT_GALLERY.currentIndex;
+
+      const imgEl = document.getElementById('pdmFullscreenImg');
+      const counterEl = document.getElementById('pdmFullscreenCounter');
+      const dotsEl = document.getElementById('pdmFullscreenDots');
+      const prevBtn = document.querySelector('#pdmFullscreenViewport .pdm-fullscreen-arrow.prev');
+      const nextBtn = document.querySelector('#pdmFullscreenViewport .pdm-fullscreen-arrow.next');
+
+      if (imgEl && PRODUCT_GALLERY.images[idx]) {
+        imgEl.src = PRODUCT_GALLERY.images[idx];
+      }
+
+      if (counterEl) counterEl.textContent = `${idx + 1} / ${N}`;
+
+      if (prevBtn) prevBtn.style.display = N > 1 ? 'flex' : 'none';
+      if (nextBtn) nextBtn.style.display = N > 1 ? 'flex' : 'none';
+
+      if (dotsEl) {
+        if (N > 1) {
+          dotsEl.style.display = 'flex';
+          dotsEl.innerHTML = PRODUCT_GALLERY.images.map((_, i) =>
+            `<div class="pdm-dot ${i === idx ? 'active' : ''}" onclick="setPdmGalleryIndex(${i})"></div>`
+          ).join('');
+        } else {
+          dotsEl.style.display = 'none';
+        }
+      }
+    }
+
+    function onPdmGalleryImageError(failedUrl) {
+      if (!failedUrl) return;
+      const idx = PRODUCT_GALLERY.images.indexOf(failedUrl);
+      if (idx !== -1) {
+        PRODUCT_GALLERY.images.splice(idx, 1);
+        const N = PRODUCT_GALLERY.images.length;
+        if (PRODUCT_GALLERY.currentIndex >= N) {
+          PRODUCT_GALLERY.currentIndex = Math.max(0, N - 1);
+        }
+        renderPdmGalleryView();
+      }
+    }
+
+    function initPdmGalleryGestures() {
+      const viewport = document.getElementById('pdmGalleryViewport');
+      if (!viewport || viewport.dataset.gesturesInited) return;
+      viewport.dataset.gesturesInited = 'true';
+
+      let startX = 0, startY = 0, isDragging = false;
+
+      viewport.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          isDragging = true;
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const dx = endX - startX;
+        const dy = endY - startY;
+
+        if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) {
+            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1); // Swipe left → next
+          } else {
+            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1); // Swipe right → prev
+          }
+        }
+      }, { passive: true });
+
+      // Mouse drag support for desktop
+      viewport.addEventListener('mousedown', e => {
+        startX = e.clientX;
+        startY = e.clientY;
+        isDragging = true;
+      });
+
+      viewport.addEventListener('mouseup', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) {
+            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1);
+          } else {
+            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1);
+          }
+        }
+      });
+    }
+
+    function initPdmFullscreenGestures() {
+      const viewport = document.getElementById('pdmFullscreenViewport');
+      if (!viewport || viewport.dataset.gesturesInited) return;
+      viewport.dataset.gesturesInited = 'true';
+
+      let startX = 0, startY = 0, isDragging = false;
+
+      viewport.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          isDragging = true;
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const dx = endX - startX;
+        const dy = endY - startY;
+
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) {
+            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1);
+          } else {
+            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1);
+          }
+        }
+      }, { passive: true });
+
+      // Keyboard navigation & Escape close
+      document.addEventListener('keydown', e => {
+        if (!PRODUCT_GALLERY.viewerOpen) return;
+        if (e.key === 'ArrowRight') {
+          setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1);
+        } else if (e.key === 'ArrowLeft') {
+          setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1);
+        } else if (e.key === 'Escape') {
+          closePdmFullscreen();
+        }
+      });
     }
 
     // ══════════════════════════════════════════
