@@ -9199,7 +9199,16 @@
 
     function onPdmGalleryImageError(failedUrl) {
       if (!failedUrl) return;
-      const idx = PRODUCT_GALLERY.images.indexOf(failedUrl);
+      const target = String(failedUrl).trim();
+      const idx = PRODUCT_GALLERY.images.findIndex(img => {
+        if (!img) return false;
+        const clean = String(img).trim();
+        return clean === target ||
+               target.endsWith(clean) ||
+               clean.endsWith(target) ||
+               decodeURIComponent(clean) === decodeURIComponent(target);
+      });
+
       if (idx !== -1) {
         PRODUCT_GALLERY.images.splice(idx, 1);
         const N = PRODUCT_GALLERY.images.length;
