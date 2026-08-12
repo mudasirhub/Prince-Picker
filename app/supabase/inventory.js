@@ -58,17 +58,23 @@
     }
   }
 
-  async function updateInventory(sku, availableQty) {
+  async function updateInventory(sku, availableQty, transactionId) {
+    const txId = transactionId || '';
     // 1. Always update local IndexedDB immediately for 0-latency UI
-    await window.PICKER_DB.updateInventoryItem(sku, availableQty);
+    if (window.PICKER_DB && typeof window.PICKER_DB.updateInventoryItem === 'function') {
+      try { await window.PICKER_DB.updateInventoryItem(sku, availableQty); } catch (e) { }
+    }
 
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
     const timestamp = new Date().toISOString();
 
-    if (!client) {
+    if (!client || !isOnline) {
       // Offline: queue sync task
-      await window.PICKER_DB.addSyncQueue('update_inventory', { sku, available_qty: availableQty, updated_at: timestamp });
-      return { synced: false, queued: true };
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('update_inventory', { sku, available_qty: availableQty, updated_at: timestamp, transactionId: txId });
+      }
+      return { success: true, queued: true, synced: false, transactionId: txId };
     }
 
     try {
@@ -77,28 +83,33 @@
         .upsert({ sku, available_qty: availableQty, updated_at: timestamp });
 
       if (error) {
-        await window.PICKER_DB.addSyncQueue('update_inventory', { sku, available_qty: availableQty, updated_at: timestamp });
-        return { synced: false, queued: true };
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('update_inventory', { sku, available_qty: availableQty, updated_at: timestamp, transactionId: txId });
+        }
+        return { success: true, queued: true, synced: false, transactionId: txId, error };
       }
-      return { synced: true, queued: false };
+      return { success: true, queued: false, synced: true, transactionId: txId };
     } catch (e) {
-      await window.PICKER_DB.addSyncQueue('update_inventory', { sku, available_qty: availableQty, updated_at: timestamp });
-      return { synced: false, queued: true };
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('update_inventory', { sku, available_qty: availableQty, updated_at: timestamp, transactionId: txId });
+      }
+      return { success: true, queued: true, synced: false, transactionId: txId, error: e };
     }
   }
 
-  async function processMovement(type, sku, qty, location, picker, sessionId) {
+  async function processMovement(type, sku, qty, location, picker, sessionId, transactionId) {
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
     const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
     const cleanType = String(type || 'PICK').toUpperCase();
     const cleanQty = Number(qty) || 1;
+    const txId = transactionId || '';
 
     // Offline or Client Unavailable
     if (!client || !isOnline) {
       if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId });
+        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId, transactionId: txId });
       }
-      return { success: true, queued: true, synced: false };
+      return { success: true, queued: true, synced: false, transactionId: txId };
     }
 
     try {
@@ -108,24 +119,25 @@
         p_qty: cleanQty,
         p_location: location || '',
         p_picker: picker || 'Picker',
-        p_session_id: sessionId || ('SES-' + Date.now())
+        p_session_id: sessionId || ('SES-' + Date.now()),
+        p_transaction_id: txId
       });
 
       if (error) {
         console.warn('[Inventory] RPC movement error, queuing:', error.message);
         if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-          await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId });
+          await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId, transactionId: txId });
         }
-        return { success: true, queued: true, synced: false, error };
+        return { success: true, queued: true, synced: false, transactionId: txId, error };
       }
 
-      return { success: true, queued: false, synced: true, data };
+      return { success: true, queued: false, synced: true, transactionId: txId, data };
     } catch (e) {
       console.error('[Inventory] Exception in processMovement:', e);
       if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId });
+        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId, transactionId: txId });
       }
-      return { success: true, queued: true, synced: false, error: e };
+      return { success: true, queued: true, synced: false, transactionId: txId, error: e };
     }
   }
 

@@ -95,7 +95,8 @@
             p_qty: Number(p.qty) || 1,
             p_location: p.location || '',
             p_picker: p.picker || 'Picker',
-            p_session_id: p.sessionId || ('SES-' + Date.now())
+            p_session_id: p.sessionId || ('SES-' + Date.now()),
+            p_transaction_id: p.transactionId || p.txId || ''
           });
           if (!error) {
             await window.PICKER_DB.removeSyncQueue(item.id);

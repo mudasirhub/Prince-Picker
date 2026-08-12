@@ -7124,12 +7124,19 @@
 
       // Strict enforcement: Never render a blob: URL as a persistent image URL
       if (url.startsWith('blob:')) return '';
-
       if (url.startsWith('data:')) return url;
+
+      const OLD_R2_DOMAIN = 'pub-091b1d2070306c80f830d33d243cf4f0.r2.dev';
+      const R2_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+
+      // Map any old R2 URL dynamically to the new public R2 domain
+      if (url.includes(OLD_R2_DOMAIN)) {
+        return url.replace(new RegExp(`https?://${OLD_R2_DOMAIN}`, 'gi'), R2_BASE);
+      }
+
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
       if (url.startsWith('/') && !url.startsWith('//')) return url;
 
-      const R2_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
       const cleanKey = url.replace(/^\/+/, '');
       return `${R2_BASE}/${cleanKey}`;
     }
@@ -7158,14 +7165,7 @@
       // Filter out any stale/ephemeral blob: URLs entirely
       const validCandidates = candidates.filter(item => typeof item === 'string' && !item.trim().startsWith('blob:'));
 
-      // Pass 1: Permanent HTTP/HTTPS or Base64 data: URLs
-      for (const item of validCandidates) {
-        if (item.startsWith('http://') || item.startsWith('https://') || item.startsWith('data:')) {
-          return item;
-        }
-      }
-
-      // Pass 2: Relative object keys (e.g. "products/...", "Test_img/...")
+      // Pass 1: Formatted URLs (handles old R2 URL domain replacement, data: URLs, http/https)
       for (const item of validCandidates) {
         const formatted = formatImageUrl(item);
         if (formatted) return formatted;
@@ -7434,10 +7434,12 @@
       return effectiveQty;
     }
 
-    window.updateProductStock = async function (sku, newQty) {
-      if (!sku) return;
+    window.updateProductStock = async function (sku, newQty, transactionId) {
+      if (!sku) return { success: false, error: 'No SKU provided' };
       const cleanQty = Number(newQty);
-      if (isNaN(cleanQty)) return;
+      if (isNaN(cleanQty)) return { success: false, error: 'Invalid quantity' };
+
+      const txId = transactionId || '';
 
       const product = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
       if (product) {
@@ -7445,21 +7447,42 @@
         product.qty = cleanQty;
       }
 
+      let invRes = { success: true, queued: false, synced: true };
+      let prodRes = { success: true, queued: false, synced: true };
+
       // 1. Sync IndexedDB & Supabase Inventory table (available_qty)
-      if (window.SUPABASE_INVENTORY) {
-        await window.SUPABASE_INVENTORY.updateInventory(sku, cleanQty);
-      } else if (window.PICKER_DB) {
-        await window.PICKER_DB.updateInventoryItem(sku, cleanQty);
+      if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.updateInventory === 'function') {
+        invRes = await window.SUPABASE_INVENTORY.updateInventory(sku, cleanQty, txId);
+      } else if (window.PICKER_DB && typeof window.PICKER_DB.updateInventoryItem === 'function') {
+        try {
+          await window.PICKER_DB.updateInventoryItem(sku, cleanQty);
+          invRes = { success: true, queued: true, synced: false, transactionId: txId };
+        } catch (err) {
+          invRes = { success: false, error: err };
+        }
       }
 
       // 2. Sync Supabase Products table (stock) if product object exists
       if (product && window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
         try {
-          await window.SUPABASE_PRODUCTS.saveProduct(product);
+          prodRes = await window.SUPABASE_PRODUCTS.saveProduct(product, txId);
         } catch (e) {
           console.warn('[updateProductStock] saveProduct warning:', e);
+          prodRes = { success: true, queued: true, synced: false, error: e };
         }
       }
+
+      const success = Boolean((!invRes || invRes.success !== false) && (!prodRes || prodRes.success !== false));
+      const queued = Boolean((invRes && invRes.queued) || (prodRes && prodRes.queued));
+      const synced = Boolean((invRes && invRes.synced) && (prodRes && prodRes.synced));
+
+      return {
+        success: success,
+        queued: queued,
+        synced: synced,
+        transactionId: txId,
+        error: (!success) ? (invRes?.error || prodRes?.error || 'Stock persistence failed') : null
+      };
     };
 
     function setSplash(msg, pct) {
@@ -8371,12 +8394,17 @@
 
       // Single Source of Truth Inventory Transaction
       if (ci.product) {
+        const txId = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : ('tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+
         inventoryTransaction({
           type: (STATE.currentMode || 'pick').toUpperCase(),
           sku: ci.product.sku || ci.barcode,
           qty: ci.picked,
           location: ci.product.loc || '',
-          sessionId: STATE.session?.id || ('SES-' + Date.now())
+          sessionId: STATE.session?.id || ('SES-' + Date.now()),
+          transactionId: txId
         });
       }
 
@@ -9664,12 +9692,17 @@
               ci.pickTime = Math.round((Date.now() - (ci.itemStart || Date.now())) / 1000);
 
               if (ci.product) {
+                const txId = typeof crypto !== 'undefined' && crypto.randomUUID
+                  ? crypto.randomUUID()
+                  : ('tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+
                 inventoryTransaction({
                   type: (STATE.currentMode || 'pick').toUpperCase(),
                   sku: ci.product.sku || ci.barcode,
                   qty: ci.picked,
                   location: ci.product.loc || '',
-                  sessionId: STATE.session?.id || ('SES-' + Date.now())
+                  sessionId: STATE.session?.id || ('SES-' + Date.now()),
+                  transactionId: txId
                 });
               }
 
@@ -10710,12 +10743,17 @@
       const mode = (adhocState.mode || 'pick').toUpperCase();
 
       if (p) {
+        const txId = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : ('tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+
         inventoryTransaction({
           type: mode,
           sku: p.sku || p.barcode,
           qty: q,
           location: p.loc || '',
-          sessionId: 'ADHOC-' + Date.now()
+          sessionId: 'ADHOC-' + Date.now(),
+          transactionId: txId
         });
         addItemToCart(p, q);
       }
@@ -10729,73 +10767,138 @@
     // ══════════════════════════════════════════
     //  DROP MODE V1 (HIGH-SPEED WAREHOUSE WORKFLOW)
     // ══════════════════════════════════════════
-    window.inventoryTransaction = function (opts) {
-      if (!opts) return;
+    window.inventoryTransaction = async function (opts) {
+      if (!opts) return { success: false, error: 'Invalid options' };
       const type = (opts.type || 'DROP').toUpperCase();
       const sku = opts.sku || opts.barcode || '';
       const qty = Number(opts.qty);
-      if (!sku || isNaN(qty) || qty <= 0) return;
+      if (!sku || isNaN(qty) || qty <= 0) return { success: false, error: 'Invalid SKU or quantity' };
 
       const location = opts.location || '';
       const sessionId = opts.sessionId || (type + '-' + Date.now());
       const operator = opts.operator || STATE.pickerName || 'Picker';
 
-      // Deduplication guard against double processing same sessionId + sku + qty + type transaction
-      const txKey = `${sessionId}_${sku}_${qty}_${type}`;
-      if (!window._processedTxSet) {
-        window._processedTxSet = new Set();
+      // 1. Transaction ID validation / fallback
+      const transactionId = opts.transactionId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)));
+
+      // 2. Check completed in _processedTxSet
+      if (!window._processedTxSet) window._processedTxSet = new Set();
+      if (window._processedTxSet.has(transactionId)) {
+        console.warn('[inventoryTransaction] Duplicate transaction prevented (already completed):', transactionId);
+        return { success: false, duplicate: true, error: 'Transaction already completed' };
       }
-      if (window._processedTxSet.has(txKey)) {
-        console.warn('[inventoryTransaction] Duplicate transaction prevented:', txKey);
-        return;
+
+      // 3. Acquire active processing lock in _activeTxLocks
+      if (!window._activeTxLocks) window._activeTxLocks = new Set();
+      if (window._activeTxLocks.has(transactionId)) {
+        console.warn('[inventoryTransaction] Transaction currently in progress:', transactionId);
+        return { success: false, inProgress: true, error: 'Transaction in progress' };
       }
-      window._processedTxSet.add(txKey);
-      if (window._processedTxSet.size > 500) {
-        const first = window._processedTxSet.values().next().value;
-        window._processedTxSet.delete(first);
-      }
+      window._activeTxLocks.add(transactionId);
 
       const prod = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
-      if (prod) {
-        const currentStock = Number(prod.stock ?? prod.qty ?? 0) || 0;
-        let newStock = 0;
-        if (type === 'DROP') {
-          newStock = currentStock + qty;
-        } else if (type === 'PICK') {
-          newStock = Math.max(0, currentStock - qty);
+      if (!prod) {
+        window._activeTxLocks.delete(transactionId);
+        return { success: false, error: 'Product not found: ' + sku };
+      }
+
+      // 4. Pre-mutation State Snapshot
+      const origStock = prod.stock;
+      const origQty = prod.qty;
+      const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
+      const origFSStock = fpIdx >= 0 ? FS_PRODUCTS[fpIdx].stock : undefined;
+      const origFSQty = fpIdx >= 0 ? FS_PRODUCTS[fpIdx].qty : undefined;
+
+      // Calculate Stock (immediate read)
+      const currentStock = typeof getEffectiveInventory === 'function'
+        ? getEffectiveInventory(prod.sku || prod.barcode || prod.id, location || prod.loc)
+        : Number(prod.stock ?? prod.qty ?? 0) || 0;
+
+      let newStock = currentStock;
+      const legDir = (opts.direction || opts.leg || '').toLowerCase();
+      if (type === 'DROP') {
+        newStock = currentStock + qty;
+      } else if (type === 'PICK') {
+        newStock = Math.max(0, currentStock - qty);
+      } else if (type === 'AUDIT') {
+        newStock = qty; // AUDIT target count
+      } else if (type.startsWith('TRANSFER') || type === 'TRANSFER') {
+        if (legDir === 'src' || legDir === 'source' || legDir === 'out' || type === 'TRANSFER_SRC' || type === 'TRANSFER_OUT') {
+          newStock = Math.max(0, currentStock - qty); // TRANSFER SOURCE leg: subtract
         } else {
-          newStock = Math.max(0, currentStock - qty);
+          newStock = currentStock + qty; // TRANSFER DESTINATION leg: add
         }
+      } else {
+        newStock = Math.max(0, currentStock - qty);
+      }
 
-        prod.stock = newStock;
-        prod.qty = newStock;
+      // 5. Apply local stock mutation
+      prod.stock = newStock;
+      prod.qty = newStock;
 
-        const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
+      if (fpIdx >= 0) {
+        FS_PRODUCTS[fpIdx].stock = newStock;
+        FS_PRODUCTS[fpIdx].qty = newStock;
+      }
+      if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
+      if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
+
+      // Helper function to rollback local state if persistence or movement queueing fails
+      const rollbackLocalState = async () => {
+        prod.stock = origStock;
+        prod.qty = origQty;
         if (fpIdx >= 0) {
-          FS_PRODUCTS[fpIdx].stock = newStock;
-          FS_PRODUCTS[fpIdx].qty = newStock;
+          FS_PRODUCTS[fpIdx].stock = origFSStock;
+          FS_PRODUCTS[fpIdx].qty = origFSQty;
         }
         if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
         if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
 
-        // E. Persist local IndexedDB & Sync Supabase Inventory & Products table
         if (typeof window.updateProductStock === 'function') {
-          window.updateProductStock(prod.sku || prod.barcode || sku, newStock).catch(function (err) {
-            console.warn('[inventoryTransaction] updateProductStock warning:', err);
-          });
+          try { await window.updateProductStock(prod.sku || prod.barcode || sku, origStock, 'rollback_' + transactionId); } catch (e) { }
         }
+      };
 
-        // F. Log exactly ONE movement record via processMovement()
-        if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.processMovement === 'function') {
-          window.SUPABASE_INVENTORY.processMovement(type, prod.sku || prod.barcode || sku, qty, location, operator, sessionId).catch(function (err) {
-            console.warn('[inventoryTransaction] processMovement warning:', err);
-          });
+      // 6 & 7. Persist/Queue local & remote stock updates
+      let updateRes = { success: true, queued: false, synced: true };
+      try {
+        if (typeof window.updateProductStock === 'function') {
+          const res = await window.updateProductStock(prod.sku || prod.barcode || sku, newStock, transactionId);
+          if (res) updateRes = res;
         }
+      } catch (errUpd) {
+        console.warn('[inventoryTransaction] updateProductStock exception:', errUpd);
+        updateRes = { success: false, error: errUpd };
       }
 
-      // G. Local activity log
+      if (!updateRes || updateRes.success === false) {
+        await rollbackLocalState();
+        window._activeTxLocks.delete(transactionId);
+        return { success: false, transactionId, error: updateRes?.error || 'Stock persistence failed' };
+      }
+
+      // 8. Persist/Queue movement record
+      let movRes = { success: true, queued: false, synced: true };
+      try {
+        if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.processMovement === 'function') {
+          const res = await window.SUPABASE_INVENTORY.processMovement(type, prod.sku || prod.barcode || sku, qty, location, operator, sessionId, transactionId);
+          if (res) movRes = res;
+        }
+      } catch (errMov) {
+        console.warn('[inventoryTransaction] processMovement exception:', errMov);
+        movRes = { success: false, error: errMov };
+      }
+
+      if (!movRes || movRes.success === false) {
+        await rollbackLocalState();
+        window._activeTxLocks.delete(transactionId);
+        return { success: false, transactionId, error: movRes?.error || 'Movement logging failed' };
+      }
+
+      // Log to local activity log
       STATE.logs.unshift({
         orderId: sessionId,
+        transactionId: transactionId,
         type: type.toLowerCase(),
         sku: sku,
         qty: qty,
@@ -10809,6 +10912,26 @@
       try {
         localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50)));
       } catch (e) { }
+
+      // 9. Mark transaction processed ONLY after local persistence/queueing succeeds
+      window._processedTxSet.add(transactionId);
+      if (window._processedTxSet.size > 1000) {
+        const first = window._processedTxSet.values().next().value;
+        window._processedTxSet.delete(first);
+      }
+
+      // 10. Release active processing lock
+      window._activeTxLocks.delete(transactionId);
+
+      return {
+        success: true,
+        queued: Boolean(updateRes.queued || movRes.queued),
+        synced: Boolean(updateRes.synced && movRes.synced),
+        transactionId: transactionId,
+        sku: sku,
+        qty: qty,
+        newStock: newStock
+      };
     };
 
     // DROP state is initialized at top level near APP STATE
@@ -11099,9 +11222,6 @@
         });
       }
 
-      // Add to main CART
-      addItemToCart(prod, 1, 'drop');
-
       playSound('scan_success');
       if (navigator.vibrate) navigator.vibrate(40);
 
@@ -11350,15 +11470,21 @@
         triggerFlash(true);
 
         // COMMIT INVENTORY: Invoke black-box inventoryTransaction() for every item in this verified location group
-        group.items.forEach(item => {
+        for (const item of group.items) {
+          const txId = typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : ('tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+
           inventoryTransaction({
             type: "DROP",
             sku: item.sku,
             qty: item.qty,
             location: group.rawLoc,
-            sessionId: DROP.sessionId
+            sessionId: DROP.sessionId,
+            operator: STATE.pickerName || 'Picker',
+            transactionId: txId
           });
-        });
+        }
 
         DROP.completedStats.productsProcessed += group.items.length;
         DROP.completedStats.totalUnits += group.items.reduce((sum, i) => sum + i.qty, 0);

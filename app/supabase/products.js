@@ -62,11 +62,13 @@
    * Save (upsert) a product to Supabase and update local IndexedDB cache.
    * Logs every step, handles offline queueing, and differentiates network vs database errors.
    */
-  async function saveProduct(product) {
+  async function saveProduct(product, transactionId) {
     if (!product) {
       console.error('[SAVE_PRODUCT] Error: No product provided');
       return { success: false, error: 'No product provided' };
     }
+
+    const txId = transactionId || '';
 
     const id = String(product.id || product.barcode || product.sku || '');
     const barcode = String(product.barcode || product.sku || id);
@@ -137,7 +139,8 @@
       fitment_group: product.fitment_group || '',
       intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
       image: primaryImageUrl,
-      updated_at: product.updated_at || new Date().toISOString()
+      updated_at: product.updated_at || new Date().toISOString(),
+      transactionId: txId
     };
 
     console.log('[SAVE_PRODUCT] Product:', product);
