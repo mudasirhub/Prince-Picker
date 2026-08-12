@@ -8937,19 +8937,32 @@
       PRODUCT_GALLERY.viewerOpen = false;
 
       // Resolve candidate images
-      let rawImages = [];
+      const candidateUrls = [];
       if (Array.isArray(p.images) && p.images.length > 0) {
-        rawImages = p.images.map(img => (typeof img === 'object' ? (img.url || img.dataUrl) : img)).filter(Boolean);
+        for (const img of p.images) {
+          if (typeof img === 'string' && img.trim()) candidateUrls.push(img.trim());
+          else if (img && typeof img === 'object') {
+            if (img.url && typeof img.url === 'string' && img.url.trim()) candidateUrls.push(img.url.trim());
+            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) candidateUrls.push(img.dataUrl.trim());
+          }
+        }
       }
-      if (!rawImages.length && p.image) rawImages.push(p.image);
-      if (!rawImages.length && FS_IMAGES[p.id]) rawImages.push(FS_IMAGES[p.id]);
-      if (!rawImages.length && FS_IMAGES[p.barcode]) rawImages.push(FS_IMAGES[p.barcode]);
+      if (typeof p.image === 'string' && p.image.trim()) candidateUrls.push(p.image.trim());
+      if (p.image && typeof p.image === 'object') {
+        if (p.image.url && typeof p.image.url === 'string' && p.image.url.trim()) candidateUrls.push(p.image.url.trim());
+        if (p.image.dataUrl && typeof p.image.dataUrl === 'string' && p.image.dataUrl.trim()) candidateUrls.push(p.image.dataUrl.trim());
+      }
+
+      const idKey = p.id || '';
+      const bcKey = p.barcode || p.sku || '';
+      if (idKey && FS_IMAGES[idKey]) candidateUrls.push(FS_IMAGES[idKey]);
+      if (bcKey && FS_IMAGES[bcKey]) candidateUrls.push(FS_IMAGES[bcKey]);
 
       // Filter out blob: URLs and invalid formats, then run through formatImageUrl()
       const validImages = [];
       const seen = new Set();
 
-      for (const rawUrl of rawImages) {
+      for (const rawUrl of candidateUrls) {
         if (!rawUrl || typeof rawUrl !== 'string') continue;
         if (rawUrl.trim().startsWith('blob:')) continue; // Ignore persistent blob: URLs
         const formatted = formatImageUrl(rawUrl);
@@ -9094,13 +9107,12 @@
         if (nextBtn) nextBtn.style.display = 'none';
         if (dotsEl) dotsEl.style.display = 'none';
       } else {
-        // Fallback Emoji Mode
+        // Fallback Emoji Mode (No valid images in PRODUCT_GALLERY.images)
         if (wrapEl) wrapEl.style.display = 'none';
         if (imgBoxEl) {
           imgBoxEl.style.display = 'flex';
           const p = PRODUCT_GALLERY.product || {};
-          const imgSrc = getProductImageSrc(p);
-          imgBoxEl.innerHTML = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover" onclick="openPdmFullscreen()">` : emoji(p.name || '');
+          imgBoxEl.innerHTML = emoji(p.name || '');
         }
       }
 
