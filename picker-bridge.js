@@ -78,8 +78,17 @@
     function initBridge() {
         if (typeof io === 'undefined') return;
         
-        socket = io(BRIDGE_URL + '/io/picker', { 
-            reconnectionDelay: 2000,
+        var customServer = localStorage.getItem('bridge_server');
+        // Do not auto-connect to port 3002 on public web deployments unless a custom bridge server is specified
+        if (!isLocalEnv && !customServer) {
+            console.log('[PickerBridge] Public web deployment detected — skipping default port 3002 auto-connect.');
+            return;
+        }
+
+        var targetUrl = customServer || BRIDGE_URL;
+        socket = io(targetUrl + '/io/picker', { 
+            reconnectionDelay: 5000,
+            reconnectionAttempts: 5,
             reconnection: true,
             timeout: 5000
         });
