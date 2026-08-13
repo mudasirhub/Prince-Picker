@@ -9199,8 +9199,19 @@
 
     let pdmCompatExpanded = false;
 
-    function openProdDetail(pOrId) {
-      const p = typeof pOrId === 'object' ? pOrId : (STATE.barcodeIndex.get(pOrId) || STATE.products.find(x => x.id === pOrId || x.barcode === pOrId || x.sku === pOrId));
+    async function openProdDetail(pOrId) {
+      let p = null;
+      if (typeof pOrId === 'object' && pOrId !== null) {
+        p = pOrId;
+      } else if (pOrId) {
+        const idStr = String(pOrId);
+        p = (typeof FS_PRODUCTS !== 'undefined' && Array.isArray(FS_PRODUCTS) ? FS_PRODUCTS.find(x => x.id === idStr || x.barcode === idStr || x.sku === idStr) : null) ||
+            (STATE.barcodeIndex ? STATE.barcodeIndex.get(idStr) : null) ||
+            (STATE.products ? STATE.products.find(x => x.id === idStr || x.barcode === idStr || x.sku === idStr) : null);
+        if (!p && typeof IDB !== 'undefined' && IDB && typeof idbGet === 'function') {
+          try { p = await idbGet('products', idStr); } catch (e) { }
+        }
+      }
       if (!p) { toast('Product details not found', 'err'); return; }
 
       PRODUCT_GALLERY.product = p;
@@ -9230,8 +9241,8 @@
       }
       const idKey = p.id || '';
       const bcKey = p.barcode || p.sku || '';
-      if (idKey && FS_IMAGES[idKey]) candidateUrls.push(FS_IMAGES[idKey]);
-      if (bcKey && FS_IMAGES[bcKey]) candidateUrls.push(FS_IMAGES[bcKey]);
+      if (idKey && typeof FS_IMAGES !== 'undefined' && FS_IMAGES[idKey]) candidateUrls.push(FS_IMAGES[idKey]);
+      if (bcKey && typeof FS_IMAGES !== 'undefined' && FS_IMAGES[bcKey]) candidateUrls.push(FS_IMAGES[bcKey]);
 
       const validImages = [];
       const seen = new Set();
@@ -9268,9 +9279,13 @@
       renderPdmCarousel();
 
       // 4. Stats Row
-      const effStock = getEffectiveInventory(p.id || p.barcode, p.loc);
+      let effStock = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, p.loc || p.location) : 0;
+      const rawQty = p.qty != null ? Number(p.qty) : (p.stock != null ? Number(p.stock) : 0);
+      if (effStock === 0 && rawQty > 0) {
+        effStock = rawQty;
+      }
       const threshold = Number(p.threshold || 5);
-      
+
       const stockValEl = document.getElementById('pdmStockVal');
       const stockSubEl = document.getElementById('pdmStockSub');
       const mrpValEl = document.getElementById('pdmMrpVal');
@@ -9293,8 +9308,11 @@
         }
       }
 
-      if (mrpValEl) mrpValEl.textContent = `₹${p.mrp || 0}`;
-      if (sellValEl) sellValEl.textContent = `₹${p.sp || p.mrp || 0}`;
+      const mrpNum = p.mrp != null ? p.mrp : 0;
+      const sellNum = p.sp != null ? p.sp : (p.sell != null ? p.sell : mrpNum);
+
+      if (mrpValEl) mrpValEl.textContent = `₹${mrpNum}`;
+      if (sellValEl) sellValEl.textContent = `₹${sellNum}`;
 
       // 5. Information Rows
       const bcEl = document.getElementById('pdmInfoBarcode');
@@ -14169,107 +14187,7 @@
     }
 
 
-    // ══════════════════════════════════════════
-    //  PRODUCT DETAIL MODAL
-    // ══════════════════════════════════════════
-
-    async function openProdDetail(id) {
-      if (!id) return;
-      id = String(id);
-      _pdmId = id;
-      // Sync lookup first (no await needed for demo/FS/STATE products)
-      var p = FS_PRODUCTS.find(function (x) { return x.id === id || x.barcode === id || x.sku === id; });
-      if (!p) p = STATE.products.find(function (x) { return x.id === id || x.barcode === id || x.sku === id; });
-      if (!p) p = STATE.barcodeIndex.get(id);
-      if (!p && IDB) { try { p = await idbGet('products', id); } catch (e) { } }
-      if (!p) { toast('Product not found', 'err'); return; }
-      _pdmId = p.id || p.barcode || id;
-
-      var imgSrc = getProductImageSrc(p);
-      var imgEl = document.getElementById('pdmImg');
-      if (imgEl) imgEl.innerHTML = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size:30px\\'>${emoji(p.name || '')}</span>';">` : '<span style="font-size:30px">' + emoji(p.name || '') + '</span>';
-
-      var ne = document.getElementById('pdmName'); if (ne) ne.textContent = p.name || '—';
-      var le = document.getElementById('pdmLoc'); if (le) le.textContent = p.location || p.loc || '—';
-      var me = document.getElementById('pdmMeta'); if (me) me.textContent = [p.brand, p.category].filter(Boolean).join(' · ');
-
-      var qty = p.qty != null ? p.qty : (p.stock != null ? p.stock : 0);
-      var t = p.threshold != null ? p.threshold : 5;
-      var isOut = qty === 0, isLow = !isOut && t > 0 && qty <= t;
-      var qc = isOut ? 'var(--rd)' : isLow ? 'var(--yl)' : 'var(--gr)';
-      var bdg = isOut ? '<span class="chip c-rd" style="font-size:10px;margin-left:6px">OUT</span>'
-        : isLow ? '<span class="chip c-yl" style="font-size:10px;margin-left:6px">LOW</span>' : '';
-      var se = document.getElementById('pdmStrip');
-      if (se) se.innerHTML =
-        '<div style="flex:1;background:var(--bg);border-radius:14px;padding:12px 14px;border:1.5px solid var(--bd)">' +
-        '<div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px">Stock</div>' +
-        '<div style="display:flex;align-items:center"><span style="font-size:26px;font-weight:800;color:' + qc + ';line-height:1">' + qty + '</span>' + bdg + '</div>' +
-        '<div style="font-size:9px;color:var(--t3);margin-top:3px">alert ≤ ' + t + '</div>' +
-        '</div>' +
-        (p.mrp ? '<div style="flex:1;background:var(--bg);border-radius:14px;padding:12px 14px;border:1.5px solid var(--bd)">' +
-          '<div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px">MRP</div>' +
-          '<div style="font-size:22px;font-weight:800;color:var(--t1);line-height:1">₹' + p.mrp + '</div>' +
-          '</div>' : '') +
-        (p.sp ? '<div style="flex:1;background:var(--or-lt);border-radius:14px;padding:12px 14px;border:1.5px solid var(--or-md)">' +
-          '<div style="font-size:10px;font-weight:700;color:var(--or);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px">Sell</div>' +
-          '<div style="font-size:22px;font-weight:800;color:var(--or);line-height:1">₹' + p.sp + '</div>' +
-          '</div>' : '');
-
-      var rows = [['Barcode', p.barcode || '—'], ['Location', p.location || p.loc || '—'], ['Brand', p.brand || '—'], ['Category', p.category || '—'], ['Fitment Group', p.fitment_group || '—']]
-        .filter(function (r) { return r[1] && r[1] !== '—'; });
-      var body = document.getElementById('pdmBody');
-      if (body) {
-        body.innerHTML = rows.map(function (r) {
-          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--bd)">' +
-            '<span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">' + r[0] + '</span>' +
-            '<span style="font-size:14px;font-weight:700;color:var(--t1);text-align:right;max-width:62%">' + r[1] + '</span></div>';
-        }).join('');
-        if (p.compatibility && p.compatibility.length) {
-          body.insertAdjacentHTML('beforeend',
-            '<div style="padding:11px 0"><div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Compatible Vehicles</div>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:5px">' + p.compatibility.map(function (v) { return '<span class="chip c-bl">' + v + '</span>'; }).join('') + '</div></div>');
-        }
-      }
-
-      var modal = document.getElementById('prodDetailModal');
-      if (modal) modal.style.display = 'flex';
-    }
-
-    function closeProdDetail() {
-      var modal = document.getElementById('prodDetailModal');
-      if (modal) modal.style.display = 'none';
-      _pdmId = null;
-    }
-
-    function pdmEdit() {
-      var id = _pdmId;
-      closeProdDetail();
-      if (id) editProduct(id);
-    }
-
-    async function pdmDelete() {
-      var id = _pdmId;
-      if (!id) return;
-      var p = FS_PRODUCTS.find(function (x) { return x.id === id || x.barcode === id; }) ||
-        STATE.products.find(function (x) { return x.id === id || x.barcode === id; });
-      var name = p ? (p.name || id) : id;
-      if (!confirm('Delete "' + name.slice(0, 40) + '"?\nThis cannot be undone.')) return;
-
-      var p2 = FS_PRODUCTS.find(function (x) { return x.id === id || x.barcode === id; }) ||
-        STATE.products.find(function (x) { return x.id === id || x.barcode === id; });
-      var altId = p2 ? (p2.id !== id ? p2.id : p2.barcode) : null;
-      FS_PRODUCTS = FS_PRODUCTS.filter(function (x) { return x.id !== id && x.barcode !== id && x.id !== altId && x.barcode !== altId; });
-      STATE.products = STATE.products.filter(function (x) { return x.id !== id && x.barcode !== id && x.id !== altId && x.barcode !== altId; });
-      STATE.barcodeIndex.delete(id); if (altId) STATE.barcodeIndex.delete(altId);
-      STATE.warehouseMap = buildWarehouseMap(STATE.products);
-      if (IDB) { try { await idbDelete('products', id); } catch (e) { } }
-      delete FS_IMAGES[id];
-      if (IDB) { try { await idbDelete('images', id); } catch (e) { } }
-      await fsSave();
-      closeProdDetail();
-      renderProductsList(document.getElementById('prodQ')?.value.trim() || '');
-      toast('Deleted: ' + name.slice(0, 30));
-    }
+    // (Legacy duplicate product detail modal functions removed — unified with openProdDetail above)
 
     // ── Filter modal brand/cat live search ──
     function filterFmPills(type, q) {
