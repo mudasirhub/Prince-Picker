@@ -6623,7 +6623,9 @@
         style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">
         Size (mm)</div>
       <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
-        <button class="sticker-btn on" id="sz-30x20" onclick="setStickerSize(this,'30x20')"
+        <button class="sticker-btn on" id="sz-55x30" onclick="setStickerSize(this,'55x30')"
+          style="height:36px;font-weight:700">55×30mm — Thermal</button>
+        <button class="sticker-btn" id="sz-30x20" onclick="setStickerSize(this,'30x20')"
           style="height:36px">30×20mm</button>
         <button class="sticker-btn" id="sz-58x30" onclick="setStickerSize(this,'58x30')"
           style="height:36px">58×30mm</button>
@@ -14286,8 +14288,61 @@
 
     // ── QR selection state ──
     var QR_SEL = new Map(); // id → { product, qty }
-    var QR_STICKER = '30x20';
+    var QR_STICKER = '55x30';
     var _btDevice = null, _btChar = null;
+
+    // ─────────────────────────────────────────────
+    //  PRINTER CONFIG & UNIFIED LABEL RENDERER
+    // ─────────────────────────────────────────────
+    var PRINTER_CONFIG = {
+      dpi: 203,
+      labelWidthMm: 55,
+      labelHeightMm: 30
+    };
+
+    // Code 128 patterns (107 standard indices)
+    var CODE128_PATTERNS = [
+      "212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312", "132212", "221213",
+      "221312", "231212", "112232", "122132", "122231", "113222", "123122", "123221", "223211", "221132",
+      "221231", "213212", "223112", "312131", "311222", "321122", "321221", "312212", "322112", "322211",
+      "212123", "212321", "232121", "111323", "131123", "131321", "112313", "132113", "132311", "211313",
+      "231113", "231311", "112133", "112331", "132131", "113123", "113321", "133121", "313121", "211331",
+      "231131", "213113", "213311", "213131", "311123", "311321", "331121", "312113", "312311", "332111",
+      "314111", "221411", "431111", "111224", "111422", "121124", "121421", "141122", "141221", "112214",
+      "112412", "122114", "122411", "142112", "142211", "241211", "221114", "413111", "241112", "134111",
+      "111242", "121142", "121241", "114212", "124112", "124211", "411212", "421112", "421211", "212141",
+      "214121", "412121", "111143", "111341", "131141", "114113", "114311", "411113", "411311", "113141",
+      "114131", "311141", "411131", "211412", "211214", "211232", "2331112"
+    ];
+
+    function drawCode128(ctx, text, x, y, barHeight, unitWidth) {
+      var sum = 104; // Start B
+      var codes = [104];
+      for (var i = 0; i < text.length; i++) {
+        var code = text.charCodeAt(i) - 32;
+        if (code >= 0 && code <= 102) {
+          codes.push(code);
+          sum += code * (i + 1);
+        }
+      }
+      var checksum = sum % 103;
+      codes.push(checksum);
+      codes.push(106); // Stop symbol
+
+      var currentX = x;
+      ctx.fillStyle = '#000000';
+      for (var i = 0; i < codes.length; i++) {
+        var pattern = CODE128_PATTERNS[codes[i]];
+        for (var j = 0; j < pattern.length; j++) {
+          var w = parseInt(pattern[j]) * unitWidth;
+          if (j % 2 === 0) {
+            ctx.fillRect(currentX, y, w, barHeight);
+          }
+          currentX += w;
+        }
+      }
+      return currentX - x;
+    }
 
     function setStickerSize(btn, size) {
       QR_STICKER = size;
@@ -14392,69 +14447,10 @@
       var QRCode = await loadQrLib();
       var canvas = document.createElement('canvas');
       await QRCode.toCanvas(canvas, value, {
-        width: size, margin: 1,
+        width: size, margin: 4, errorCorrectionLevel: 'M',
         color: { dark: '#000000', light: '#ffffff' }
       });
       return canvas;
-    }
-
-    // ── Build sticker label (canvas) ──
-    async function makeStickerCanvas(product, qty, stickerSize) {
-      var parts = (stickerSize || '30x20').split('x').map(Number);
-      var mmW = parts[0] || 30, mmH = parts[1] || 20;
-      var dpi = 203; // standard thermal printer DPI
-      var pxW = Math.round(mmW / 25.4 * dpi);
-      var pxH = Math.round(mmH / 25.4 * dpi);
-      var qrSz = Math.round(Math.min(pxW, pxH) * 0.55);
-      var label = product.barcode || product.id || '';
-      var name = (product.name || '').slice(0, 28);
-      var loc = product.location || product.loc || '';
-
-      var qrCanvas = await makeQrCanvas(label, qrSz);
-
-      var c = document.createElement('canvas');
-      c.width = pxW; c.height = pxH;
-      var ctx = c.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, pxW, pxH);
-
-      // QR left side
-      var qrX = 4, qrY = Math.round((pxH - qrSz) / 2);
-      ctx.drawImage(qrCanvas, qrX, qrY, qrSz, qrSz);
-
-      // Text right side
-      var textX = qrSz + 8;
-      var textW = pxW - textX - 4;
-      ctx.fillStyle = '#000';
-      ctx.textAlign = 'left';
-
-      // Name
-      var nameFontSz = Math.max(10, Math.min(22, Math.round(pxH * 0.22)));
-      ctx.font = 'bold ' + nameFontSz + 'px sans-serif';
-      ctx.fillText(name, textX, qrY + nameFontSz, textW);
-
-      // Barcode
-      var bcFontSz = Math.max(9, Math.round(pxH * 0.16));
-      ctx.font = bcFontSz + 'px monospace';
-      ctx.fillStyle = '#444';
-      ctx.fillText(label, textX, qrY + nameFontSz + bcFontSz + 4, textW);
-
-      // Location
-      if (loc) {
-        var locFontSz = Math.max(9, Math.round(pxH * 0.16));
-        ctx.font = 'bold ' + locFontSz + 'px sans-serif';
-        ctx.fillStyle = '#ec5b13';
-        ctx.fillText(loc, textX, qrY + nameFontSz + bcFontSz + locFontSz + 10, textW);
-      }
-
-      // Quantity badge if > 1
-      if (qty > 1) {
-        ctx.font = 'bold ' + Math.round(pxH * 0.14) + 'px sans-serif';
-        ctx.fillStyle = '#ec5b13';
-        ctx.textAlign = 'right';
-        ctx.fillText('x' + qty, pxW - 4, qrY + qrSz);
-      }
-
-      return c;
     }
 
     // ── Preview ──
@@ -14463,7 +14459,6 @@
       var container = document.getElementById('qrPreviewContent');
       if (!container) return;
 
-      // Show type badge
       var badge = document.getElementById('qrPreviewTypeBadge');
       if (badge) badge.textContent = QR_LABEL_TYPE === 'barcode' ? 'Barcode' : 'QR Code';
 
@@ -14471,28 +14466,27 @@
       var modal = document.getElementById('qrPreviewModal');
       if (modal) modal.style.display = 'flex';
 
-      // Small delay so modal renders before heavy canvas work
       await new Promise(function (r) { setTimeout(r, 30); });
 
       container.innerHTML = '';
       for (var entry of QR_SEL) {
         var item = entry[1];
-        // Render each copy
-        for (var qi = 0; qi < Math.min(item.qty, 6); qi++) {
+        // Render each copy in sequence
+        for (var qi = 0; qi < Math.min(item.qty, 12); qi++) {
           var canvas = await buildLabelCanvas(item.product, 1, QR_STICKER, QR_LABEL_TYPE);
-          // Scale canvas for display: render at natural size but constrain via CSS
           canvas.style.maxWidth = '100%';
           canvas.style.height = 'auto';
           canvas.style.borderRadius = '8px';
           canvas.style.border = '1.5px solid var(--bd)';
           canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,.12)';
           canvas.style.display = 'block';
+          canvas.style.margin = '0 auto 12px';
           container.appendChild(canvas);
         }
-        if (item.qty > 6) {
+        if (item.qty > 12) {
           var note = document.createElement('div');
           note.style.cssText = 'font-size:11px;color:var(--t3);text-align:center;padding:6px 0;width:100%';
-          note.textContent = '+ ' + (item.qty - 6) + ' more labels (truncated in preview)';
+          note.textContent = '+ ' + (item.qty - 12) + ' more labels (truncated in preview)';
           container.appendChild(note);
         }
       }
@@ -14529,153 +14523,189 @@
     };
 
     // ─────────────────────────────────────────────
-    //  CANVAS LABEL BUILDER
+    //  UNIFIED CANVAS LABEL LAYOUT ENGINE
     // ─────────────────────────────────────────────
     async function buildLabelCanvas(product, qty, stickerSize, labelType) {
-      var szStr = (stickerSize === 'custom') ? getCustomSize() : (stickerSize || '30x20');
+      var szStr = (stickerSize === 'custom') ? getCustomSize() : (stickerSize || '55x30');
       var parts = szStr.split('x').map(Number);
-      var mmW = parts[0] || 30, mmH = parts[1] || 20;
-      // 8px/mm ≈ 203 DPI (standard thermal resolution)
-      var PX = 8;
-      var pxW = mmW * PX, pxH = mmH * PX;
+      var mmW = parts[0] || 55, mmH = parts[1] || 30;
+
+      // Normalize 58x30 mm printable content width to actual 55 mm thermal target
+      var printableMmW = mmW;
+      if (mmW === 58 && mmH === 30) {
+        printableMmW = 55;
+      }
+
+      var dpi = PRINTER_CONFIG.dpi || 203;
+      var pxW = Math.round(mmW * dpi / 25.4);
+      var pxH = Math.round(mmH * dpi / 25.4);
+      var printPxW = Math.round(printableMmW * dpi / 25.4);
 
       var c = document.createElement('canvas');
       c.width = pxW; c.height = pxH;
       var ctx = c.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, pxW, pxH);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pxW, pxH);
 
-      var barcode = product.barcode || product.id || '';
-      var name = (product.name || '').slice(0, 32);
-      var loc = product.location || product.loc || '';
+      // Disable bilinear interpolation for crisp QR and barcode lines
+      ctx.imageSmoothingEnabled = false;
+      ctx.webkitImageSmoothingEnabled = false;
+
+      var barcode = String(product.barcode || product.id || product.sku || '');
+      var name = String(product.name || '').slice(0, 32);
+      var loc = String(product.location || product.loc || '');
+
+      var xOffset = Math.max(0, Math.floor((pxW - printPxW) / 2));
 
       if (labelType === 'barcode') {
-        // ── Barcode label: text barcode + name ──
-        var barH = Math.round(pxH * 0.45);
-        // Draw barcode bars manually (simple Code39 style visual)
-        ctx.fillStyle = '#000';
-        var barW = 2, gap = 1, x = 8;
-        for (var ci = 0; ci < barcode.length && x < pxW - 8; ci++) {
-          var w = (barcode.charCodeAt(ci) % 3) + 1;
-          ctx.fillRect(x, 6, barW * w, barH);
-          x += barW * w + gap;
+        // ── Barcode Label layout (centered stacked) ──
+        var modules = 11 * barcode.length + 35;
+        var unitW = 2;
+        var barTotalW = modules * unitW;
+        if (barTotalW > printPxW - 16) {
+          unitW = 1;
+          barTotalW = modules * unitW;
         }
-        // Barcode text
-        var bcFs = Math.max(8, Math.round(pxH * 0.14));
+
+        var barH = Math.round(pxH * 0.4);
+        var barX = xOffset + Math.round((printPxW - barTotalW) / 2);
+        var barY = Math.round(pxH * 0.1);
+
+        // Draw real Code 128 barcode
+        drawCode128(ctx, barcode, barX, barY, barH, unitW);
+
+        // Barcode text below barcode
+        var bcFs = Math.max(8, Math.round(pxH * 0.12));
         ctx.font = bcFs + 'px monospace';
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#000';
-        ctx.fillText(barcode.slice(0, 20), pxW / 2, barH + 6 + bcFs);
-        // Name
-        var nmFs = Math.max(8, Math.round(pxH * 0.16));
+        ctx.fillStyle = '#000000';
+        ctx.fillText(barcode.slice(0, 32), xOffset + printPxW / 2, barY + barH + bcFs + 2);
+
+        // Product Name below barcode text
+        var nmFs = Math.max(8, Math.round(pxH * 0.14));
         ctx.font = 'bold ' + nmFs + 'px sans-serif';
-        ctx.fillStyle = '#333';
-        ctx.fillText(name, pxW / 2, barH + 6 + bcFs + nmFs + 4, pxW - 8);
-        // Location
+        ctx.fillStyle = '#333333';
+        ctx.fillText(name, xOffset + printPxW / 2, barY + barH + bcFs + nmFs + 6, printPxW - 8);
+
+        // Location at the very bottom
         if (loc) {
-          ctx.font = 'bold ' + Math.max(8, Math.round(pxH * 0.15)) + 'px sans-serif';
+          var locFs = Math.max(8, Math.round(pxH * 0.12));
+          ctx.font = 'bold ' + locFs + 'px sans-serif';
           ctx.fillStyle = '#ec5b13';
-          ctx.fillText(loc, pxW / 2, pxH - 4, pxW - 8);
+          ctx.fillText(loc, xOffset + printPxW / 2, pxH - 4, printPxW - 8);
         }
       } else {
-        // ── QR label: QR + name + location ──
+        // ── QR Label layout ──
         var QRLib = await loadQrLib();
-        var qrSz = Math.round(Math.min(pxW, pxH) * 0.6);
-        var qrC = document.createElement('canvas');
-        await QRLib.toCanvas(qrC, barcode || name, {
-          width: qrSz, margin: 1,
-          color: { dark: '#000000', light: '#ffffff' }
-        });
-        // QR on left
-        var qrX = 4, qrY = Math.round((pxH - qrSz) / 2);
-        ctx.drawImage(qrC, qrX, qrY, qrSz, qrSz);
-        // Text right side
-        var tx = qrSz + 8, tw = pxW - tx - 4;
-        var nmFs = Math.max(9, Math.min(20, Math.round(pxH * 0.22)));
-        ctx.font = 'bold ' + nmFs + 'px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#111';
-        ctx.fillText(name, tx, qrY + nmFs, tw);
-        // Barcode text
-        var bcFs = Math.max(8, Math.round(pxH * 0.15));
-        ctx.font = bcFs + 'px monospace';
-        ctx.fillStyle = '#555';
-        ctx.fillText(barcode, tx, qrY + nmFs + bcFs + 3, tw);
-        // Location
-        if (loc) {
-          var lcFs = Math.max(8, Math.round(pxH * 0.15));
-          ctx.font = 'bold ' + lcFs + 'px sans-serif';
-          ctx.fillStyle = '#ec5b13';
-          ctx.fillText(loc, tx, qrY + nmFs + bcFs + lcFs + 8, tw);
+        var isSmallLabel = printableMmW < 50;
+
+        if (isSmallLabel) {
+          // Compact stacked layout for small labels (e.g. 30x20mm)
+          var nmFs = Math.max(8, Math.round(pxH * 0.14));
+          ctx.font = 'bold ' + nmFs + 'px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#111111';
+          ctx.fillText(name, xOffset + printPxW / 2, nmFs + 2, printPxW - 6);
+
+          var qrSz = Math.round(pxH * 0.5);
+          var qrC = document.createElement('canvas');
+          await QRLib.toCanvas(qrC, barcode, {
+            width: qrSz, margin: 4, errorCorrectionLevel: 'M',
+            color: { dark: '#000000', light: '#ffffff' }
+          });
+          var qrX = xOffset + Math.round((printPxW - qrSz) / 2);
+          var qrY = nmFs + 4;
+          ctx.drawImage(qrC, qrX, qrY, qrSz, qrSz);
+
+          var bcFs = Math.max(7, Math.round(pxH * 0.11));
+          ctx.font = bcFs + 'px monospace';
+          ctx.fillStyle = '#555555';
+          var bottomText = barcode + (loc ? ' · ' + loc : '');
+          ctx.fillText(bottomText, xOffset + printPxW / 2, pxH - 3, printPxW - 6);
+        } else {
+          // Larger horizontal two-column layout (e.g. 55x30mm)
+          var qrSz = Math.round(pxH * 0.7);
+          var qrC = document.createElement('canvas');
+          await QRLib.toCanvas(qrC, barcode, {
+            width: qrSz, margin: 4, errorCorrectionLevel: 'M',
+            color: { dark: '#000000', light: '#ffffff' }
+          });
+
+          var qrX = xOffset + 8;
+          var qrY = Math.round((pxH - qrSz) / 2);
+          ctx.drawImage(qrC, qrX, qrY, qrSz, qrSz);
+
+          var tx = xOffset + qrSz + 16;
+          var tw = printPxW - qrSz - 20;
+          ctx.textAlign = 'left';
+
+          var nmFs = Math.max(9, Math.min(18, Math.round(pxH * 0.18)));
+          ctx.font = 'bold ' + nmFs + 'px sans-serif';
+          ctx.fillStyle = '#111111';
+          ctx.fillText(name, tx, qrY + nmFs + 2, tw);
+
+          var bcFs = Math.max(8, Math.round(pxH * 0.13));
+          ctx.font = bcFs + 'px monospace';
+          ctx.fillStyle = '#555555';
+          ctx.fillText(barcode, tx, qrY + nmFs + bcFs + 8, tw);
+
+          if (loc) {
+            var lcFs = Math.max(8, Math.round(pxH * 0.13));
+            ctx.font = 'bold ' + lcFs + 'px sans-serif';
+            ctx.fillStyle = '#ec5b13';
+            ctx.fillText(loc, tx, qrY + nmFs + bcFs + lcFs + 14, tw);
+          }
         }
       }
 
-      // Qty badge
       if (qty > 1) {
-        ctx.font = 'bold ' + Math.round(pxH * 0.14) + 'px sans-serif';
+        ctx.font = 'bold ' + Math.round(pxH * 0.12) + 'px sans-serif';
         ctx.fillStyle = '#ec5b13';
         ctx.textAlign = 'right';
-        ctx.fillText('×' + qty, pxW - 4, pxH - 4);
+        ctx.fillText('×' + qty, pxW - 6, pxH - 6);
+      }
+
+      if (labelType !== 'barcode') {
+        console.log('[QR_RENDER] Input data:', barcode, 'Size:', mmW + 'x' + mmH + 'mm');
+      } else {
+        console.log('[BARCODE_RENDER] Input data:', barcode, 'Size:', mmW + 'x' + mmH + 'mm');
       }
 
       return c;
     }
 
     // ─────────────────────────────────────────────
-    //  PRINT — browser print dialog (works on Android)
+    //  PRINT EXECUTION VIA PRINTER SERVICE
     // ─────────────────────────────────────────────
     async function doPrint() {
       if (QR_SEL.size === 0) { toast('Select at least one product', 'err'); return; }
-      var sz = QR_STICKER === 'custom' ? getCustomSize() : (QR_STICKER || '30x20');
+      var sz = QR_STICKER === 'custom' ? getCustomSize() : (QR_STICKER || '55x30');
       var parts = sz.split('x').map(Number);
-      var mmW = parts[0] || 30, mmH = parts[1] || 20;
+      var mmW = parts[0] || 55, mmH = parts[1] || 30;
 
-      toast('Generating labels...');
-      var imgs = [];
+      toast('Generating label layout...');
+      var canvases = [];
       for (var entry of QR_SEL) {
         var item = entry[1];
         for (var qi = 0; qi < item.qty; qi++) {
           var c = await buildLabelCanvas(item.product, 1, sz, QR_LABEL_TYPE);
-          imgs.push(c.toDataURL('image/png'));
+          canvases.push(c);
         }
       }
-      if (!imgs.length) { toast('No labels generated', 'err'); return; }
+      if (!canvases.length) { toast('No labels generated', 'err'); return; }
 
-      var wMM = mmW + 'mm', hMM = mmH + 'mm';
-      var labelDivs = imgs.map(function (src) {
-        return '<div class="lbl"><img src="' + src + '"></div>';
-      }).join('');
-
-      var printHtml = [
-        '<!DOCTYPE html><html><head><meta charset="utf-8">',
-        '<style>',
-        '@page{size:' + wMM + ' ' + hMM + ';margin:0}',
-        'html,body{margin:0;padding:0}',
-        '.lbl{width:' + wMM + ';height:' + hMM + ';display:block;page-break-after:always;overflow:hidden}',
-        '.lbl img{width:100%;height:100%;display:block}',
-        '</st' + 'yle></he' + 'ad><body>',
-        labelDivs,
-        '</bo' + 'dy></ht' + 'ml>',
-      ].join('');
-
-      // Try using blob URL (no popup needed on some Android browsers)
-      var blob = new Blob([printHtml], { type: 'text/html' });
-      var url = URL.createObjectURL(blob);
-      var win = window.open(url, '_blank');
-      if (!win) {
-        // Fallback: inject iframe
-        var fr = document.createElement('iframe');
-        fr.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px';
-        fr.src = url;
-        fr.onload = function () {
-          try { fr.contentWindow.print(); } catch (e) { }
-          setTimeout(function () { document.body.removeChild(fr); URL.revokeObjectURL(url); }, 3000);
-        };
-        document.body.appendChild(fr);
-        toast('Printing via frame...', 'ok');
-        return;
+      try {
+        if (window.PRINTER_SERVICE && typeof window.PRINTER_SERVICE.printLabels === 'function') {
+          await window.PRINTER_SERVICE.printLabels(canvases, { widthMm: mmW, heightMm: mmH });
+          toast('✓ ' + canvases.length + ' label(s) sent to printer', 'ok');
+        } else {
+          throw new Error('Printer service unavailable');
+        }
+      } catch (err) {
+        console.error('[PRINT_ERROR]', err);
+        alert('Print Error: ' + (err.message || 'Unknown print error'));
+        toast('Print failed: ' + (err.message || 'Error'), 'err');
       }
-      setTimeout(function () { win.print(); URL.revokeObjectURL(url); }, 500);
-      toast('✓ ' + imgs.length + ' label(s) ready to print', 'ok');
     }
 
     // Keep old name as alias
@@ -16497,6 +16527,7 @@
       });
     }
   </script>
+  <script src="printer_service.js"></script>
   <script src="picker-bridge.js"></script>
 </body>
 
