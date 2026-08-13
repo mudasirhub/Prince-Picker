@@ -9479,6 +9479,14 @@
       openPdmFullscreen();
     }
 
+    function renderPdmGalleryView() {
+      if (PRODUCT_GALLERY.viewerOpen) {
+        syncPdmFullscreenView();
+      } else {
+        scrollPdmCarouselToIndex(PRODUCT_GALLERY.currentIndex);
+      }
+    }
+
     function setPdmGalleryIndex(newIdx) {
       const N = PRODUCT_GALLERY.images.length;
       if (N <= 0) return;
