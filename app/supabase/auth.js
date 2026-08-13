@@ -2,46 +2,62 @@
  * Supabase Authentication & Picker Verification
  */
 (function(window) {
-  async function verifyPicker(pickerName) {
+  async function verifyPicker(pickerName, pickerPin) {
     if (!pickerName || !pickerName.trim()) {
-      return { success: false, error: 'Picker name is required' };
+      return { success: false, error: 'Invalid PIN. Access denied.' };
     }
+    if (!pickerPin || !pickerPin.trim()) {
+      return { success: false, error: 'Invalid PIN. Access denied.' };
+    }
+
     const cleanName = pickerName.trim();
+    const cleanPin = pickerPin.trim();
+
+    // Verify 4-digit numeric format
+    if (!/^\d{4}$/.test(cleanPin)) {
+      return { success: false, error: 'Invalid PIN. Access denied.' };
+    }
+
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
 
     if (!client) {
-      console.warn('[Auth] Supabase client not active. Storing picker locally.');
-      const localId = 'P-' + Math.floor(Math.random() * 10000);
-      await savePickerLocally(cleanName, localId);
-      return { success: true, picker: { name: cleanName, id: localId }, offline: true };
+      console.warn('[Auth] Supabase client not active.');
+      return { success: false, error: 'Supabase connection offline. Verification unavailable.' };
     }
 
     try {
-      const { data, error } = await client
-        .from('pickers')
-        .select('*')
-        .ilike('name', cleanName);
+      // Call server-side PostgreSQL RPC function fn_verify_picker
+      const { data, error } = await client.rpc('fn_verify_picker', {
+        p_name: cleanName,
+        p_pin: cleanPin
+      });
 
       if (error) {
-        console.warn('[Auth] Supabase query error, falling back to local session:', error.message);
-        const localId = localStorage.getItem('picker_id') || ('P-' + Math.floor(Math.random() * 10000));
-        await savePickerLocally(cleanName, localId);
-        return { success: true, picker: { name: cleanName, id: localId }, offline: true };
+        console.warn('[Auth] Supabase RPC query error:', error.message);
+        return { success: false, error: 'Invalid PIN. Access denied.' };
       }
 
-      if (data && data.length > 0) {
-        const picker = data[0];
-        const pickerId = picker.id || picker.picker_id || ('P-' + Math.floor(Math.random() * 10000));
+      if (data && data.success && data.picker) {
+        const picker = data.picker;
+        const pickerId = picker.id || ('P-' + Math.floor(Math.random() * 10000));
         await savePickerLocally(picker.name || cleanName, pickerId);
-        return { success: true, picker: { name: picker.name || cleanName, id: pickerId } };
+        return { 
+          success: true, 
+          picker: { 
+            name: picker.name || cleanName, 
+            id: pickerId,
+            role: picker.role || 'picker'
+          } 
+        };
       } else {
-        return { success: false, error: `Picker "${cleanName}" not found in database.` };
+        return { 
+          success: false, 
+          error: (data && data.error) ? data.error : 'Invalid PIN. Access denied.' 
+        };
       }
     } catch (e) {
       console.error('[Auth] Verification exception:', e);
-      const localId = localStorage.getItem('picker_id') || ('P-' + Math.floor(Math.random() * 10000));
-      await savePickerLocally(cleanName, localId);
-      return { success: true, picker: { name: cleanName, id: localId }, offline: true };
+      return { success: false, error: 'Invalid PIN. Access denied.' };
     }
   }
 
@@ -78,3 +94,4 @@
     getSavedPicker
   };
 })(typeof window !== 'undefined' ? window : this);
+

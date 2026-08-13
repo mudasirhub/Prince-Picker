@@ -4769,10 +4769,9 @@
         <div class="login-sub">Enter your name to start picking</div>
         <input class="login-input" id="pickerName" placeholder="Your name" maxlength="32" autocomplete="name">
         <div style="width:100%;margin-bottom:8px">
-          <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.5px;margin-bottom:6px">SERVER
-            ADDRESS</div>
+          <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.5px;margin-bottom:6px">ENTER PIN</div>
           <div class="login-server-row">
-            <input class="server-input" id="serverUrl" placeholder="http://192.168.1.x:3000" value="">
+            <input class="server-input" id="pickerPin" type="password" placeholder="Enter 4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
             <div class="server-badge chk" id="serverBadge">–</div>
           </div>
         </div>
@@ -5881,92 +5880,321 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
           }
 
-          /* ── Product Detail Modal Multi-Image Gallery ── */
-          .pdm-gallery-container {
+          /* ── Product Detail Bottom Sheet (Pixel-Perfect to Spec) ── */
+          .pdm-sheet-container {
             position: relative;
             width: 100%;
-            border-radius: 16px;
+            max-width: 480px;
+            height: 90vh;
+            max-height: 90vh;
+            background: #ffffff;
+            border-radius: 24px 24px 0 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            background: var(--bg, #0f131a);
-            border: 1.5px solid var(--bd, #272d3b);
-            box-shadow: var(--sh, 0 4px 12px rgba(0,0,0,0.15));
+            margin: 0 auto;
           }
-          .pdm-gallery-viewport {
-            position: relative;
-            width: 100%;
-            height: 220px;
+
+          .pdm-drag-handle-bar {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0 6px;
+            flex-shrink: 0;
+            background: #ffffff;
+          }
+
+          .pdm-drag-handle {
+            width: 38px;
+            height: 4px;
+            border-radius: 2px;
+            background: #D1D5DB;
+          }
+
+          /* Header */
+          .pdm-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 6px 20px 14px;
+            flex-shrink: 0;
+            background: #ffffff;
+          }
+
+          .pdm-header-avatar {
+            width: 64px;
+            height: 64px;
+            min-width: 64px;
+            border-radius: 50%;
+            border: 2px solid #E5E7EB;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            user-select: none;
-            touch-action: pan-y;
-            cursor: pointer;
+            background: #F3F4F6;
+            font-size: 28px;
+            flex-shrink: 0;
           }
-          .pdm-gallery-image {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+
+          .pdm-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
           }
-          .pdm-gallery-counter {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0, 0, 0, 0.75);
-            color: #fff;
-            font-size: 11px;
+
+          .pdm-header-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+          }
+
+          .pdm-header-title {
+            font-size: 20px;
             font-weight: 800;
-            padding: 3px 8px;
-            border-radius: 12px;
-            letter-spacing: 0.5px;
-            backdrop-filter: blur(4px);
-            z-index: 5;
-            pointer-events: none;
+            color: #111827;
+            line-height: 1.25;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
-          .pdm-gallery-dots {
+
+          .pdm-header-sub {
+            font-size: 14px;
+            font-weight: 500;
+            color: #6B7280;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          /* Scrollable Content */
+          .pdm-scroll-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 24px;
+          }
+
+          /* Image Carousel with peeking slides */
+          .pdm-carousel-wrap {
+            width: 100%;
+            position: relative;
+            padding: 0 0 16px;
+          }
+
+          .pdm-carousel-track {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 0 40px;
+            gap: 12px;
+          }
+          .pdm-carousel-track::-webkit-scrollbar {
+            display: none;
+          }
+
+          .pdm-carousel-slide {
+            flex: 0 0 80%;
+            scroll-snap-align: center;
+            height: 230px;
+            background: #F3F4F6;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+          }
+
+          .pdm-carousel-slide img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+          }
+
+          .pdm-carousel-dots {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 8px 0 6px;
+            margin-top: 12px;
           }
-          .pdm-dot {
-            width: 7px;
-            height: 7px;
+
+          .pdm-carousel-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: var(--t4, rgba(255,255,255,0.3));
-            cursor: pointer;
+            background: #D1D5DB;
             transition: all 0.2s ease;
+            cursor: pointer;
           }
-          .pdm-dot.active {
-            width: 20px;
-            border-radius: 4px;
-            background: var(--or, #ec5b13);
+
+          .pdm-carousel-dot.active {
+            background: #374151;
+            transform: scale(1.1);
           }
-          .pdm-gallery-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            border: none;
-            font-size: 20px;
+
+          /* Stats Row */
+          .pdm-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            margin: 0 20px 16px;
+            padding: 12px 0;
+            border-top: 1px solid #E5E7EB;
+            border-bottom: 1px solid #E5E7EB;
+          }
+
+          .pdm-stat-col {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            z-index: 6;
-            opacity: 0.85;
-            transition: opacity 0.2s ease;
+            padding: 0 8px;
+            border-right: 1px solid #E5E7EB;
           }
-          .pdm-gallery-arrow:hover { opacity: 1; }
-          .pdm-gallery-arrow.prev { left: 8px; }
-          .pdm-gallery-arrow.next { right: 8px; }
+
+          .pdm-stat-col:last-child {
+            border-right: none;
+          }
+
+          .pdm-stat-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6B7280;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+          }
+
+          .pdm-stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.2;
+          }
+
+          .pdm-stat-val.green { color: #1E803E; }
+          .pdm-stat-val.amber { color: #D97706; }
+          .pdm-stat-val.red   { color: #DC2626; }
+          .pdm-stat-val.dark  { color: #111827; }
+          .pdm-stat-val.orange { color: #F15A24; }
+
+          .pdm-stat-sub {
+            font-size: 10.5px;
+            font-weight: 600;
+            margin-top: 2px;
+          }
+          .pdm-stat-sub.green { color: #1E803E; }
+          .pdm-stat-sub.amber { color: #D97706; }
+          .pdm-stat-sub.red   { color: #DC2626; }
+
+          /* Information Rows */
+          .pdm-info-rows {
+            padding: 0 20px;
+          }
+
+          .pdm-info-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 13px 0;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 13px;
+          }
+
+          .pdm-info-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            flex: 0 0 120px;
+            padding-right: 12px;
+          }
+
+          .pdm-info-val {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #111827;
+            text-align: right;
+            flex: 1;
+            word-break: break-word;
+          }
+
+          .pdm-info-val.barcode {
+            font-family: inherit;
+            letter-spacing: -0.2px;
+            word-break: break-all;
+          }
+
+          .pdm-more-btn {
+            display: inline-flex;
+            align-items: center;
+            background: #FCEEE8;
+            color: #F15A24;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            margin-left: 6px;
+            vertical-align: middle;
+          }
+
+          /* Sticky Footer */
+          .pdm-sticky-footer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            padding-bottom: max(14px, env(safe-area-inset-bottom));
+            background: #ffffff;
+            border-top: 1px solid #E5E7EB;
+            flex-shrink: 0;
+          }
+
+          .pdm-btn-delete {
+            flex: 1;
+            height: 48px;
+            background: #FDE8E8;
+            color: #DC2626;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+          }
+
+          .pdm-btn-delete:active {
+            opacity: 0.8;
+          }
+
+          .pdm-btn-edit {
+            flex: 2.2;
+            height: 48px;
+            background: #F15A24;
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+          }
+
+          .pdm-btn-edit:active {
+            opacity: 0.9;
+          }
 
           /* ── Instagram-Style Fullscreen Image Viewer ── */
           .pdm-fullscreen-viewer {
@@ -6213,64 +6441,91 @@
     </div>
   </div>
 
-  <!-- ══ PRODUCT DETAIL MODAL ══ -->
+  <!-- ══ PRODUCT DETAIL BOTTOM SHEET MODAL ══ -->
   <div id="prodDetailModal"
-    style="display:none;position:fixed;inset:0;z-index:450;flex-direction:column;align-items:stretch;justify-content:flex-end">
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,.55)" onclick="closeProdDetail()"></div>
-    <div
-      style="position:relative;background:var(--card);border-radius:24px 24px 0 0;max-height:91vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
-      <div style="display:flex;justify-content:center;padding:10px 0 2px">
-        <div style="width:36px;height:4px;border-radius:2px;background:var(--bd2)"></div>
+    style="display:none;position:fixed;inset:0;z-index:450;flex-direction:column;align-items:center;justify-content:flex-end">
+    <!-- Dimmed Background -->
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.5);transition:opacity 0.2s" onclick="closeProdDetail()"></div>
+
+    <!-- Bottom Sheet Container -->
+    <div class="pdm-sheet-container">
+      <!-- Drag Handle -->
+      <div class="pdm-drag-handle-bar">
+        <div class="pdm-drag-handle"></div>
       </div>
 
-      <!-- Multi-Image Swipe Gallery Wrap -->
-      <div id="pdmGalleryWrap" style="display:none;position:relative;padding:8px 16px 4px;flex-shrink:0">
-        <div id="pdmGalleryContainer" class="pdm-gallery-container">
-          <div id="pdmGalleryViewport" class="pdm-gallery-viewport">
-            <img id="pdmGalleryImg" class="pdm-gallery-image" src="" alt="Product Image" onclick="openPdmFullscreen()" onerror="onPdmGalleryImageError(this.src)">
-            <button type="button" class="pdm-gallery-arrow prev" onclick="event.stopPropagation(); setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1)">‹</button>
-            <button type="button" class="pdm-gallery-arrow next" onclick="event.stopPropagation(); setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1)">›</button>
-            <div id="pdmGalleryCounter" class="pdm-gallery-counter">1 / 1</div>
-          </div>
-          <div id="pdmGalleryDots" class="pdm-gallery-dots"></div>
+      <!-- 1. Product Header -->
+      <div class="pdm-header">
+        <div class="pdm-header-avatar" id="pdmHeaderAvatar"></div>
+        <div class="pdm-header-info">
+          <div class="pdm-header-title" id="pdmName">—</div>
+          <div class="pdm-header-sub" id="pdmSub">—</div>
         </div>
       </div>
 
-      <div style="display:flex;align-items:flex-start;gap:14px;padding:8px 16px 12px;flex-shrink:0">
-        <div id="pdmImg"
-          style="width:68px;height:68px;min-width:68px;border-radius:16px;background:var(--bg);border:1.5px solid var(--bd);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">
+      <!-- Scrollable Body Content -->
+      <div class="pdm-scroll-body" id="pdmScrollBody">
+
+        <!-- 3. Image Carousel -->
+        <div class="pdm-carousel-wrap" id="pdmCarouselWrap">
+          <div class="pdm-carousel-track" id="pdmCarouselTrack"></div>
+          <div class="pdm-carousel-dots" id="pdmCarouselDots"></div>
         </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:16px;font-weight:800;color:var(--t1);line-height:1.25;margin-bottom:3px" id="pdmName">—
+
+        <!-- 4. Stats Row (STOCK | MRP | SELL) -->
+        <div class="pdm-stats-row">
+          <div class="pdm-stat-col">
+            <div class="pdm-stat-label">STOCK</div>
+            <div class="pdm-stat-val green" id="pdmStockVal">0</div>
+            <div class="pdm-stat-sub green" id="pdmStockSub">healthy stock</div>
           </div>
-          <div style="font-size:13px;font-weight:700;color:var(--or);margin-bottom:2px" id="pdmLoc">—</div>
-          <div style="font-size:11px;color:var(--t3)" id="pdmMeta"></div>
+          <div class="pdm-stat-col">
+            <div class="pdm-stat-label">MRP</div>
+            <div class="pdm-stat-val dark" id="pdmMrpVal">₹0</div>
+          </div>
+          <div class="pdm-stat-col">
+            <div class="pdm-stat-label">SELL</div>
+            <div class="pdm-stat-val orange" id="pdmSellVal">₹0</div>
+          </div>
         </div>
-        <button onclick="closeProdDetail()"
-          style="width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);flex-shrink:0">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+
+        <!-- 5. Information Rows -->
+        <div class="pdm-info-rows">
+          <div class="pdm-info-row">
+            <div class="pdm-info-label">BARCODE</div>
+            <div class="pdm-info-val barcode" id="pdmInfoBarcode">—</div>
+          </div>
+          <div class="pdm-info-row">
+            <div class="pdm-info-label">LOCATION</div>
+            <div class="pdm-info-val" id="pdmInfoLoc">—</div>
+          </div>
+          <div class="pdm-info-row">
+            <div class="pdm-info-label">BRAND</div>
+            <div class="pdm-info-val" id="pdmInfoBrand">—</div>
+          </div>
+          <div class="pdm-info-row">
+            <div class="pdm-info-label">CATEGORY</div>
+            <div class="pdm-info-val" id="pdmInfoCat">—</div>
+          </div>
+          <div class="pdm-info-row">
+            <div class="pdm-info-label">COMPATIBILITY</div>
+            <div class="pdm-info-val">
+              <span id="pdmInfoCompatText">—</span>
+              <button type="button" id="pdmCompatToggleBtn" class="pdm-more-btn" style="display:none" onclick="togglePdmCompat()">More</button>
+            </div>
+          </div>
+          <div class="pdm-info-row" style="border-bottom:none">
+            <div class="pdm-info-label">INTACT MAPPING</div>
+            <div class="pdm-info-val" id="pdmInfoIntact">—</div>
+          </div>
+        </div>
+
       </div>
-      <div id="pdmStrip" style="display:flex;gap:8px;padding:0 16px 12px;flex-shrink:0"></div>
-      <div style="overflow-y:auto;padding:0 16px 6px;flex:1" id="pdmBody"></div>
-      <div style="display:flex;gap:10px;padding:12px 16px 16px;flex-shrink:0;border-top:1px solid var(--bd)">
-        <button onclick="pdmDelete()"
-          style="flex:1;height:50px;border-radius:14px;border:1.5px solid var(--rd-bg);background:var(--rd-bg);color:var(--rd);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-          </svg>Delete
-        </button>
-        <button onclick="pdmEdit()"
-          style="flex:2.5;height:50px;border-radius:14px;border:none;background:var(--or);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 4px 14px rgba(236,91,19,.3)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>Edit Product
-        </button>
+
+      <!-- 9. Sticky Footer -->
+      <div class="pdm-sticky-footer">
+        <button type="button" class="pdm-btn-delete" onclick="pdmDelete()">Delete</button>
+        <button type="button" class="pdm-btn-edit" onclick="pdmEdit()">Edit Product</button>
       </div>
     </div>
   </div>
@@ -7557,6 +7812,7 @@
         }
       };
       document.getElementById('pickerName')?.addEventListener('keydown', loginSubmitOnEnter);
+      document.getElementById('pickerPin')?.addEventListener('keydown', loginSubmitOnEnter);
       document.getElementById('serverUrl')?.addEventListener('keydown', loginSubmitOnEnter);
 
       // ── Offline-First Startup with IndexedDB & Supabase Sync ──
@@ -7834,24 +8090,37 @@
     //  LOGIN
     // ══════════════════════════════════════════
     async function doLogin() {
-      const name = document.getElementById('pickerName').value.trim();
-      const server = document.getElementById('serverUrl').value.trim();
-      if (!name) { toast('Enter your picker name first', 'err'); return; }
+      const nameEl = document.getElementById('pickerName');
+      const pinEl = document.getElementById('pickerPin');
+      const name = nameEl ? nameEl.value.trim() : '';
+      const pin = pinEl ? pinEl.value.trim() : '';
 
+      if (!name) {
+        setBadge('err', 'Invalid PIN');
+        toast('Enter your picker name', 'err');
+        return;
+      }
+      if (!pin || pin.length !== 4) {
+        setBadge('err', 'Invalid PIN');
+        toast('Enter a 4-digit PIN', 'err');
+        return;
+      }
+
+      const server = document.getElementById('serverUrl') ? document.getElementById('serverUrl').value.trim() : '';
       if (server) {
         STATE.serverUrl = server;
         localStorage.setItem(LS_SERVER, server);
       }
 
       setBadge('chk', 'Verifying...');
-      toast('Verifying picker from Supabase...', 'info');
+      toast('Verifying PIN with Supabase...', 'info');
 
       try {
-        // 1. Verify picker with Supabase
-        const authResult = window.SUPABASE_AUTH ? await window.SUPABASE_AUTH.verifyPicker(name) : { success: true, picker: { name } };
-        if (!authResult.success) {
-          setBadge('err', 'Invalid Picker');
-          toast(authResult.error || 'Picker verification failed', 'err');
+        // 1. Verify picker with Supabase server-side RPC
+        const authResult = window.SUPABASE_AUTH ? await window.SUPABASE_AUTH.verifyPicker(name, pin) : { success: false, error: 'Invalid PIN. Access denied.' };
+        if (!authResult || !authResult.success) {
+          setBadge('err', 'Invalid PIN');
+          toast(authResult?.error || 'Invalid PIN. Access denied.', 'err');
           return;
         }
 
@@ -7874,8 +8143,8 @@
         doLoginWithName(authResult.picker.name);
       } catch (err) {
         console.error('[doLogin] Login error:', err);
-        toast('Login failed: ' + err.message, 'err');
-        setBadge('err', 'Error');
+        setBadge('err', 'Invalid PIN');
+        toast('Invalid PIN. Access denied.', 'err');
       }
     }
 
@@ -8928,6 +9197,8 @@
       prevBodyOverflow: ''
     };
 
+    let pdmCompatExpanded = false;
+
     function openProdDetail(pOrId) {
       const p = typeof pOrId === 'object' ? pOrId : (STATE.barcodeIndex.get(pOrId) || STATE.products.find(x => x.id === pOrId || x.barcode === pOrId || x.sku === pOrId));
       if (!p) { toast('Product details not found', 'err'); return; }
@@ -8936,99 +9207,165 @@
       PRODUCT_GALLERY.currentIndex = 0;
       PRODUCT_GALLERY.viewerOpen = false;
 
-      // Resolve candidate images
+      // Lock body scrolling behind bottom sheet
+      PRODUCT_GALLERY.prevBodyOverflow = document.body.style.overflow || '';
+      document.body.style.overflow = 'hidden';
+
+      // 1. Header Image Avatar (Circular)
+      const avatarEl = document.getElementById('pdmHeaderAvatar');
       const candidateUrls = [];
-      if (Array.isArray(p.images) && p.images.length > 0) {
+      if (Array.isArray(p.images)) {
         for (const img of p.images) {
           if (typeof img === 'string' && img.trim()) candidateUrls.push(img.trim());
           else if (img && typeof img === 'object') {
-            if (img.url && typeof img.url === 'string' && img.url.trim()) candidateUrls.push(img.url.trim());
-            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.trim()) candidateUrls.push(img.dataUrl.trim());
+            if (img.url && typeof img.url === 'string') candidateUrls.push(img.url.trim());
+            if (img.dataUrl && typeof img.dataUrl === 'string') candidateUrls.push(img.dataUrl.trim());
           }
         }
       }
       if (typeof p.image === 'string' && p.image.trim()) candidateUrls.push(p.image.trim());
       if (p.image && typeof p.image === 'object') {
-        if (p.image.url && typeof p.image.url === 'string' && p.image.url.trim()) candidateUrls.push(p.image.url.trim());
-        if (p.image.dataUrl && typeof p.image.dataUrl === 'string' && p.image.dataUrl.trim()) candidateUrls.push(p.image.dataUrl.trim());
+        if (p.image.url && typeof p.image.url === 'string') candidateUrls.push(p.image.url.trim());
+        if (p.image.dataUrl && typeof p.image.dataUrl === 'string') candidateUrls.push(p.image.dataUrl.trim());
       }
-
       const idKey = p.id || '';
       const bcKey = p.barcode || p.sku || '';
       if (idKey && FS_IMAGES[idKey]) candidateUrls.push(FS_IMAGES[idKey]);
       if (bcKey && FS_IMAGES[bcKey]) candidateUrls.push(FS_IMAGES[bcKey]);
 
-      // Filter out blob: URLs and invalid formats, then run through formatImageUrl()
       const validImages = [];
       const seen = new Set();
-
       for (const rawUrl of candidateUrls) {
         if (!rawUrl || typeof rawUrl !== 'string') continue;
-        if (rawUrl.trim().startsWith('blob:')) continue; // Ignore persistent blob: URLs
+        if (rawUrl.trim().startsWith('blob:')) continue;
         const formatted = formatImageUrl(rawUrl);
         if (formatted && !seen.has(formatted)) {
           seen.add(formatted);
           validImages.push(formatted);
         }
       }
-
       PRODUCT_GALLERY.images = validImages;
 
-      // Populate basic modal text
+      if (avatarEl) {
+        if (validImages.length > 0) {
+          avatarEl.innerHTML = `<img src="${validImages[0]}" alt="${p.name || ''}" onerror="this.parentElement.innerHTML='<span>${emoji(p.name || '')}</span>'">`;
+        } else {
+          avatarEl.innerHTML = `<span>${emoji(p.name || '')}</span>`;
+        }
+      }
+
+      // 2. Header Text: Product Name & Brand · Location
       const nameEl = document.getElementById('pdmName');
-      const locEl = document.getElementById('pdmLoc');
-      const metaEl = document.getElementById('pdmMeta');
+      const subEl = document.getElementById('pdmSub');
       if (nameEl) nameEl.textContent = p.name || '—';
-      if (locEl) locEl.textContent = p.loc ? `📍 ${p.loc}` : '—';
-      if (metaEl) metaEl.textContent = [p.sku ? `SKU: ${p.sku}` : '', p.brand ? `Brand: ${p.brand}` : '', p.barcode ? `Barcode: ${p.barcode}` : ''].filter(Boolean).join(' · ');
 
-      // Update Product Strip (Stock, MRP, SP, Category)
-      const stripEl = document.getElementById('pdmStrip');
-      if (stripEl) {
-        const effStock = getEffectiveInventory(p.id || p.barcode, p.loc);
-        const sc = effStock >= 20 ? 'c-gr' : effStock >= 5 ? 'c-yl' : 'c-rd';
-        stripEl.innerHTML = `
-          <span class="chip ${sc}" style="font-size:11px;padding:4px 10px">Stock: ${effStock}</span>
-          ${p.mrp > 0 ? `<span class="chip c-or" style="font-size:11px;padding:4px 10px">MRP: ₹${p.mrp}</span>` : ''}
-          ${p.sp > 0 && p.sp !== p.mrp ? `<span class="chip c-gr" style="font-size:11px;padding:4px 10px">SP: ₹${p.sp}</span>` : ''}
-          ${p.category ? `<span class="chip" style="font-size:11px;padding:4px 10px;background:var(--bg2);color:var(--t2)">${p.category}</span>` : ''}
-        `;
+      const brandStr = p.brand ? p.brand.trim() : '';
+      const locStr = p.loc ? p.loc.trim() : (p.location ? p.location.trim() : '');
+      const subParts = [brandStr, locStr].filter(Boolean);
+      if (subEl) subEl.textContent = subParts.length > 0 ? subParts.join(' · ') : '—';
+
+      // 3. Image Carousel
+      renderPdmCarousel();
+
+      // 4. Stats Row
+      const effStock = getEffectiveInventory(p.id || p.barcode, p.loc);
+      const threshold = Number(p.threshold || 5);
+      
+      const stockValEl = document.getElementById('pdmStockVal');
+      const stockSubEl = document.getElementById('pdmStockSub');
+      const mrpValEl = document.getElementById('pdmMrpVal');
+      const sellValEl = document.getElementById('pdmSellVal');
+
+      if (stockValEl && stockSubEl) {
+        stockValEl.textContent = effStock;
+        if (effStock <= 0) {
+          stockValEl.className = 'pdm-stat-val red';
+          stockSubEl.className = 'pdm-stat-sub red';
+          stockSubEl.textContent = 'out of stock';
+        } else if (effStock < threshold) {
+          stockValEl.className = 'pdm-stat-val amber';
+          stockSubEl.className = 'pdm-stat-sub amber';
+          stockSubEl.textContent = 'low stock';
+        } else {
+          stockValEl.className = 'pdm-stat-val green';
+          stockSubEl.className = 'pdm-stat-sub green';
+          stockSubEl.textContent = 'healthy stock';
+        }
       }
 
-      // Populate Body
-      const bodyEl = document.getElementById('pdmBody');
-      if (bodyEl) {
-        bodyEl.innerHTML = `
-          <div style="background:var(--bg);border-radius:14px;padding:12px;margin-bottom:10px;font-size:12px;color:var(--t2);line-height:1.5">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">Barcode</span><strong>${p.barcode || '—'}</strong></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">SKU</span><strong>${p.sku || '—'}</strong></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">Location</span><strong>${p.loc || '—'}</strong></div>
-            ${p.threshold ? `<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--t3)">Low Stock Alert</span><strong>≤ ${p.threshold}</strong></div>` : ''}
-            ${p.fitment_group ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Fitment Group</span><strong>${p.fitment_group}</strong></div>` : ''}
-          </div>
-          ${Array.isArray(p.compatibility) && p.compatibility.length > 0 ? `
-            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Compatibility</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-              ${p.compatibility.map(c => `<span class="chip" style="font-size:10px;background:var(--bg2);color:var(--t1)">${c}</span>`).join('')}
-            </div>
-          ` : ''}
-        `;
+      if (mrpValEl) mrpValEl.textContent = `₹${p.mrp || 0}`;
+      if (sellValEl) sellValEl.textContent = `₹${p.sp || p.mrp || 0}`;
+
+      // 5. Information Rows
+      const bcEl = document.getElementById('pdmInfoBarcode');
+      const locInfoEl = document.getElementById('pdmInfoLoc');
+      const brandInfoEl = document.getElementById('pdmInfoBrand');
+      const catInfoEl = document.getElementById('pdmInfoCat');
+      const intactInfoEl = document.getElementById('pdmInfoIntact');
+
+      if (bcEl) bcEl.textContent = p.barcode || p.sku || '—';
+      if (locInfoEl) locInfoEl.textContent = p.loc || p.location || '—';
+      if (brandInfoEl) brandInfoEl.textContent = p.brand || '—';
+      if (catInfoEl) catInfoEl.textContent = p.category || '—';
+      if (intactInfoEl) intactInfoEl.textContent = p.fitment_group || 'Mapping Data';
+
+      // Compatibility Row (with More / Less toggle)
+      pdmCompatExpanded = false;
+      const compatTextEl = document.getElementById('pdmInfoCompatText');
+      const compatBtnEl = document.getElementById('pdmCompatToggleBtn');
+
+      const rawCompatList = Array.isArray(p.compatibility) ? p.compatibility : (p.compatibility ? p.compatibility.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      const compatStr = Array.isArray(p.compatibility) ? p.compatibility.join(', ') : (p.compatibility || '');
+
+      if (compatTextEl && compatBtnEl) {
+        if (!compatStr || compatStr === '—') {
+          compatTextEl.textContent = '—';
+          compatBtnEl.style.display = 'none';
+        } else if (rawCompatList.length > 3 || compatStr.length > 30) {
+          const shortText = rawCompatList.length > 3 ? rawCompatList.slice(0, 3).join(', ') : compatStr.substring(0, 30);
+          compatTextEl.textContent = shortText + '...';
+          compatBtnEl.style.display = 'inline-flex';
+          compatBtnEl.textContent = 'More';
+        } else {
+          compatTextEl.textContent = compatStr;
+          compatBtnEl.style.display = 'none';
+        }
       }
 
-      // Render Image Gallery
-      renderPdmGalleryView();
-
+      // Show Modal
       const modal = document.getElementById('prodDetailModal');
       if (modal) modal.style.display = 'flex';
 
-      initPdmGalleryGestures();
-      initPdmFullscreenGestures();
+      // Reset scroll position to top
+      const scrollBody = document.getElementById('pdmScrollBody');
+      if (scrollBody) scrollBody.scrollTop = 0;
+    }
+
+    function togglePdmCompat() {
+      pdmCompatExpanded = !pdmCompatExpanded;
+      const textEl = document.getElementById('pdmInfoCompatText');
+      const btnEl = document.getElementById('pdmCompatToggleBtn');
+      const p = PRODUCT_GALLERY.product;
+      if (!p || !textEl || !btnEl) return;
+
+      const rawList = Array.isArray(p.compatibility) ? p.compatibility : (p.compatibility ? p.compatibility.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      const fullStr = Array.isArray(p.compatibility) ? p.compatibility.join(', ') : (p.compatibility || '');
+
+      if (pdmCompatExpanded) {
+        textEl.textContent = fullStr;
+        btnEl.textContent = 'Less';
+      } else {
+        const shortText = rawList.length > 3 ? rawList.slice(0, 3).join(', ') : fullStr.substring(0, 30);
+        textEl.textContent = shortText + '...';
+        btnEl.textContent = 'More';
+      }
     }
 
     function closeProdDetail() {
       if (PRODUCT_GALLERY.viewerOpen) {
         closePdmFullscreen();
       }
+      document.body.style.overflow = PRODUCT_GALLERY.prevBodyOverflow || '';
       const modal = document.getElementById('prodDetailModal');
       if (modal) modal.style.display = 'none';
       PRODUCT_GALLERY.product = null;
@@ -9063,63 +9400,67 @@
       }
     }
 
-    function renderPdmGalleryView() {
-      const wrapEl = document.getElementById('pdmGalleryWrap');
-      const imgBoxEl = document.getElementById('pdmImg');
-      const imgEl = document.getElementById('pdmGalleryImg');
-      const counterEl = document.getElementById('pdmGalleryCounter');
-      const dotsEl = document.getElementById('pdmGalleryDots');
-      const prevBtn = wrapEl?.querySelector('.pdm-gallery-arrow.prev');
-      const nextBtn = wrapEl?.querySelector('.pdm-gallery-arrow.next');
+    function renderPdmCarousel() {
+      const track = document.getElementById('pdmCarouselTrack');
+      const dotsEl = document.getElementById('pdmCarouselDots');
+      if (!track) return;
 
-      const N = PRODUCT_GALLERY.images.length;
-      const idx = PRODUCT_GALLERY.currentIndex;
+      const images = PRODUCT_GALLERY.images;
+      const N = images.length;
+      PRODUCT_GALLERY.currentIndex = 0;
 
-      if (N > 1) {
-        // Multi-Image Gallery Mode
-        if (wrapEl) wrapEl.style.display = 'block';
-        if (imgBoxEl) imgBoxEl.style.display = 'none';
-
-        if (imgEl && PRODUCT_GALLERY.images[idx]) {
-          imgEl.src = PRODUCT_GALLERY.images[idx];
-        }
-
-        if (counterEl) counterEl.textContent = `${idx + 1} / ${N}`;
-
-        if (prevBtn) prevBtn.style.display = N > 1 ? 'flex' : 'none';
-        if (nextBtn) nextBtn.style.display = N > 1 ? 'flex' : 'none';
+      if (N > 0) {
+        track.innerHTML = images.map((src, i) => `
+          <div class="pdm-carousel-slide" onclick="openPdmFullscreenIndex(${i})">
+            <img src="${src}" alt="Product Image ${i + 1}" onerror="onPdmGalleryImageError(this.src)">
+          </div>
+        `).join('');
 
         if (dotsEl) {
           dotsEl.style.display = 'flex';
-          dotsEl.innerHTML = PRODUCT_GALLERY.images.map((_, i) =>
-            `<div class="pdm-dot ${i === idx ? 'active' : ''}" onclick="setPdmGalleryIndex(${i})"></div>`
-          ).join('');
+          dotsEl.innerHTML = images.map((_, i) => `
+            <div class="pdm-carousel-dot ${i === 0 ? 'active' : ''}" onclick="scrollPdmCarouselToIndex(${i})"></div>
+          `).join('');
         }
-      } else if (N === 1) {
-        // Single Image Mode
-        if (wrapEl) wrapEl.style.display = 'block';
-        if (imgBoxEl) imgBoxEl.style.display = 'none';
-
-        if (imgEl) imgEl.src = PRODUCT_GALLERY.images[0];
-        if (counterEl) counterEl.textContent = '1 / 1';
-
-        if (prevBtn) prevBtn.style.display = 'none';
-        if (nextBtn) nextBtn.style.display = 'none';
-        if (dotsEl) dotsEl.style.display = 'none';
       } else {
-        // Fallback Emoji Mode (No valid images in PRODUCT_GALLERY.images)
-        if (wrapEl) wrapEl.style.display = 'none';
-        if (imgBoxEl) {
-          imgBoxEl.style.display = 'flex';
-          const p = PRODUCT_GALLERY.product || {};
-          imgBoxEl.innerHTML = emoji(p.name || '');
-        }
+        const p = PRODUCT_GALLERY.product || {};
+        track.innerHTML = `
+          <div class="pdm-carousel-slide" style="cursor:default">
+            <div style="font-size:56px">${emoji(p.name || '')}</div>
+          </div>
+        `;
+        if (dotsEl) dotsEl.style.display = 'none';
       }
 
-      // Also sync full-screen viewer if open
-      if (PRODUCT_GALLERY.viewerOpen) {
-        syncPdmFullscreenView();
-      }
+      // Scroll listener to update pagination dots dynamically
+      track.onscroll = debounce(function () {
+        const slide = track.querySelector('.pdm-carousel-slide');
+        if (!slide) return;
+        const slideW = slide.offsetWidth + 12;
+        const index = Math.round(track.scrollLeft / slideW);
+        PRODUCT_GALLERY.currentIndex = Math.max(0, Math.min(index, N - 1));
+
+        if (dotsEl && N > 0) {
+          const dots = dotsEl.querySelectorAll('.pdm-carousel-dot');
+          dots.forEach((dot, idx) => {
+            dot.classList.toggle('active', idx === PRODUCT_GALLERY.currentIndex);
+          });
+        }
+      }, 50);
+    }
+
+    function scrollPdmCarouselToIndex(idx) {
+      const track = document.getElementById('pdmCarouselTrack');
+      if (!track) return;
+      const slide = track.querySelector('.pdm-carousel-slide');
+      if (!slide) return;
+      const slideW = slide.offsetWidth + 12;
+      track.scrollTo({ left: idx * slideW, behavior: 'smooth' });
+    }
+
+    function openPdmFullscreenIndex(idx) {
+      PRODUCT_GALLERY.currentIndex = idx;
+      openPdmFullscreen();
     }
 
     function setPdmGalleryIndex(newIdx) {

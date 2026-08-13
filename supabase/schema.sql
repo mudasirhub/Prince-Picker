@@ -132,3 +132,104 @@ EXCEPTION WHEN UNIQUE_VIOLATION THEN
   );
 END;
 $$;
+
+-- =============================================================================
+-- 3. PICKER PIN AUTHENTICATION SCHEMA & VERIFICATION FUNCTION
+-- =============================================================================
+
+-- Enable pgcrypto extension for bcrypt hash verification
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Ensure pickers table structure with required security fields
+CREATE TABLE IF NOT EXISTS pickers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  role TEXT DEFAULT 'picker',
+  pin_hash TEXT NOT NULL,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE pickers ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'picker';
+ALTER TABLE pickers ADD COLUMN IF NOT EXISTS pin_hash TEXT;
+ALTER TABLE pickers ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true;
+
+-- Enable Row Level Security (RLS) on pickers
+ALTER TABLE pickers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public pickers read policy" ON pickers;
+CREATE POLICY "Public pickers read policy" ON pickers 
+  FOR SELECT USING (active = true);
+
+-- Atomic PostgreSQL RPC function for PIN verification
+-- Executes with SECURITY DEFINER privileges to compare bcrypt hash securely without exposing pin_hash to frontend client
+CREATE OR REPLACE FUNCTION fn_verify_picker(
+  p_name TEXT,
+  p_pin TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_picker RECORD;
+  v_clean_name TEXT;
+  v_clean_pin TEXT;
+BEGIN
+  v_clean_name := LOWER(TRIM(COALESCE(p_name, '')));
+  v_clean_pin := TRIM(COALESCE(p_pin, ''));
+
+  IF v_clean_name = '' OR v_clean_pin = '' THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Invalid PIN. Access denied.'
+    );
+  END IF;
+
+  -- Query active picker by case-insensitive name match
+  SELECT id, name, role, pin_hash INTO v_picker
+  FROM pickers
+  WHERE LOWER(TRIM(name)) = v_clean_name AND active = true
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Invalid PIN. Access denied.'
+    );
+  END IF;
+
+  -- Verify PIN using pgcrypto crypt() function
+  IF v_picker.pin_hash IS NOT NULL AND v_picker.pin_hash = crypt(v_clean_pin, v_picker.pin_hash) THEN
+    RETURN jsonb_build_object(
+      'success', true,
+      'picker', jsonb_build_object(
+        'id', v_picker.id,
+        'name', v_picker.name,
+        'role', v_picker.role
+      )
+    );
+  ELSE
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Invalid PIN. Access denied.'
+    );
+  END IF;
+END;
+$$;
+
+-- Seed / Upsert Initial Pickers with bcrypt hashed PINs
+INSERT INTO pickers (name, pin_hash, role, active)
+VALUES 
+  ('Admin', crypt('3363', gen_salt('bf')), 'admin', true),
+  ('Picker Admin', crypt('3363', gen_salt('bf')), 'admin', true),
+  ('Mudasir', crypt('1627', gen_salt('bf')), 'picker', true),
+  ('Mujeeb Khan', crypt('1627', gen_salt('bf')), 'picker', true),
+  ('Akram Khan', crypt('1627', gen_salt('bf')), 'picker', true)
+ON CONFLICT (name) DO UPDATE SET 
+  pin_hash = EXCLUDED.pin_hash,
+  role = EXCLUDED.role,
+  active = EXCLUDED.active,
+  updated_at = NOW();
+
