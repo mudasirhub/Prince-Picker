@@ -9394,11 +9394,9 @@
     function pdmEdit() {
       const p = PRODUCT_GALLERY.product;
       closeProdDetail();
-      if (!p) return;
-      nav('s-add-product');
-      setTimeout(function () {
-        if (typeof populateAPForm === 'function') populateAPForm(p);
-      }, 100);
+      if (p) {
+        editProduct(p.id || p.barcode);
+      }
     }
 
     function pdmDelete() {
