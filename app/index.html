@@ -9912,8 +9912,19 @@
 
       // 5. Stock By Location Block
       const primaryLoc = (p.loc || p.location || 'R1L1B3').trim();
-      const shopLocCode = primaryLoc.replace(/^WR/i, '');
-      const whLocCode = 'WR' + shopLocCode;
+      let shopLocCode = primaryLoc;
+      let whLocCode = primaryLoc;
+
+      if (/^WR/i.test(primaryLoc)) {
+        shopLocCode = primaryLoc.replace(/^WR/i, 'R');
+        whLocCode = primaryLoc.toUpperCase();
+      } else if (/^R/i.test(primaryLoc)) {
+        shopLocCode = primaryLoc.toUpperCase();
+        whLocCode = primaryLoc.replace(/^R/i, 'WR').toUpperCase();
+      } else {
+        shopLocCode = primaryLoc.toUpperCase();
+        whLocCode = ('WR' + primaryLoc).toUpperCase();
+      }
 
       const shopLocNameEl = document.getElementById('pdmShopLocName');
       const whLocNameEl = document.getElementById('pdmWhLocName');
