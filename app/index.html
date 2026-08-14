@@ -5885,91 +5885,178 @@
             position: relative;
             width: 100%;
             max-width: 480px;
-            height: 90vh;
-            max-height: 90vh;
+            height: 95vh;
+            max-height: 95vh;
             background: #ffffff;
-            border-radius: 24px 24px 0 0;
+            border-radius: 20px 20px 0 0;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             margin: 0 auto;
+            color: #111827;
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
           }
 
-          .pdm-drag-handle-bar {
-            display: flex;
-            justify-content: center;
-            padding: 10px 0 6px;
-            flex-shrink: 0;
-            background: #ffffff;
-          }
-
-          .pdm-drag-handle {
-            width: 38px;
-            height: 4px;
-            border-radius: 2px;
-            background: #D1D5DB;
-          }
-
-          /* Header */
-          .pdm-header {
+          /* 1. Header Bar & Product Identity */
+          .pdm-top-nav {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 6px 20px 14px;
+            justify-content: space-between;
+            padding: 12px 16px 8px;
             flex-shrink: 0;
             background: #ffffff;
           }
 
-          .pdm-header-avatar {
-            width: 64px;
-            height: 64px;
-            min-width: 64px;
+          .pdm-nav-btn {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 2px solid #E5E7EB;
+            border: none;
+            background: transparent;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s;
+          }
+          .pdm-nav-btn:active {
+            background: #F3F4F6;
+          }
+
+          .pdm-nav-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: -0.2px;
+          }
+
+          .pdm-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+          }
+
+          .pdm-product-identity {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 4px 20px 14px;
+            flex-shrink: 0;
+            background: #ffffff;
+          }
+
+          .pdm-avatar-box {
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
+            border-radius: 14px;
+            border: 1px solid #E5E7EB;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #F3F4F6;
-            font-size: 28px;
+            background: #F9FAFB;
+            font-size: 26px;
             flex-shrink: 0;
           }
 
-          .pdm-header-avatar img {
+          .pdm-avatar-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 50%;
+            border-radius: 14px;
           }
 
-          .pdm-header-info {
+          .pdm-identity-info {
             flex: 1;
             min-width: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
           }
 
-          .pdm-header-title {
+          .pdm-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+          }
+
+          .pdm-product-name {
             font-size: 20px;
             font-weight: 800;
             color: #111827;
             line-height: 1.25;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
           }
 
-          .pdm-header-sub {
-            font-size: 14px;
-            font-weight: 500;
+          .pdm-bookmark-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+            background: #ffffff;
+            color: #4B5563;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s;
+          }
+          .pdm-bookmark-btn.active {
+            background: #FEF3C7;
+            border-color: #F59E0B;
+            color: #D97706;
+          }
+
+          .pdm-product-sub {
+            font-size: 13.5px;
+            font-weight: 600;
             color: #6B7280;
             margin-top: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+          }
+
+          .pdm-badges-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+          }
+
+          .pdm-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11.5px;
+            font-weight: 700;
+            line-height: 1.3;
+          }
+          .pdm-badge.active {
+            background: #DEF7EC;
+            color: #03543F;
+          }
+          .pdm-badge.stock-status.green {
+            background: #FCEEE8;
+            color: #D97706;
+          }
+          .pdm-badge.stock-status.healthy {
+            background: #DEF7EC;
+            color: #03543F;
+          }
+          .pdm-badge.stock-status.amber {
+            background: #FEF3C7;
+            color: #B45309;
+          }
+          .pdm-badge.stock-status.red {
+            background: #FDE8E8;
+            color: #9B1C1C;
           }
 
           /* Scrollable Content */
@@ -5977,162 +6064,201 @@
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 24px;
+            padding: 8px 0 24px;
+            background: #FAFAFA;
           }
 
-          /* Image Carousel with peeking slides */
-          .pdm-carousel-wrap {
-            width: 100%;
-            position: relative;
-            padding: 0 0 16px;
+          /* 2. Product Images Block */
+          .pdm-images-container {
+            padding: 0 16px 14px;
           }
 
-          .pdm-carousel-track {
+          .pdm-image-grid {
             display: flex;
-            align-items: center;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            padding: 0 40px;
             gap: 12px;
-          }
-          .pdm-carousel-track::-webkit-scrollbar {
-            display: none;
+            height: 200px;
           }
 
-          .pdm-carousel-slide {
-            flex: 0 0 80%;
-            scroll-snap-align: center;
-            height: 230px;
-            background: #F3F4F6;
+          .pdm-primary-img-tile {
+            flex: 1.6;
+            height: 100%;
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
             border-radius: 16px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+          }
+          .pdm-primary-img-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
 
-          .pdm-carousel-slide img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
+          .pdm-add-photo-tile {
+            flex: 1;
+            height: 100%;
+            background: #FFFFFF;
+            border: 2px dashed #D1D5DB;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #6B7280;
+            font-size: 12.5px;
+            font-weight: 700;
+            transition: background 0.15s;
+          }
+          .pdm-add-photo-tile:active {
+            background: #F3F4F6;
           }
 
-          .pdm-carousel-dots {
+          .pdm-dots-container {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            margin-top: 12px;
+            margin-top: 10px;
           }
 
           .pdm-carousel-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background: #D1D5DB;
             transition: all 0.2s ease;
             cursor: pointer;
           }
-
           .pdm-carousel-dot.active {
             background: #374151;
-            transform: scale(1.1);
+            transform: scale(1.2);
           }
 
-          /* Stats Row */
-          .pdm-stats-row {
+          /* 3. Three Equal Compact Cards (Price + Quantity) */
+          .pdm-three-cards {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            margin: 0 20px 16px;
-            padding: 12px 0;
-            border-top: 1px solid #E5E7EB;
-            border-bottom: 1px solid #E5E7EB;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 16px 14px;
           }
 
-          .pdm-stat-col {
+          .pdm-compact-card {
+            background: #FFFFFF;
+            border: 1px solid #F3F4F6;
+            border-radius: 14px;
+            padding: 12px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0 8px;
-            border-right: 1px solid #E5E7EB;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
           }
 
-          .pdm-stat-col:last-child {
-            border-right: none;
-          }
-
-          .pdm-stat-label {
+          .pdm-card-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 800;
             color: #6B7280;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
           }
 
-          .pdm-stat-val {
-            font-size: 22px;
+          .pdm-card-value {
+            font-size: 20px;
             font-weight: 800;
             line-height: 1.2;
           }
+          .pdm-card-value.dark { color: #111827; }
+          .pdm-card-value.orange { color: #F15A24; }
+          .pdm-card-value.green { color: #1E803E; }
+          .pdm-card-value.amber { color: #D97706; }
+          .pdm-card-value.red { color: #DC2626; }
 
-          .pdm-stat-val.green { color: #1E803E; }
-          .pdm-stat-val.amber { color: #D97706; }
-          .pdm-stat-val.red   { color: #DC2626; }
-          .pdm-stat-val.dark  { color: #111827; }
-          .pdm-stat-val.orange { color: #F15A24; }
-
-          .pdm-stat-sub {
+          .pdm-card-sub {
             font-size: 10.5px;
-            font-weight: 600;
+            font-weight: 700;
             margin-top: 2px;
           }
-          .pdm-stat-sub.green { color: #1E803E; }
-          .pdm-stat-sub.amber { color: #D97706; }
-          .pdm-stat-sub.red   { color: #DC2626; }
+          .pdm-card-sub.green { color: #1E803E; }
+          .pdm-card-sub.amber { color: #D97706; }
+          .pdm-card-sub.red { color: #DC2626; }
 
-          /* Information Rows */
-          .pdm-info-rows {
-            padding: 0 20px;
+          /* 4. Product Information Block */
+          .pdm-info-block {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            margin: 0 16px 14px;
+            padding: 4px 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
           }
 
-          .pdm-info-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            padding: 13px 0;
-            border-bottom: 1px solid #E5E7EB;
-            font-size: 13px;
+          .pdm-block-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #F3F4F6;
+          }
+          .pdm-block-item.no-border {
+            border-bottom: none;
           }
 
-          .pdm-info-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #374151;
+          .pdm-item-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #6B7280;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            flex: 0 0 120px;
-            padding-right: 12px;
+            margin-bottom: 4px;
           }
 
-          .pdm-info-val {
-            font-size: 13.5px;
+          .pdm-item-val {
+            font-size: 14px;
             font-weight: 600;
             color: #111827;
-            text-align: right;
-            flex: 1;
-            word-break: break-word;
           }
 
-          .pdm-info-val.barcode {
+          .pdm-item-val-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+          }
+          .pdm-item-val-row.flex-wrap {
+            flex-wrap: wrap;
+          }
+
+          .pdm-barcode-text {
             font-family: inherit;
             letter-spacing: -0.2px;
             word-break: break-all;
+            font-size: 13.5px;
+          }
+
+          .pdm-icon-action-btn {
+            background: transparent;
+            border: none;
+            color: #6B7280;
+            cursor: pointer;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.15s;
+          }
+          .pdm-icon-action-btn:active {
+            background: #F3F4F6;
+            color: #111827;
           }
 
           .pdm-more-btn {
@@ -6147,10 +6273,224 @@
             border: none;
             cursor: pointer;
             margin-left: 6px;
-            vertical-align: middle;
           }
 
-          /* Sticky Footer */
+          /* 5. Stock By Location Block */
+          .pdm-location-block {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            margin: 0 16px 14px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+          }
+
+          .pdm-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          }
+
+          .pdm-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+          }
+
+          .pdm-title-icon-wrap {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .pdm-title-icon-wrap.pin {
+            background: #F3F4F6;
+            color: #374151;
+          }
+          .pdm-title-icon-wrap.link {
+            background: #F3F4F6;
+            color: #374151;
+          }
+
+          .pdm-section-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #F15A24;
+            cursor: pointer;
+          }
+
+          .pdm-location-grid {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .pdm-loc-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .pdm-loc-divider {
+            width: 1px;
+            height: 54px;
+            background: #E5E7EB;
+          }
+
+          .pdm-loc-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .pdm-loc-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .pdm-loc-icon.shop {
+            background: #DEF7EC;
+          }
+          .pdm-loc-icon.warehouse {
+            background: #EBF5FF;
+          }
+
+          .pdm-loc-name {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+          }
+
+          .pdm-loc-qty {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-left: 30px;
+          }
+          .pdm-loc-qty.green { color: #1E803E; }
+          .pdm-loc-qty.blue { color: #2563EB; }
+
+          .pdm-loc-intact {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #374151;
+            margin-left: 30px;
+          }
+
+          /* 6. Intact Linked SKUs Block */
+          .pdm-intact-block {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            margin: 0 16px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+          }
+
+          .pdm-intact-table {
+            width: 100%;
+            margin-top: 8px;
+          }
+
+          .pdm-intact-thead {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 11px;
+            font-weight: 800;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+
+          .pdm-th.col-shop { text-align: right; }
+          .pdm-th.col-wh { text-align: right; }
+          .pdm-th.col-tot { text-align: right; }
+
+          .pdm-intact-tbody {
+            display: flex;
+            flex-direction: column;
+          }
+
+          .pdm-intact-row {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 10px 0;
+            border-bottom: 1px solid #F3F4F6;
+            align-items: center;
+            font-size: 12.5px;
+          }
+          .pdm-intact-row:last-child {
+            border-bottom: none;
+          }
+
+          .pdm-td-prod {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #111827;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .pdm-dot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+          }
+          .pdm-dot-indicator.orange { background: #F15A24; }
+          .pdm-dot-indicator.blue { background: #2563EB; }
+
+          .pdm-td-shop {
+            font-weight: 700;
+            color: #1E803E;
+            text-align: right;
+          }
+
+          .pdm-td-wh {
+            font-weight: 700;
+            color: #2563EB;
+            text-align: right;
+          }
+
+          .pdm-td-tot {
+            font-weight: 800;
+            color: #111827;
+            text-align: right;
+          }
+
+          .pdm-empty-state {
+            padding: 16px 0;
+            text-align: center;
+            font-size: 13px;
+            color: #6B7280;
+            font-weight: 500;
+          }
+
+          /* 7. Sticky Footer */
           .pdm-sticky-footer {
             display: flex;
             align-items: center;
@@ -6172,12 +6512,13 @@
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             transition: opacity 0.15s;
           }
-
-          .pdm-btn-delete:active {
-            opacity: 0.8;
-          }
+          .pdm-btn-delete:active { opacity: 0.8; }
 
           .pdm-btn-edit {
             flex: 2.2;
@@ -6189,12 +6530,13 @@
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             transition: opacity 0.15s;
           }
-
-          .pdm-btn-edit:active {
-            opacity: 0.9;
-          }
+          .pdm-btn-edit:active { opacity: 0.9; }
 
           /* ── Instagram-Style Fullscreen Image Viewer ── */
           .pdm-fullscreen-viewer {
@@ -6449,83 +6791,273 @@
 
     <!-- Bottom Sheet Container -->
     <div class="pdm-sheet-container">
-      <!-- Drag Handle -->
-      <div class="pdm-drag-handle-bar">
-        <div class="pdm-drag-handle"></div>
+      <!-- 1. Header Navigation Bar -->
+      <div class="pdm-top-nav">
+        <button type="button" class="pdm-nav-btn" onclick="closeProdDetail()" title="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="pdm-nav-title">Product Details</div>
+        <div class="pdm-nav-actions">
+          <button type="button" class="pdm-nav-btn" onclick="pdmShowHistory()" title="History">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="9"/>
+              <polyline points="12 7 12 12 15 15"/>
+            </svg>
+          </button>
+          <button type="button" class="pdm-nav-btn" onclick="pdmShowStockLog()" title="Stock Log">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </button>
+          <button type="button" class="pdm-nav-btn" onclick="pdmShowMoreMenu()" title="More">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="5" r="1.5"/>
+              <circle cx="12" cy="12" r="1.5"/>
+              <circle cx="12" cy="19" r="1.5"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <!-- 1. Product Header -->
-      <div class="pdm-header">
-        <div class="pdm-header-avatar" id="pdmHeaderAvatar"></div>
-        <div class="pdm-header-info">
-          <div class="pdm-header-title" id="pdmName">—</div>
-          <div class="pdm-header-sub" id="pdmSub">—</div>
+      <!-- Product Identity Bar -->
+      <div class="pdm-product-identity">
+        <div class="pdm-avatar-box" id="pdmHeaderAvatar"></div>
+        <div class="pdm-identity-info">
+          <div class="pdm-title-row">
+            <div class="pdm-product-name" id="pdmName">—</div>
+            <button type="button" class="pdm-bookmark-btn" id="pdmBookmarkBtn" onclick="togglePdmBookmark()" title="Bookmark">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="pdm-product-sub" id="pdmSub">—</div>
+          <div class="pdm-badges-row">
+            <span class="pdm-badge active" id="pdmBadgeActive">Active</span>
+            <span class="pdm-badge stock-status green" id="pdmBadgeStockStatus">Normal Stock</span>
+          </div>
         </div>
       </div>
 
       <!-- Scrollable Body Content -->
       <div class="pdm-scroll-body" id="pdmScrollBody">
 
-        <!-- 3. Image Carousel -->
-        <div class="pdm-carousel-wrap" id="pdmCarouselWrap">
-          <div class="pdm-carousel-track" id="pdmCarouselTrack"></div>
-          <div class="pdm-carousel-dots" id="pdmCarouselDots"></div>
+        <!-- 2. Product Images Section -->
+        <div class="pdm-images-container">
+          <div class="pdm-image-grid">
+            <div class="pdm-primary-img-tile" id="pdmPrimaryTile" onclick="openPdmFullscreenIndex(0)">
+              <img id="pdmPrimaryImg" src="" alt="Product Image" onerror="onPdmGalleryImageError(this.src)" />
+            </div>
+            <div class="pdm-add-photo-tile" onclick="pdmTriggerAddPhoto()">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Add Photo</span>
+              <input type="file" id="pdmAddPhotoInput" accept="image/*" style="display:none" onchange="pdmHandlePhotoUpload(event)" />
+            </div>
+          </div>
+          <div class="pdm-dots-container" id="pdmCarouselDots">
+            <div class="pdm-carousel-dot active"></div>
+            <div class="pdm-carousel-dot"></div>
+            <div class="pdm-carousel-dot"></div>
+            <div class="pdm-carousel-dot"></div>
+          </div>
         </div>
 
-        <!-- 4. Stats Row (STOCK | MRP | SELL) -->
-        <div class="pdm-stats-row">
-          <div class="pdm-stat-col">
-            <div class="pdm-stat-label">STOCK</div>
-            <div class="pdm-stat-val green" id="pdmStockVal">0</div>
-            <div class="pdm-stat-sub green" id="pdmStockSub">healthy stock</div>
+        <!-- 3. Price + Quantity Cards (Three Equal Compact Cards) -->
+        <div class="pdm-three-cards">
+          <!-- Card 1: MRP -->
+          <div class="pdm-compact-card">
+            <div class="pdm-card-header">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              <span>MRP</span>
+            </div>
+            <div class="pdm-card-value dark" id="pdmMrpVal">₹0</div>
           </div>
-          <div class="pdm-stat-col">
-            <div class="pdm-stat-label">MRP</div>
-            <div class="pdm-stat-val dark" id="pdmMrpVal">₹0</div>
+
+          <!-- Card 2: SELL PRICE -->
+          <div class="pdm-compact-card">
+            <div class="pdm-card-header">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              <span>SELL PRICE</span>
+            </div>
+            <div class="pdm-card-value orange" id="pdmSellVal">₹0</div>
           </div>
-          <div class="pdm-stat-col">
-            <div class="pdm-stat-label">SELL</div>
-            <div class="pdm-stat-val orange" id="pdmSellVal">₹0</div>
+
+          <!-- Card 3: STOCK QTY (Current Shop Qty) -->
+          <div class="pdm-compact-card">
+            <div class="pdm-card-header">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              <span>STOCK QTY</span>
+            </div>
+            <div class="pdm-card-value green" id="pdmStockVal">0 pcs</div>
+            <div class="pdm-card-sub green" id="pdmStockSub">Healthy Stock</div>
           </div>
         </div>
 
-        <!-- 5. Information Rows -->
-        <div class="pdm-info-rows">
-          <div class="pdm-info-row">
-            <div class="pdm-info-label">BARCODE</div>
-            <div class="pdm-info-val barcode" id="pdmInfoBarcode">—</div>
+        <!-- 4. Product Information Block -->
+        <div class="pdm-info-block">
+          <div class="pdm-block-item">
+            <div class="pdm-item-label">BARCODE</div>
+            <div class="pdm-item-val-row">
+              <span class="pdm-barcode-text" id="pdmInfoBarcode">—</span>
+              <button type="button" class="pdm-icon-action-btn" onclick="pdmCopyBarcode()" title="Copy Barcode">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="pdm-info-row">
-            <div class="pdm-info-label">LOCATION</div>
-            <div class="pdm-info-val" id="pdmInfoLoc">—</div>
+          <div class="pdm-block-item">
+            <div class="pdm-item-label">LOCATION (PRIMARY)</div>
+            <div class="pdm-item-val-row">
+              <span id="pdmInfoLoc">—</span>
+              <button type="button" class="pdm-icon-action-btn" onclick="pdmEditLocation()" title="Edit Location">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="pdm-info-row">
-            <div class="pdm-info-label">BRAND</div>
-            <div class="pdm-info-val" id="pdmInfoBrand">—</div>
+          <div class="pdm-block-item">
+            <div class="pdm-item-label">BRAND</div>
+            <div class="pdm-item-val" id="pdmInfoBrand">—</div>
           </div>
-          <div class="pdm-info-row">
-            <div class="pdm-info-label">CATEGORY</div>
-            <div class="pdm-info-val" id="pdmInfoCat">—</div>
+          <div class="pdm-block-item">
+            <div class="pdm-item-label">CATEGORY</div>
+            <div class="pdm-item-val" id="pdmInfoCat">—</div>
           </div>
-          <div class="pdm-info-row">
-            <div class="pdm-info-label">COMPATIBILITY</div>
-            <div class="pdm-info-val">
+          <div class="pdm-block-item no-border">
+            <div class="pdm-item-label">COMPATIBILITY</div>
+            <div class="pdm-item-val-row flex-wrap">
               <span id="pdmInfoCompatText">—</span>
               <button type="button" id="pdmCompatToggleBtn" class="pdm-more-btn" style="display:none" onclick="togglePdmCompat()">More</button>
             </div>
           </div>
-          <div class="pdm-info-row" style="border-bottom:none">
-            <div class="pdm-info-label">INTACT MAPPING</div>
-            <div class="pdm-info-val" id="pdmInfoIntact">—</div>
+        </div>
+
+        <!-- 5. Stock By Location Block -->
+        <div class="pdm-location-block">
+          <div class="pdm-section-header">
+            <div class="pdm-section-title">
+              <div class="pdm-title-icon-wrap pin">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <span>STOCK BY LOCATION</span>
+            </div>
+            <div class="pdm-section-link" id="pdmLocCountLink" onclick="pdmOpenLocationBreakdown()">
+              <span id="pdmLocCountText">2 Locations</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="pdm-location-grid">
+            <!-- Shop Column -->
+            <div class="pdm-loc-col">
+              <div class="pdm-loc-header">
+                <div class="pdm-loc-icon shop">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E803E" stroke-width="2.2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <span class="pdm-loc-name" id="pdmShopLocName">SHOP</span>
+              </div>
+              <div class="pdm-loc-qty green" id="pdmShopQtyVal">0 pcs</div>
+              <div class="pdm-loc-intact" id="pdmShopIntactVal">Intact SKUs: 0</div>
+            </div>
+
+            <div class="pdm-loc-divider"></div>
+
+            <!-- Warehouse Column -->
+            <div class="pdm-loc-col">
+              <div class="pdm-loc-header">
+                <div class="pdm-loc-icon warehouse">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2">
+                    <path d="M3 21h18M3 7v14M21 7v14M6 21V11m4 10V11m4 10V11m4 10V11M12 3L3 7h18l-9-4z"/>
+                  </svg>
+                </div>
+                <span class="pdm-loc-name" id="pdmWhLocName">WAREHOUSE</span>
+              </div>
+              <div class="pdm-loc-qty blue" id="pdmWhQtyVal">0 pcs</div>
+              <div class="pdm-loc-intact" id="pdmWhIntactVal">Intact SKUs: 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Intact Linked SKUs Block -->
+        <div class="pdm-intact-block">
+          <div class="pdm-section-header">
+            <div class="pdm-section-title">
+              <div class="pdm-title-icon-wrap link">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+              </div>
+              <span>INTACT (LINKED SKUs)</span>
+            </div>
+            <div class="pdm-section-link" id="pdmIntactGroupLink">
+              <span id="pdmIntactGroupName">Group Name: —</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="pdm-intact-table">
+            <div class="pdm-intact-thead">
+              <div class="pdm-th col-prod">SKU / Product</div>
+              <div class="pdm-th col-shop" id="pdmThShop">Shop</div>
+              <div class="pdm-th col-wh" id="pdmThWh">Warehouse</div>
+              <div class="pdm-th col-tot">Total</div>
+            </div>
+            <div class="pdm-intact-tbody" id="pdmIntactRows">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
         </div>
 
       </div>
 
-      <!-- 9. Sticky Footer -->
+      <!-- 7. Sticky Footer -->
       <div class="pdm-sticky-footer">
-        <button type="button" class="pdm-btn-delete" onclick="pdmDelete()">Delete</button>
-        <button type="button" class="pdm-btn-edit" onclick="pdmEdit()">Edit Product</button>
+        <button type="button" class="pdm-btn-delete" onclick="pdmDelete()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span>Delete</span>
+        </button>
+        <button type="button" class="pdm-btn-edit" onclick="pdmEdit()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          <span>Edit Product</span>
+        </button>
       </div>
     </div>
   </div>
@@ -9224,7 +9756,7 @@
       PRODUCT_GALLERY.prevBodyOverflow = document.body.style.overflow || '';
       document.body.style.overflow = 'hidden';
 
-      // 1. Header Image Avatar (Circular)
+      // 1. Header Image Avatar
       const avatarEl = document.getElementById('pdmHeaderAvatar');
       const candidateUrls = [];
       if (Array.isArray(p.images)) {
@@ -9267,7 +9799,23 @@
         }
       }
 
-      // 2. Header Text: Product Name & Brand · Location
+      // Render Primary Image Tile
+      const primImgEl = document.getElementById('pdmPrimaryImg');
+      const primTileEl = document.getElementById('pdmPrimaryTile');
+      if (primImgEl && primTileEl) {
+        if (validImages.length > 0) {
+          primImgEl.src = validImages[0];
+          primImgEl.style.display = 'block';
+        } else {
+          primImgEl.style.display = 'none';
+          primTileEl.innerHTML = `<div style="font-size:48px;display:flex;align-items:center;justify-content:center;height:100%">${emoji(p.name || '')}</div>`;
+        }
+      }
+
+      // Update Carousel Dots
+      renderPdmDots(validImages.length);
+
+      // 2. Header Product Identity: Product Name & Brand · Location
       const nameEl = document.getElementById('pdmName');
       const subEl = document.getElementById('pdmSub');
       if (nameEl) nameEl.textContent = p.name || '—';
@@ -9277,36 +9825,48 @@
       const subParts = [brandStr, locStr].filter(Boolean);
       if (subEl) subEl.textContent = subParts.length > 0 ? subParts.join(' · ') : '—';
 
-      // 3. Image Carousel
-      renderPdmCarousel();
+      // Bookmark Button State
+      const bmBtn = document.getElementById('pdmBookmarkBtn');
+      if (bmBtn) {
+        bmBtn.classList.toggle('active', Boolean(p.is_bookmarked || p.bookmarked));
+      }
 
-      // 4. Stats Row
+      // 3. Stats & Quantities
       let effStock = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, p.loc || p.location) : 0;
       const rawQty = p.qty != null ? Number(p.qty) : (p.stock != null ? Number(p.stock) : 0);
       if (effStock === 0 && rawQty > 0) {
         effStock = rawQty;
       }
+
+      // Top STOCK QTY Card represents CURRENT SHOP QUANTITY
+      const shopQty = p.shop_qty != null ? Number(p.shop_qty) : (p.shop_stock != null ? Number(p.shop_stock) : effStock);
+      const whQty = p.wh_qty != null ? Number(p.wh_qty) : (p.wh_stock != null ? Number(p.wh_stock) : (p.warehouse_qty != null ? Number(p.warehouse_qty) : 0));
+
       const threshold = Number(p.threshold || 5);
 
       const stockValEl = document.getElementById('pdmStockVal');
       const stockSubEl = document.getElementById('pdmStockSub');
+      const badgeStockEl = document.getElementById('pdmBadgeStockStatus');
       const mrpValEl = document.getElementById('pdmMrpVal');
       const sellValEl = document.getElementById('pdmSellVal');
 
       if (stockValEl && stockSubEl) {
-        stockValEl.textContent = effStock;
-        if (effStock <= 0) {
-          stockValEl.className = 'pdm-stat-val red';
-          stockSubEl.className = 'pdm-stat-sub red';
-          stockSubEl.textContent = 'out of stock';
-        } else if (effStock < threshold) {
-          stockValEl.className = 'pdm-stat-val amber';
-          stockSubEl.className = 'pdm-stat-sub amber';
-          stockSubEl.textContent = 'low stock';
+        stockValEl.textContent = `${shopQty} pcs`;
+        if (shopQty <= 0) {
+          stockValEl.className = 'pdm-card-value red';
+          stockSubEl.className = 'pdm-card-sub red';
+          stockSubEl.textContent = 'Out of Stock';
+          if (badgeStockEl) { badgeStockEl.className = 'pdm-badge stock-status red'; badgeStockEl.textContent = 'Out of Stock'; }
+        } else if (shopQty < threshold) {
+          stockValEl.className = 'pdm-card-value amber';
+          stockSubEl.className = 'pdm-card-sub amber';
+          stockSubEl.textContent = 'Low Stock';
+          if (badgeStockEl) { badgeStockEl.className = 'pdm-badge stock-status amber'; badgeStockEl.textContent = 'Low Stock'; }
         } else {
-          stockValEl.className = 'pdm-stat-val green';
-          stockSubEl.className = 'pdm-stat-sub green';
-          stockSubEl.textContent = 'healthy stock';
+          stockValEl.className = 'pdm-card-value green';
+          stockSubEl.className = 'pdm-card-sub green';
+          stockSubEl.textContent = 'Healthy Stock';
+          if (badgeStockEl) { badgeStockEl.className = 'pdm-badge stock-status healthy'; badgeStockEl.textContent = 'Normal Stock'; }
         }
       }
 
@@ -9316,25 +9876,23 @@
       if (mrpValEl) mrpValEl.textContent = `₹${mrpNum}`;
       if (sellValEl) sellValEl.textContent = `₹${sellNum}`;
 
-      // 5. Information Rows
+      // 4. Product Information Block
       const bcEl = document.getElementById('pdmInfoBarcode');
       const locInfoEl = document.getElementById('pdmInfoLoc');
       const brandInfoEl = document.getElementById('pdmInfoBrand');
       const catInfoEl = document.getElementById('pdmInfoCat');
-      const intactInfoEl = document.getElementById('pdmInfoIntact');
 
       if (bcEl) bcEl.textContent = p.barcode || p.sku || '—';
       if (locInfoEl) locInfoEl.textContent = p.loc || p.location || '—';
       if (brandInfoEl) brandInfoEl.textContent = p.brand || '—';
       if (catInfoEl) catInfoEl.textContent = p.category || '—';
-      if (intactInfoEl) intactInfoEl.textContent = p.fitment_group || 'Mapping Data';
 
-      // Compatibility Row (with More / Less toggle)
+      // Compatibility Row
       pdmCompatExpanded = false;
       const compatTextEl = document.getElementById('pdmInfoCompatText');
       const compatBtnEl = document.getElementById('pdmCompatToggleBtn');
 
-      const rawCompatList = Array.isArray(p.compatibility) ? p.compatibility : (p.compatibility ? p.compatibility.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      const rawCompatList = Array.isArray(p.compatibility) ? p.compatibility : (p.compatibility ? String(p.compatibility).split(',').map(s=>s.trim()).filter(Boolean) : []);
       const compatStr = Array.isArray(p.compatibility) ? p.compatibility.join(', ') : (p.compatibility || '');
 
       if (compatTextEl && compatBtnEl) {
@@ -9352,13 +9910,222 @@
         }
       }
 
+      // 5. Stock By Location Block
+      const primaryLoc = (p.loc || p.location || 'R1L1B3').trim();
+      const shopLocCode = primaryLoc.replace(/^WR/i, '');
+      const whLocCode = 'WR' + shopLocCode;
+
+      const shopLocNameEl = document.getElementById('pdmShopLocName');
+      const whLocNameEl = document.getElementById('pdmWhLocName');
+      const shopQtyValEl = document.getElementById('pdmShopQtyVal');
+      const whQtyValEl = document.getElementById('pdmWhQtyVal');
+
+      if (shopLocNameEl) shopLocNameEl.textContent = `SHOP (${shopLocCode})`;
+      if (whLocNameEl) whLocNameEl.textContent = `WAREHOUSE (${whLocCode})`;
+      if (shopQtyValEl) shopQtyValEl.textContent = `${shopQty} pcs`;
+      if (whQtyValEl) whQtyValEl.textContent = `${whQty} pcs`;
+
+      // 6. Intact Linked SKUs Block
+      renderPdmIntactSection(p, shopLocCode, whLocCode);
+
       // Show Modal
       const modal = document.getElementById('prodDetailModal');
       if (modal) modal.style.display = 'flex';
 
-      // Reset scroll position to top
+      // Reset scroll position
       const scrollBody = document.getElementById('pdmScrollBody');
       if (scrollBody) scrollBody.scrollTop = 0;
+    }
+
+    function renderPdmDots(totalImages) {
+      const dotsContainer = document.getElementById('pdmCarouselDots');
+      if (!dotsContainer) return;
+      const count = Math.max(1, Math.min(totalImages || 1, 4));
+      dotsContainer.innerHTML = Array.from({ length: count }, (_, i) => `
+        <div class="pdm-carousel-dot ${i === 0 ? 'active' : ''}" onclick="openPdmFullscreenIndex(${i})"></div>
+      `).join('');
+    }
+
+    function renderPdmIntactSection(p, shopLocCode, whLocCode) {
+      const groupNameEl = document.getElementById('pdmIntactGroupName');
+      const thShopEl = document.getElementById('pdmThShop');
+      const thWhEl = document.getElementById('pdmThWh');
+      const rowsEl = document.getElementById('pdmIntactRows');
+      const shopIntactValEl = document.getElementById('pdmShopIntactVal');
+      const whIntactValEl = document.getElementById('pdmWhIntactVal');
+
+      if (thShopEl) thShopEl.textContent = `Shop (${shopLocCode})`;
+      if (thWhEl) thWhEl.textContent = `Warehouse (${whLocCode})`;
+
+      const group = p.fitment_group ? String(p.fitment_group).trim() : '';
+
+      if (groupNameEl) groupNameEl.textContent = group ? `Group Name: ${group}` : 'Group Name: None';
+
+      let linkedList = [];
+      if (group) {
+        const allProds = (typeof FS_PRODUCTS !== 'undefined' && Array.isArray(FS_PRODUCTS) ? FS_PRODUCTS : []).concat(STATE.products || []);
+        const seen = new Set();
+        for (const item of allProds) {
+          if (!item || !item.fitment_group) continue;
+          if (String(item.fitment_group).trim().toLowerCase() === group.toLowerCase()) {
+            const key = item.id || item.barcode || item.sku;
+            if (key && !seen.has(key)) {
+              seen.add(key);
+              linkedList.push(item);
+            }
+          }
+        }
+      }
+
+      const intactCount = linkedList.length;
+      if (shopIntactValEl) shopIntactValEl.textContent = `Intact SKUs: ${intactCount}`;
+      if (whIntactValEl) whIntactValEl.textContent = `Intact SKUs: ${intactCount}`;
+
+      if (!rowsEl) return;
+
+      if (linkedList.length > 0) {
+        rowsEl.innerHTML = linkedList.map((item, idx) => {
+          const sQty = item.shop_qty != null ? Number(item.shop_qty) : (item.shop_stock != null ? Number(item.shop_stock) : (item.qty ?? item.stock ?? 0));
+          const wQty = item.wh_qty != null ? Number(item.wh_qty) : (item.wh_stock != null ? Number(item.wh_stock) : (item.warehouse_qty != null ? Number(item.warehouse_qty) : 0));
+          const tot = sQty + wQty;
+          const skuName = `${item.sku || item.barcode || ''} ${item.name || ''}`.trim();
+          const dotClass = idx % 2 === 0 ? 'orange' : 'blue';
+          return `
+            <div class="pdm-intact-row">
+              <div class="pdm-td-prod" title="${skuName}">
+                <span class="pdm-dot-indicator ${dotClass}"></span>
+                <span>${skuName}</span>
+              </div>
+              <div class="pdm-td-shop">${sQty} pcs</div>
+              <div class="pdm-td-wh">${wQty} pcs</div>
+              <div class="pdm-td-tot">${tot} pcs</div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        rowsEl.innerHTML = `
+          <div class="pdm-empty-state">No Intact SKUs linked for this product</div>
+        `;
+      }
+    }
+
+    function pdmCopyBarcode() {
+      const p = PRODUCT_GALLERY.product;
+      const bc = p ? (p.barcode || p.sku || '') : '';
+      if (!bc) { toast('No barcode available', 'err'); return; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(bc).then(() => toast('✓ Barcode copied', 'ok')).catch(() => {
+          copyFallback(bc);
+        });
+      } else {
+        copyFallback(bc);
+      }
+    }
+
+    function copyFallback(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('✓ Barcode copied', 'ok');
+    }
+
+    function pdmEditLocation() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      const curLoc = p.loc || p.location || '';
+      const newLoc = prompt('Update Primary Location:', curLoc);
+      if (newLoc !== null && newLoc.trim() !== '' && newLoc.trim() !== curLoc) {
+        const clean = newLoc.trim();
+        p.loc = clean;
+        p.location = clean;
+        if (window.PICKER_DB && typeof window.PICKER_DB.saveProduct === 'function') {
+          window.PICKER_DB.saveProduct(p);
+        }
+        const locInfoEl = document.getElementById('pdmInfoLoc');
+        const subEl = document.getElementById('pdmSub');
+        if (locInfoEl) locInfoEl.textContent = clean;
+        const brandStr = p.brand ? p.brand.trim() : '';
+        const subParts = [brandStr, clean].filter(Boolean);
+        if (subEl) subEl.textContent = subParts.join(' · ');
+        toast(`✓ Location updated to ${clean}`, 'ok');
+      }
+    }
+
+    function pdmTriggerAddPhoto() {
+      const input = document.getElementById('pdmAddPhotoInput');
+      if (input) input.click();
+    }
+
+    async function pdmHandlePhotoUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+
+      try {
+        toast('Processing image...', 'ok');
+        let newUrl = '';
+        if (typeof uploadSingleImage === 'function') {
+          const res = await uploadSingleImage(file, p.id || p.barcode);
+          newUrl = res?.url || res?.dataUrl || res;
+        } else {
+          newUrl = URL.createObjectURL(file);
+        }
+
+        if (newUrl) {
+          p.images = Array.isArray(p.images) ? p.images : [];
+          p.images.push(newUrl);
+          if (!p.image) p.image = newUrl;
+          if (window.PICKER_DB && typeof window.PICKER_DB.saveProduct === 'function') {
+            await window.PICKER_DB.saveProduct(p);
+          }
+          openProdDetail(p);
+          toast('✓ Photo added', 'ok');
+        }
+      } catch (err) {
+        toast('Failed to upload photo: ' + err.message, 'err');
+      }
+      event.target.value = '';
+    }
+
+    function togglePdmBookmark() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      p.is_bookmarked = !p.is_bookmarked;
+      p.bookmarked = p.is_bookmarked;
+      const btn = document.getElementById('pdmBookmarkBtn');
+      if (btn) btn.classList.toggle('active', Boolean(p.is_bookmarked));
+      if (window.PICKER_DB && typeof window.PICKER_DB.saveProduct === 'function') {
+        window.PICKER_DB.saveProduct(p);
+      }
+      toast(p.is_bookmarked ? '✓ Bookmarked product' : 'Removed bookmark', 'ok');
+    }
+
+    function pdmShowHistory() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      toast(`Showing history for ${p.name || 'product'}`, 'ok');
+    }
+
+    function pdmShowStockLog() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      toast(`Stock Log: Current stock ${p.stock || p.qty || 0}`, 'ok');
+    }
+
+    function pdmShowMoreMenu() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      toast(`Product Options: ${p.barcode || p.sku || p.name}`, 'ok');
+    }
+
+    function pdmOpenLocationBreakdown() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      toast(`Location Breakdown for ${p.loc || p.location || 'Shop & Warehouse'}`, 'ok');
     }
 
     function togglePdmCompat() {
@@ -9368,7 +10135,7 @@
       const p = PRODUCT_GALLERY.product;
       if (!p || !textEl || !btnEl) return;
 
-      const rawList = Array.isArray(p.compatibility) ? p.compatibility : (p.compatibility ? p.compatibility.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      const rawList = Array.isArray(p.compatibility) ? p.compatibility : (p.compatibility ? String(p.compatibility).split(',').map(s=>s.trim()).filter(Boolean) : []);
       const fullStr = Array.isArray(p.compatibility) ? p.compatibility.join(', ') : (p.compatibility || '');
 
       if (pdmCompatExpanded) {
