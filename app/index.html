@@ -6071,16 +6071,27 @@
           /* 2. Product Images Block */
           .pdm-images-container {
             padding: 0 16px 14px;
+            width: 100%;
           }
 
           .pdm-image-grid {
             display: flex;
+            align-items: center;
             gap: 12px;
             height: 200px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 2px;
+          }
+          .pdm-image-grid::-webkit-scrollbar {
+            display: none;
           }
 
-          .pdm-primary-img-tile {
-            flex: 1.6;
+          .pdm-img-slide {
+            flex: 0 0 75%;
+            scroll-snap-align: start;
             height: 100%;
             background: #FFFFFF;
             border: 1px solid #E5E7EB;
@@ -6090,15 +6101,24 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
           }
-          .pdm-primary-img-tile img {
+          .pdm-img-slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
           }
+          .pdm-img-slide.placeholder {
+            background: #F9FAFB;
+            cursor: default;
+          }
+          .pdm-placeholder-emoji {
+            font-size: 52px;
+          }
 
-          .pdm-add-photo-tile {
-            flex: 1;
+          .pdm-add-photo-slide {
+            flex: 0 0 55%;
+            scroll-snap-align: start;
             height: 100%;
             background: #FFFFFF;
             border: 2px dashed #D1D5DB;
@@ -6113,8 +6133,9 @@
             font-size: 12.5px;
             font-weight: 700;
             transition: background 0.15s;
+            flex-shrink: 0;
           }
-          .pdm-add-photo-tile:active {
+          .pdm-add-photo-slide:active {
             background: #F3F4F6;
           }
 
@@ -6597,13 +6618,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: pan-y;
+            touch-action: none;
+            overflow: hidden;
           }
           .pdm-fullscreen-image {
             max-width: 95vw;
             max-height: 85vh;
             object-fit: contain;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            user-select: none;
+            -webkit-user-drag: none;
+            touch-action: none;
+            transform-origin: center center;
+            transition: transform 0.15s ease-out;
           }
           .pdm-fullscreen-dots {
             position: absolute;
@@ -6848,25 +6874,10 @@
 
         <!-- 2. Product Images Section -->
         <div class="pdm-images-container">
-          <div class="pdm-image-grid">
-            <div class="pdm-primary-img-tile" id="pdmPrimaryTile" onclick="openPdmFullscreenIndex(0)">
-              <img id="pdmPrimaryImg" src="" alt="Product Image" onerror="onPdmGalleryImageError(this.src)" />
-            </div>
-            <div class="pdm-add-photo-tile" onclick="pdmTriggerAddPhoto()">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-              <span>Add Photo</span>
-              <input type="file" id="pdmAddPhotoInput" accept="image/*" style="display:none" onchange="pdmHandlePhotoUpload(event)" />
-            </div>
+          <div class="pdm-image-grid" id="pdmImageGrid">
+            <!-- Dynamically populated by renderPdmImages() -->
           </div>
-          <div class="pdm-dots-container" id="pdmCarouselDots">
-            <div class="pdm-carousel-dot active"></div>
-            <div class="pdm-carousel-dot"></div>
-            <div class="pdm-carousel-dot"></div>
-            <div class="pdm-carousel-dot"></div>
-          </div>
+          <div class="pdm-dots-container" id="pdmCarouselDots"></div>
         </div>
 
         <!-- 3. Price + Quantity Cards (Three Equal Compact Cards) -->
@@ -9799,21 +9810,8 @@
         }
       }
 
-      // Render Primary Image Tile
-      const primImgEl = document.getElementById('pdmPrimaryImg');
-      const primTileEl = document.getElementById('pdmPrimaryTile');
-      if (primImgEl && primTileEl) {
-        if (validImages.length > 0) {
-          primImgEl.src = validImages[0];
-          primImgEl.style.display = 'block';
-        } else {
-          primImgEl.style.display = 'none';
-          primTileEl.innerHTML = `<div style="font-size:48px;display:flex;align-items:center;justify-content:center;height:100%">${emoji(p.name || '')}</div>`;
-        }
-      }
-
-      // Update Carousel Dots
-      renderPdmDots(validImages.length);
+      // Render Images & Carousel
+      renderPdmImages();
 
       // 2. Header Product Identity: Product Name & Brand · Location
       const nameEl = document.getElementById('pdmName');
@@ -9948,13 +9946,76 @@
       if (scrollBody) scrollBody.scrollTop = 0;
     }
 
-    function renderPdmDots(totalImages) {
-      const dotsContainer = document.getElementById('pdmCarouselDots');
-      if (!dotsContainer) return;
-      const count = Math.max(1, Math.min(totalImages || 1, 4));
-      dotsContainer.innerHTML = Array.from({ length: count }, (_, i) => `
-        <div class="pdm-carousel-dot ${i === 0 ? 'active' : ''}" onclick="openPdmFullscreenIndex(${i})"></div>
-      `).join('');
+    function renderPdmImages() {
+      const gridEl = document.getElementById('pdmImageGrid');
+      const dotsEl = document.getElementById('pdmCarouselDots');
+      if (!gridEl) return;
+
+      const images = PRODUCT_GALLERY.images || [];
+      const N = images.length;
+      const showAddPhoto = N < 4;
+
+      let html = '';
+
+      if (N > 0) {
+        images.slice(0, 4).forEach((src, i) => {
+          html += `
+            <div class="pdm-img-slide" onclick="openPdmFullscreenIndex(${i})">
+              <img src="${src}" alt="Product Image ${i + 1}" onerror="onPdmGalleryImageError(this.src)" />
+            </div>
+          `;
+        });
+      } else {
+        const p = PRODUCT_GALLERY.product || {};
+        html += `
+          <div class="pdm-img-slide placeholder">
+            <div class="pdm-placeholder-emoji">${emoji(p.name || '')}</div>
+          </div>
+        `;
+      }
+
+      if (showAddPhoto) {
+        html += `
+          <div class="pdm-add-photo-slide" onclick="pdmTriggerAddPhoto()">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span>Add Photo</span>
+            <input type="file" id="pdmAddPhotoInput" accept="image/*" style="display:none" onchange="pdmHandlePhotoUpload(event)" />
+          </div>
+        `;
+      }
+
+      gridEl.innerHTML = html;
+
+      const totalSlides = (N === 0 ? 1 : Math.min(N, 4)) + (showAddPhoto ? 1 : 0);
+
+      if (dotsEl) {
+        dotsEl.innerHTML = Array.from({ length: totalSlides }, (_, i) => `
+          <div class="pdm-carousel-dot ${i === 0 ? 'active' : ''}" onclick="scrollPdmImageIndex(${i})"></div>
+        `).join('');
+      }
+
+      gridEl.onscroll = debounce(function () {
+        const slide = gridEl.querySelector('.pdm-img-slide, .pdm-add-photo-slide');
+        if (!slide || !dotsEl) return;
+        const slideW = slide.offsetWidth + 12;
+        const activeIdx = Math.round(gridEl.scrollLeft / slideW);
+        const dots = dotsEl.querySelectorAll('.pdm-carousel-dot');
+        dots.forEach((dot, idx) => {
+          dot.classList.toggle('active', idx === Math.max(0, Math.min(activeIdx, totalSlides - 1)));
+        });
+      }, 50);
+    }
+
+    function scrollPdmImageIndex(idx) {
+      const gridEl = document.getElementById('pdmImageGrid');
+      if (!gridEl) return;
+      const slide = gridEl.querySelector('.pdm-img-slide, .pdm-add-photo-slide');
+      if (!slide) return;
+      const slideW = slide.offsetWidth + 12;
+      gridEl.scrollTo({ left: idx * slideW, behavior: 'smooth' });
     }
 
     function renderPdmIntactSection(p, shopLocCode, whLocCode) {
@@ -10278,6 +10339,126 @@
       renderPdmGalleryView();
     }
 
+    let pdmZoomState = {
+      scale: 1,
+      startScale: 1,
+      startDistance: 0,
+      posX: 0,
+      posY: 0,
+      startX: 0,
+      startY: 0,
+      isDragging: false,
+      swipeStartX: 0,
+      swipeStartY: 0,
+      lastTapTime: 0,
+      initialized: false
+    };
+
+    function resetPdmFullscreenZoom() {
+      pdmZoomState.scale = 1;
+      pdmZoomState.startScale = 1;
+      pdmZoomState.startDistance = 0;
+      pdmZoomState.posX = 0;
+      pdmZoomState.posY = 0;
+      pdmZoomState.isDragging = false;
+      const img = document.getElementById('pdmFullscreenImg');
+      if (img) {
+        img.style.transform = 'translate(0px, 0px) scale(1)';
+        img.style.transition = 'transform 0.15s ease-out';
+      }
+    }
+
+    function initPdmFullscreenZoomAndSwipe() {
+      if (pdmZoomState.initialized) return;
+      const viewport = document.getElementById('pdmFullscreenViewport');
+      const img = document.getElementById('pdmFullscreenImg');
+      if (!viewport || !img) return;
+
+      pdmZoomState.initialized = true;
+
+      function updateTransform(animate = false) {
+        img.style.transform = `translate(${pdmZoomState.posX}px, ${pdmZoomState.posY}px) scale(${pdmZoomState.scale})`;
+        img.style.transition = animate ? 'transform 0.2s ease-out' : 'none';
+      }
+
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          pdmZoomState.startDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          pdmZoomState.startScale = pdmZoomState.scale;
+        } else if (e.touches.length === 1) {
+          const now = Date.now();
+          if (now - pdmZoomState.lastTapTime < 300) {
+            if (pdmZoomState.scale > 1.2) {
+              resetPdmFullscreenZoom();
+            } else {
+              pdmZoomState.scale = 2.5;
+              pdmZoomState.posX = 0;
+              pdmZoomState.posY = 0;
+              updateTransform(true);
+            }
+            pdmZoomState.lastTapTime = 0;
+            return;
+          }
+          pdmZoomState.lastTapTime = now;
+
+          pdmZoomState.swipeStartX = e.touches[0].clientX;
+          pdmZoomState.swipeStartY = e.touches[0].clientY;
+          pdmZoomState.startX = e.touches[0].clientX - pdmZoomState.posX;
+          pdmZoomState.startY = e.touches[0].clientY - pdmZoomState.posY;
+          pdmZoomState.isDragging = true;
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+          const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          if (pdmZoomState.startDistance > 0) {
+            let newScale = pdmZoomState.startScale * (dist / pdmZoomState.startDistance);
+            newScale = Math.max(1, Math.min(newScale, 4));
+            pdmZoomState.scale = newScale;
+            if (newScale === 1) {
+              pdmZoomState.posX = 0;
+              pdmZoomState.posY = 0;
+            }
+            updateTransform(false);
+          }
+        } else if (e.touches.length === 1 && pdmZoomState.isDragging) {
+          if (pdmZoomState.scale > 1.05) {
+            pdmZoomState.posX = e.touches[0].clientX - pdmZoomState.startX;
+            pdmZoomState.posY = e.touches[0].clientY - pdmZoomState.startY;
+            updateTransform(false);
+          }
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchend', (e) => {
+        pdmZoomState.isDragging = false;
+        if (e.touches.length === 0) {
+          if (pdmZoomState.scale <= 1.05) {
+            const touch = e.changedTouches[0];
+            if (touch) {
+              const diffX = touch.clientX - pdmZoomState.swipeStartX;
+              const diffY = touch.clientY - pdmZoomState.swipeStartY;
+              if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX < 0) {
+                  setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1);
+                } else {
+                  setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1);
+                }
+              }
+            }
+            resetPdmFullscreenZoom();
+          }
+        }
+      }, { passive: true });
+    }
+
     function openPdmFullscreen() {
       const N = PRODUCT_GALLERY.images.length;
       if (N === 0) return; // No image to expand
@@ -10298,6 +10479,7 @@
 
     function closePdmFullscreen() {
       PRODUCT_GALLERY.viewerOpen = false;
+      resetPdmFullscreenZoom();
 
       // Restore Body Lock
       document.body.style.overflow = PRODUCT_GALLERY.prevBodyOverflow || '';
@@ -10314,6 +10496,9 @@
     function syncPdmFullscreenView() {
       const N = PRODUCT_GALLERY.images.length;
       const idx = PRODUCT_GALLERY.currentIndex;
+
+      resetPdmFullscreenZoom();
+      initPdmFullscreenZoomAndSwipe();
 
       const imgEl = document.getElementById('pdmFullscreenImg');
       const counterEl = document.getElementById('pdmFullscreenCounter');
