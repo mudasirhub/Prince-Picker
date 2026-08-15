@@ -3521,6 +3521,37 @@
       font-weight: 700
     }
 
+    /* storage toggle */
+    .storage-toggle-ctrl {
+      display: flex;
+      background: var(--card, #ffffff);
+      border: 1.5px solid var(--bd2, #e5e7eb);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .storage-toggle-btn {
+      flex: 1;
+      height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--t3, #888888);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .storage-toggle-btn.on {
+      background: var(--or, #ec5b13);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(236, 91, 19, 0.25);
+    }
+
     /* location selector */
     .loc-sel-row {
       display: grid;
@@ -5677,6 +5708,15 @@
               oninput="filterDD('catDD','apCat',CATS,true)" onfocus="openDD('catDD','apCat',CATS,true)"
               onblur="closeDD('catDD',200)">
             <div class="ap-dropdown-list" id="catDD-list"></div>
+          </div>
+        </div>
+
+        <!-- 3b. Storage -->
+        <div class="ap-field">
+          <label class="ap-label">STORAGE</label>
+          <div class="storage-toggle-ctrl">
+            <button type="button" class="storage-toggle-btn on" id="storageShopBtn" onclick="setStorageType('SHOP')">SHOP</button>
+            <button type="button" class="storage-toggle-btn" id="storageWhBtn" onclick="setStorageType('WAREHOUSE')">WAREHOUSE</button>
           </div>
         </div>
 
@@ -10612,7 +10652,7 @@
     function buildWarehouseMap(products) {
       const map = {};
       for (const p of products) {
-        const m = (p.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
+        const m = (p.loc || p.location || '').toUpperCase().match(/(?:W)?R(\d+)L(\d+)B(\d+)/);
         if (!m) continue;
         const [, r, l, b] = m;
         if (!map[r]) map[r] = {};
@@ -13914,8 +13954,26 @@
     }
 
     // ══════════════════════════════════════════════════════════
-    //  LOCATION HELPERS
+    //  STORAGE & LOCATION HELPERS
     // ══════════════════════════════════════════════════════════
+    let AP_STORAGE_TYPE = 'SHOP';
+
+    function setStorageType(type) {
+      AP_STORAGE_TYPE = (type === 'WAREHOUSE') ? 'WAREHOUSE' : 'SHOP';
+      const shopBtn = document.getElementById('storageShopBtn');
+      const whBtn = document.getElementById('storageWhBtn');
+      if (shopBtn && whBtn) {
+        if (AP_STORAGE_TYPE === 'SHOP') {
+          shopBtn.classList.add('on');
+          whBtn.classList.remove('on');
+        } else {
+          whBtn.classList.add('on');
+          shopBtn.classList.remove('on');
+        }
+      }
+      syncAPLoc();
+    }
+
     function adjAP(id, d) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -13928,7 +13986,8 @@
       const r = document.getElementById('apR')?.value || 1;
       const l = document.getElementById('apL')?.value || 1;
       const b = document.getElementById('apB')?.value || 1;
-      const loc = `R${r}L${l}B${b}`;
+      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'W' : '';
+      const loc = `${prefix}R${r}L${l}B${b}`;
       const prev = document.getElementById('apLocPreview');
       if (prev) prev.textContent = loc;
     }
@@ -13937,18 +13996,24 @@
       const r = document.getElementById('apR')?.value || '1';
       const l = document.getElementById('apL')?.value || '1';
       const b = document.getElementById('apB')?.value || '1';
-      return 'R' + r + 'L' + l + 'B' + b;
+      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'W' : '';
+      return prefix + 'R' + r + 'L' + l + 'B' + b;
     }
 
     function setAPLoc(loc) {
-      const m = (loc || '').match(/R(\d+)L(\d+)B(\d+)/i);
-      if (!m) return;
-      const r = document.getElementById('apR');
-      const l = document.getElementById('apL');
-      const b = document.getElementById('apB');
-      if (r) r.value = m[1];
-      if (l) l.value = m[2];
-      if (b) b.value = m[3];
+      const str = String(loc || '').trim().toUpperCase();
+      const isWh = str.startsWith('W') || str.includes('WAREHOUSE');
+      setStorageType(isWh ? 'WAREHOUSE' : 'SHOP');
+
+      const m = str.match(/(?:W)?R(\d+)L(\d+)B(\d+)/i);
+      if (m) {
+        const r = document.getElementById('apR');
+        const l = document.getElementById('apL');
+        const b = document.getElementById('apB');
+        if (r) r.value = m[1];
+        if (l) l.value = m[2];
+        if (b) b.value = m[3];
+      }
       syncAPLoc();
     }
 
@@ -14296,6 +14361,7 @@
         name,
         brand: gv('apBrand'),
         category: gv('apCat'),
+        storage_type: AP_STORAGE_TYPE,
         location: loc,
         loc,
         qty: gn('apQty'),
@@ -14385,6 +14451,14 @@
         var el = document.getElementById(fid);
         if (el) { el.value = ''; el.classList.remove('filled'); }
       });
+      setStorageType('SHOP');
+      const apR = document.getElementById('apR');
+      const apL = document.getElementById('apL');
+      const apB = document.getElementById('apB');
+      if (apR) apR.value = 1;
+      if (apL) apL.value = 1;
+      if (apB) apB.value = 1;
+      syncAPLoc();
       AP_COMPAT_SEL.clear();
       AP_PRODUCT_IMAGES = [];
       if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
