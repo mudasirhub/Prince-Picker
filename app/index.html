@@ -1359,6 +1359,37 @@
       margin-bottom: 3px
     }
 
+    /* ══ AP STORAGE TOGGLE ══ */
+    .ap-toggle-group {
+      display: flex;
+      background: var(--bg);
+      border: 1.5px solid var(--bd2);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .ap-toggle-btn {
+      flex: 1;
+      height: 40px;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--t3);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .ap-toggle-btn.active {
+      background: var(--or);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(236, 91, 19, 0.25);
+    }
+
+
     .scan-err-sub {
       font-size: 12px;
       color: var(--t2);
@@ -5680,6 +5711,15 @@
           </div>
         </div>
 
+        <!-- 3.5 Storage Mode -->
+        <div class="ap-field">
+          <label class="ap-label">STORAGE</label>
+          <div class="ap-toggle-group">
+            <button type="button" id="apStorageShop" class="ap-toggle-btn active" onclick="setAPStorage('shop')">SHOP</button>
+            <button type="button" id="apStorageWarehouse" class="ap-toggle-btn" onclick="setAPStorage('warehouse')">WAREHOUSE</button>
+          </div>
+        </div>
+
         <!-- 4. Location -->
         <div class="ap-field">
           <label class="ap-label">Location</label>
@@ -8428,149 +8468,390 @@
       localStorage.removeItem(LS_ACTIVE_TRANSFER);
     }
 
+    // ══════════════════════════════════════════
+    //  LOCATION & SMART REFILL ENGINE HELPERS
+    // ══════════════════════════════════════════
+    function isWarehouseLoc(loc) {
+      if (!loc || typeof loc !== 'string') return false;
+      return /^WR/i.test(loc.trim());
+    }
+
+    function isShopLoc(loc) {
+      if (!loc || typeof loc !== 'string') return true;
+      return !isWarehouseLoc(loc);
+    }
+
+    function normalizeProductLocations(p) {
+      if (!p || typeof p !== 'object') return [];
+      let locs = [];
+      if (Array.isArray(p.locations) && p.locations.length > 0) {
+        locs = p.locations.map(item => {
+          if (typeof item === 'string') {
+            const lStr = item.trim();
+            return { loc: lStr, qty: 0, threshold: 5, type: isWarehouseLoc(lStr) ? 'warehouse' : 'shop' };
+          }
+          const lStr = String(item.loc || item.location || 'R1L1B1').trim();
+          return {
+            loc: lStr,
+            qty: Number(item.qty ?? item.stock ?? 0),
+            threshold: Number(item.threshold !== undefined && item.threshold !== null ? item.threshold : 5),
+            type: item.type || (isWarehouseLoc(lStr) ? 'warehouse' : 'shop')
+          };
+        });
+      } else {
+        const fallbackLoc = String(p.loc || p.location || 'R1L1B1').trim();
+        const fallbackQty = Number(p.stock ?? p.qty ?? 0);
+        const fallbackThresh = Number(p.threshold !== undefined && p.threshold !== null ? p.threshold : 5);
+        locs = [{
+          loc: fallbackLoc,
+          qty: fallbackQty,
+          threshold: fallbackThresh,
+          type: isWarehouseLoc(fallbackLoc) ? 'warehouse' : 'shop'
+        }];
+      }
+      return locs;
+    }
+
+    function getProductShopStock(p) {
+      const locs = normalizeProductLocations(p);
+      const shopLocs = locs.filter(l => isShopLoc(l.loc));
+      return shopLocs.reduce((sum, l) => {
+        const eff = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, l.loc) : Number(l.qty || 0);
+        return sum + Math.max(0, eff);
+      }, 0);
+    }
+
+    function getProductWarehouseStock(p) {
+      const locs = normalizeProductLocations(p);
+      const whLocs = locs.filter(l => isWarehouseLoc(l.loc));
+      return whLocs.reduce((sum, l) => {
+        const eff = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, l.loc) : Number(l.qty || 0);
+        return sum + Math.max(0, eff);
+      }, 0);
+    }
+
+    function getProductTotalStock(p) {
+      return getProductShopStock(p) + getProductWarehouseStock(p);
+    }
+
+    // ── SMART REFILL ENGINE ──
+    function getShopStock(sku, useIntact = true) {
+      const p = (STATE.barcodeIndex ? STATE.barcodeIndex.get(sku) : null) || STATE.products.find(x => x.sku === sku || x.barcode === sku || x.id === sku);
+      if (!p) return 0;
+
+      let targetProducts = [p];
+      if (useIntact && p.fitment_group) {
+        const group = String(p.fitment_group).trim().toLowerCase();
+        targetProducts = STATE.products.filter(x => x.fitment_group && String(x.fitment_group).trim().toLowerCase() === group);
+      }
+
+      let totalShop = 0;
+      targetProducts.forEach(prod => {
+        totalShop += getProductShopStock(prod);
+      });
+      return totalShop;
+    }
+
+    function getWarehouseStock(sku, useIntact = true) {
+      const p = (STATE.barcodeIndex ? STATE.barcodeIndex.get(sku) : null) || STATE.products.find(x => x.sku === sku || x.barcode === sku || x.id === sku);
+      if (!p) return { total: 0, bins: [] };
+
+      let targetProducts = [p];
+      if (useIntact && p.fitment_group) {
+        const group = String(p.fitment_group).trim().toLowerCase();
+        targetProducts = STATE.products.filter(x => x.fitment_group && String(x.fitment_group).trim().toLowerCase() === group);
+      }
+
+      let totalWh = 0;
+      const bins = [];
+      targetProducts.forEach(prod => {
+        const locs = normalizeProductLocations(prod).filter(l => isWarehouseLoc(l.loc));
+        locs.forEach(l => {
+          const eff = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(prod.id || prod.barcode, l.loc) : Number(l.qty || 0);
+          const qty = Math.max(0, eff);
+          if (qty > 0) {
+            totalWh += qty;
+            bins.push({ loc: l.loc, qty, sku: prod.sku || prod.barcode, name: prod.name });
+          }
+        });
+      });
+
+      return { total: totalWh, bins };
+    }
+
+    function getEvaluatedShopThreshold(sku) {
+      const p = (STATE.barcodeIndex ? STATE.barcodeIndex.get(sku) : null) || STATE.products.find(x => x.sku === sku || x.barcode === sku || x.id === sku);
+      if (!p) return 5;
+      const locs = normalizeProductLocations(p);
+      const shopLoc = locs.find(l => isShopLoc(l.loc));
+      return Number(shopLoc?.threshold ?? p.threshold ?? 5);
+    }
+
+    function getSmartRefillStatus(sku) {
+      const p = (STATE.barcodeIndex ? STATE.barcodeIndex.get(sku) : null) || STATE.products.find(x => x.sku === sku || x.barcode === sku || x.id === sku);
+      if (!p) return { status: 'NORMAL', deficit: 0, shopStock: 0, whStock: 0, requiredThreshold: 5, suggestedRefill: 0, bins: [] };
+
+      const requiredThreshold = getEvaluatedShopThreshold(sku);
+      const shopStock = getShopStock(sku, true);
+      const whInfo = getWarehouseStock(sku, true);
+      const whStock = whInfo.total;
+
+      const deficit = requiredThreshold - shopStock;
+
+      let status = 'NORMAL';
+      if (deficit > 0) {
+        if (whStock >= deficit) {
+          status = 'REFILL REQUIRED';
+        } else if (whStock > 0) {
+          status = 'LOW STOCK';
+        } else {
+          status = 'OUT OF STOCK';
+        }
+      } else if (shopStock === 0 && whStock === 0) {
+        status = 'OUT OF STOCK';
+      }
+
+      return {
+        status,
+        deficit: Math.max(0, deficit),
+        shopStock,
+        whStock,
+        requiredThreshold,
+        suggestedRefill: deficit > 0 ? Math.min(deficit, whStock) : 0,
+        bins: whInfo.bins,
+        product: p
+      };
+    }
+
+    function checkAndTriggerRefillNotification(p, refillInfo) {
+      if (!p || !refillInfo) return;
+      const dedupeKey = `refill_req_${p.fitment_group ? ('group_' + p.fitment_group.toLowerCase()) : ('sku_' + (p.sku || p.barcode))}`;
+
+      if (refillInfo.status === 'REFILL REQUIRED') {
+        addNotification({
+          dedupeKey: dedupeKey,
+          title: '🔄 Refill Required',
+          message: `${p.name}\nShop: ${refillInfo.shopStock} pcs | Required: ${refillInfo.requiredThreshold} pcs | Warehouse: ${refillInfo.whStock} pcs\nSuggested refill: ${refillInfo.suggestedRefill} pcs`,
+          severity: 'warning',
+          entityType: 'product',
+          entityId: p.sku || p.barcode || p.id,
+          actionRoute: 's-transfer'
+        });
+      } else if (refillInfo.status === 'NORMAL') {
+        // Clear active notification state when Shop stock is back to normal
+        if (STATE.notifications) {
+          const idx = STATE.notifications.findIndex(n => n.dedupeKey === dedupeKey);
+          if (idx >= 0) {
+            STATE.notifications.splice(idx, 1);
+            try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch(e){}
+          }
+        }
+      }
+    }
+
+    // ── NOTIFICATION CENTER HELPERS ──
+    function addNotification(notif) {
+      if (!notif || !notif.title) return;
+      const key = notif.dedupeKey || `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+      if (STATE.dismissedNotificationKeys && STATE.dismissedNotificationKeys.has(key)) return;
+
+      if (!Array.isArray(STATE.notifications)) STATE.notifications = [];
+
+      const existingIdx = STATE.notifications.findIndex(n => n.dedupeKey === key);
+      const newNotif = {
+        id: 'NOTIF-' + Date.now().toString(36).toUpperCase(),
+        dedupeKey: key,
+        title: notif.title,
+        message: notif.message || '',
+        severity: notif.severity || 'info',
+        entityType: notif.entityType || null,
+        entityId: notif.entityId || null,
+        actionRoute: notif.actionRoute || null,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+
+      if (existingIdx >= 0) {
+        STATE.notifications[existingIdx] = newNotif;
+      } else {
+        STATE.notifications.unshift(newNotif);
+      }
+
+      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications.slice(0, 50))); } catch (e) {}
+      updateNotificationBadge();
+      const sheet = document.getElementById('notifSheet');
+      if (sheet && sheet.style.display === 'block') {
+        renderNotifications();
+      }
+    }
+
+    function dismissNotification(dedupeKey) {
+      if (!dedupeKey) return;
+      if (!STATE.dismissedNotificationKeys) STATE.dismissedNotificationKeys = new Set();
+      STATE.dismissedNotificationKeys.add(dedupeKey);
+      STATE.notifications = (STATE.notifications || []).filter(n => n.dedupeKey !== dedupeKey);
+      try {
+        localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications));
+        localStorage.setItem(LS_DISMISSED_NOTIFICATIONS, JSON.stringify(Array.from(STATE.dismissedNotificationKeys)));
+      } catch(e){}
+      updateNotificationBadge();
+      renderNotifications();
+    }
+
+    function clearAllNotifications() {
+      if (!STATE.dismissedNotificationKeys) STATE.dismissedNotificationKeys = new Set();
+      (STATE.notifications || []).forEach(n => {
+        if (n.dedupeKey) STATE.dismissedNotificationKeys.add(n.dedupeKey);
+      });
+      STATE.notifications = [];
+      try {
+        localStorage.setItem(LS_NOTIFICATIONS, '[]');
+        localStorage.setItem(LS_DISMISSED_NOTIFICATIONS, JSON.stringify(Array.from(STATE.dismissedNotificationKeys)));
+      } catch(e){}
+      updateNotificationBadge();
+      renderNotifications();
+    }
+
+    function updateNotificationBadge() {
+      const badges = document.querySelectorAll('.notification-badge, #notifBadge');
+      const unreadCount = (STATE.notifications || []).length;
+      badges.forEach(b => {
+        b.textContent = unreadCount;
+        b.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+      });
+    }
+
+    function openNotificationCenter() {
+      renderNotifications();
+      const sheet = document.getElementById('notifSheet');
+      if (sheet) sheet.style.display = 'block';
+    }
+
+    function closeNotificationCenter() {
+      const sheet = document.getElementById('notifSheet');
+      if (sheet) sheet.style.display = 'none';
+    }
+
+    function renderNotifications() {
+      const listEl = document.getElementById('notifList');
+      if (!listEl) return;
+
+      if (!STATE.notifications || !STATE.notifications.length) {
+        listEl.innerHTML = `
+          <div style="text-align:center;padding:40px 16px;color:var(--t3);">
+            <div style="font-size:32px;margin-bottom:8px;">🔔</div>
+            <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px;">No Notifications</div>
+            <div style="font-size:12px;">You're all caught up! Refill alerts and stock updates will appear here.</div>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = STATE.notifications.map(n => {
+        const severityClass = n.severity === 'critical' ? 'rd' : n.severity === 'warning' ? 'or' : n.severity === 'success' ? 'gr' : 'bl';
+        return `
+          <div class="notif-item" style="background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--sh);border-left:4px solid var(--${severityClass});display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:13px;font-weight:800;color:var(--t1);">${n.title}</div>
+              <div style="font-size:10px;font-weight:600;color:var(--t3);">${new Date(n.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+            </div>
+            <div style="font-size:12px;color:var(--t2);white-space:pre-line;">${n.message}</div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+              ${n.entityId ? `<button class="btn-p" style="height:32px;padding:0 12px;font-size:11px;" onclick="closeNotificationCenter(); startRefillTransferFromNotif('${n.entityId}')">Start Refill</button>` : ''}
+              <button class="btn-s" style="height:32px;padding:0 10px;font-size:11px;" onclick="dismissNotification('${n.dedupeKey}')">Dismiss</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function startRefillTransferFromNotif(productIdOrSku) {
+      const p = (STATE.barcodeIndex ? STATE.barcodeIndex.get(productIdOrSku) : null) || STATE.products.find(x => x.sku === productIdOrSku || x.barcode === productIdOrSku || x.id === productIdOrSku);
+      if (!p) {
+        toast('Product not found', 'err');
+        return;
+      }
+
+      const refillInfo = getSmartRefillStatus(p.sku || p.barcode);
+      const whInfo = getWarehouseStock(p.sku || p.barcode, true);
+
+      if (!whInfo.bins || whInfo.bins.length === 0) {
+        toast('No warehouse source stock available', 'err');
+        return;
+      }
+
+      const sourceBin = whInfo.bins[0].loc;
+      const targetShopLoc = (p.loc || p.location || 'R1L1B1').trim();
+      const refillQty = refillInfo.suggestedRefill || 1;
+
+      window.activeTransfer = {
+        id: 'TRF-' + Date.now().toString(36).toUpperCase(),
+        device: 'Device-1',
+        picker: STATE.pickerName || 'Picker',
+        startTime: new Date().toISOString(),
+        status: 'Draft',
+        sourceLocation: { id: sourceBin, label: `Warehouse ${sourceBin}` },
+        destinationLocation: { id: targetShopLoc, label: `Shop ${targetShopLoc}` },
+        items: [{
+          productId: p.id || p.barcode,
+          sku: p.sku || p.barcode,
+          barcode: p.barcode,
+          productName: p.name,
+          transferQty: refillQty,
+          cachedQtyAtTransfer: getProductShopStock(p),
+          warnings: []
+        }],
+        warnings: []
+      };
+
+      saveActiveTransfer();
+      toast(`Initiated Refill: ${sourceBin} ➔ ${targetShopLoc} (${refillQty} pcs)`, 'ok');
+      nav('s-transfer');
+      renderTransferReviewStep();
+    }
+
     // This calculates effective inventory = Base Cache + Pending Physical Movement Overlays
     function getEffectiveInventory(productId, locationId) {
-      const product = STATE.barcodeIndex.get(productId) || STATE.products.find(p => p.id === productId || p.barcode === productId);
+      const product = STATE.barcodeIndex.get(productId) || STATE.products.find(p => p.id === productId || p.barcode === productId || p.sku === productId);
       if (!product) return 0;
 
-      let baseQty = product.stock || 0;
-
-      // For now, if the system doesn't have per-location stock tracking, 
-      // we assume the product's total stock is what's being affected.
-      // If the app supports per-bin quantities in the future, baseQty should be pulled from that specific bin.
+      let baseQty = 0;
+      if (locationId) {
+        const cleanLoc = String(locationId).trim().toUpperCase();
+        const locs = normalizeProductLocations(product);
+        const matchedLoc = locs.find(l => String(l.loc).trim().toUpperCase() === cleanLoc);
+        if (matchedLoc) {
+          baseQty = Number(matchedLoc.qty || 0);
+        } else {
+          baseQty = Number(product.stock ?? product.qty ?? 0);
+        }
+      } else {
+        baseQty = Number(product.stock ?? product.qty ?? 0);
+      }
 
       if (!STATE.pendingTransferOverlays || STATE.pendingTransferOverlays.length === 0) {
-        return baseQty;
+        return Math.max(0, baseQty);
       }
 
       let effectiveQty = baseQty;
 
       STATE.pendingTransferOverlays.forEach(overlay => {
-        // If the location matches the overlay's source, subtract
         if (overlay.sourceLocationId === locationId) {
-          const item = overlay.items.find(i => i.productId === product.id);
+          const item = overlay.items.find(i => i.productId === product.id || i.sku === product.sku);
           if (item) {
             effectiveQty -= item.quantity;
           }
         }
-        // If the location matches the overlay's destination, add
         if (overlay.destinationLocationId === locationId) {
-          const item = overlay.items.find(i => i.productId === product.id);
+          const item = overlay.items.find(i => i.productId === product.id || i.sku === product.sku);
           if (item) {
             effectiveQty += item.quantity;
           }
         }
       });
 
-      return effectiveQty;
-    }
-
-    window.updateProductStock = async function (sku, newQty, transactionId) {
-      if (!sku) return { success: false, error: 'No SKU provided' };
-      const cleanQty = Number(newQty);
-      if (isNaN(cleanQty)) return { success: false, error: 'Invalid quantity' };
-
-      const txId = transactionId || '';
-
-      const product = STATE.barcodeIndex.get(sku) || STATE.products.find(p => p.sku === sku || p.barcode === sku);
-      if (product) {
-        product.stock = cleanQty;
-        product.qty = cleanQty;
-      }
-
-      let invRes = { success: true, queued: false, synced: true };
-      let prodRes = { success: true, queued: false, synced: true };
-
-      // 1. Sync IndexedDB & Supabase Inventory table (available_qty)
-      if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.updateInventory === 'function') {
-        invRes = await window.SUPABASE_INVENTORY.updateInventory(sku, cleanQty, txId);
-      } else if (window.PICKER_DB && typeof window.PICKER_DB.updateInventoryItem === 'function') {
-        try {
-          await window.PICKER_DB.updateInventoryItem(sku, cleanQty);
-          invRes = { success: true, queued: true, synced: false, transactionId: txId };
-        } catch (err) {
-          invRes = { success: false, error: err };
-        }
-      }
-
-      // 2. Sync Supabase Products table (stock) if product object exists
-      if (product && window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
-        try {
-          prodRes = await window.SUPABASE_PRODUCTS.saveProduct(product, txId);
-        } catch (e) {
-          console.warn('[updateProductStock] saveProduct warning:', e);
-          prodRes = { success: true, queued: true, synced: false, error: e };
-        }
-      }
-
-      const success = Boolean((!invRes || invRes.success !== false) && (!prodRes || prodRes.success !== false));
-      const queued = Boolean((invRes && invRes.queued) || (prodRes && prodRes.queued));
-      const synced = Boolean((invRes && invRes.synced) && (prodRes && prodRes.synced));
-
-      return {
-        success: success,
-        queued: queued,
-        synced: synced,
-        transactionId: txId,
-        error: (!success) ? (invRes?.error || prodRes?.error || 'Stock persistence failed') : null
-      };
-    };
-
-    function setSplash(msg, pct) {
-      document.getElementById('splashStatus').textContent = msg;
-      document.getElementById('splashFill').style.width = pct + '%';
-    }
-
-    // ══════════════════════════════════════════
-    //  DATA LOADING
-    // ══════════════════════════════════════════
-    async function fetchJSON(url) {
-      // AbortSignal.timeout not available on older Android Chrome — use manual timeout
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 5000);
-      try {
-        const res = await fetch(url, { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      } catch (e) {
-        clearTimeout(timer);
-        throw e;
-      }
-    }
-
-    function loadProducts(raw, version = null) {
-      if (!Array.isArray(raw)) {
-        raw = raw?.data || raw?.items || raw?.products || raw?.inventory || (typeof raw === 'object' && raw ? Object.values(raw) : []);
-      }
-      STATE.products = raw.map(normalizeProduct);
-      STATE.inventoryVersion = version || `INV-${new Date().toISOString().replace(/T/, '-').replace(/\..+/, '')}`;
-      // Build barcode index
-      STATE.barcodeIndex.clear();
-      for (const p of STATE.products) {
-        if (p.barcode) STATE.barcodeIndex.set(String(p.barcode).trim(), p);
-        if (p.sku) STATE.barcodeIndex.set(String(p.sku).trim(), p);
-        if (p.id) STATE.barcodeIndex.set(String(p.id).trim(), p);
-      }
-      STATE.warehouseMap = buildWarehouseMap(STATE.products);
-
-      // ── Sync into FS_PRODUCTS so all products are included in file saves ──
-      const existingIds = new Set(FS_PRODUCTS.map(p => p.id || p.barcode).filter(Boolean));
-      for (const p of STATE.products) {
-        const key = p.id || p.barcode;
-        if (!key) continue;
-        const idx = FS_PRODUCTS.findIndex(fp => (fp.id || fp.barcode) === key);
-        if (idx >= 0) {
-          FS_PRODUCTS[idx] = { ...FS_PRODUCTS[idx], ...p };
-        } else {
-          FS_PRODUCTS.push(p);
-          existingIds.add(key);
-        }
-      }
-    }
-
-    function loadOrders(raw) {
-      STATE.orders = (raw?.orders || raw || []).map(normalizeOrder);
+      return Math.max(0, effectiveQty);
     }
 
     // ── Normalize product from any JSON field names ──
@@ -8581,8 +8862,14 @@
       const skuKey = String(f('sku', 'SKU', 'item_code', 'ItemCode', 'code', 'Code', 'id') || barcodeKey);
       const idKey = String(r.id || barcodeKey);
       const locStr = f('loc', 'location', 'Location', 'rack', 'bin', 'shelf', 'LOC') || '';
-      const stockNum = Number(f('stock', 'qty', 'quantity', 'Quantity', 'QTY', 'qty_on_hand', 'available', 'balance') ?? 0);
       const mrpNum = Number(f('mrp', 'MRP', 'price', 'Price', 'rate', 'cost') ?? 0);
+
+      const locsList = normalizeProductLocations(r);
+      const primaryShopLocObj = locsList.find(l => isShopLoc(l.loc)) || locsList[0];
+      const shopStockNum = locsList.filter(l => isShopLoc(l.loc)).reduce((sum, l) => sum + Number(l.qty || 0), 0);
+      const whStockNum = locsList.filter(l => isWarehouseLoc(l.loc)).reduce((sum, l) => sum + Number(l.qty || 0), 0);
+      const primaryLocStr = primaryShopLocObj ? primaryShopLocObj.loc : (locStr || 'R1L1B1');
+      const primaryThresh = primaryShopLocObj ? primaryShopLocObj.threshold : Number(f('threshold', 'Threshold') ?? 5);
 
       const imagesList = Array.isArray(r.images) && r.images.length > 0
         ? r.images
@@ -8596,16 +8883,21 @@
         name: f('name', 'product_name', 'item_name', 'ProductName', 'title', 'description', 'Name') || '(No Name)',
         barcode: barcodeKey,
         sku: skuKey,
-        loc: locStr,
-        location: locStr,
-        stock: stockNum,
-        qty: stockNum,
+        loc: primaryLocStr,
+        location: primaryLocStr,
+        locations: locsList,
+        stock: shopStockNum,
+        qty: shopStockNum,
+        shop_qty: shopStockNum,
+        wh_qty: whStockNum,
         brand: f('brand', 'Brand', 'manufacturer', 'Manufacturer', 'make') || '',
         category: f('category', 'Category', 'cat', 'Cat') || '',
         mrp: mrpNum,
         sp: Number(f('sp', 'SP', 'selling_price', 'SellingPrice') ?? mrpNum),
-        threshold: Number(f('threshold', 'Threshold') ?? 5),
+        threshold: primaryThresh,
         fitment_group: f('fitment_group', 'FitmentGroup') || '',
+        intact: Boolean(r.intact ?? r.is_intact ?? (r.fitment_group ? true : false)),
+        is_intact: Boolean(r.is_intact ?? r.intact ?? (r.fitment_group ? true : false)),
         compatibility: Array.isArray(r.compatibility) ? r.compatibility : [],
         images: imagesList,
         image: primaryImg,
@@ -9830,15 +10122,10 @@
       }
 
       // 3. Stats & Quantities
-      let effStock = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, p.loc || p.location) : 0;
-      const rawQty = p.qty != null ? Number(p.qty) : (p.stock != null ? Number(p.stock) : 0);
-      if (effStock === 0 && rawQty > 0) {
-        effStock = rawQty;
-      }
-
-      // Top STOCK QTY Card represents CURRENT SHOP QUANTITY
-      const shopQty = p.shop_qty != null ? Number(p.shop_qty) : (p.shop_stock != null ? Number(p.shop_stock) : effStock);
-      const whQty = p.wh_qty != null ? Number(p.wh_qty) : (p.wh_stock != null ? Number(p.wh_stock) : (p.warehouse_qty != null ? Number(p.warehouse_qty) : 0));
+      const shopQty = getProductShopStock(p);
+      const whQty = getProductWarehouseStock(p);
+      const totalQty = getProductTotalStock(p);
+      const refillInfo = typeof getSmartRefillStatus === 'function' ? getSmartRefillStatus(p.sku || p.barcode) : null;
 
       const threshold = Number(p.threshold || 5);
 
@@ -9850,12 +10137,18 @@
 
       if (stockValEl && stockSubEl) {
         stockValEl.textContent = `${shopQty} pcs`;
-        if (shopQty <= 0) {
+        const currStatus = refillInfo ? refillInfo.status : (shopQty <= 0 ? 'OUT OF STOCK' : (shopQty < threshold ? 'LOW STOCK' : 'NORMAL'));
+        if (currStatus === 'OUT OF STOCK') {
           stockValEl.className = 'pdm-card-value red';
           stockSubEl.className = 'pdm-card-sub red';
           stockSubEl.textContent = 'Out of Stock';
           if (badgeStockEl) { badgeStockEl.className = 'pdm-badge stock-status red'; badgeStockEl.textContent = 'Out of Stock'; }
-        } else if (shopQty < threshold) {
+        } else if (currStatus === 'REFILL REQUIRED') {
+          stockValEl.className = 'pdm-card-value amber';
+          stockSubEl.className = 'pdm-card-sub amber';
+          stockSubEl.textContent = `Refill Required (Deficit: ${refillInfo.deficit} pcs)`;
+          if (badgeStockEl) { badgeStockEl.className = 'pdm-badge stock-status amber'; badgeStockEl.textContent = '↻ Refill Required'; }
+        } else if (currStatus === 'LOW STOCK') {
           stockValEl.className = 'pdm-card-value amber';
           stockSubEl.className = 'pdm-card-sub amber';
           stockSubEl.textContent = 'Low Stock';
@@ -9911,18 +10204,7 @@
       // 5. Stock By Location Block
       const primaryLoc = (p.loc || p.location || 'R1L1B3').trim();
       let shopLocCode = primaryLoc;
-      let whLocCode = primaryLoc;
-
-      if (/^WR/i.test(primaryLoc)) {
-        shopLocCode = primaryLoc.replace(/^WR/i, 'R');
-        whLocCode = primaryLoc.toUpperCase();
-      } else if (/^R/i.test(primaryLoc)) {
-        shopLocCode = primaryLoc.toUpperCase();
-        whLocCode = primaryLoc.replace(/^R/i, 'WR').toUpperCase();
-      } else {
-        shopLocCode = primaryLoc.toUpperCase();
-        whLocCode = ('WR' + primaryLoc).toUpperCase();
-      }
+      let whLocCode = isWarehouseLoc(primaryLoc) ? primaryLoc : ('WR' + primaryLoc);
 
       const shopLocNameEl = document.getElementById('pdmShopLocName');
       const whLocNameEl = document.getElementById('pdmWhLocName');
@@ -9936,14 +10218,6 @@
 
       // 6. Intact Linked SKUs Block
       renderPdmIntactSection(p, shopLocCode, whLocCode);
-
-      // Show Modal
-      const modal = document.getElementById('prodDetailModal');
-      if (modal) modal.style.display = 'flex';
-
-      // Reset scroll position
-      const scrollBody = document.getElementById('pdmScrollBody');
-      if (scrollBody) scrollBody.scrollTop = 0;
     }
 
     function renderPdmImages() {
@@ -10057,8 +10331,8 @@
 
       if (linkedList.length > 0) {
         rowsEl.innerHTML = linkedList.map((item, idx) => {
-          const sQty = item.shop_qty != null ? Number(item.shop_qty) : (item.shop_stock != null ? Number(item.shop_stock) : (item.qty ?? item.stock ?? 0));
-          const wQty = item.wh_qty != null ? Number(item.wh_qty) : (item.wh_stock != null ? Number(item.wh_stock) : (item.warehouse_qty != null ? Number(item.warehouse_qty) : 0));
+          const sQty = getProductShopStock(item);
+          const wQty = getProductWarehouseStock(item);
           const tot = sQty + wQty;
           const skuName = `${item.sku || item.barcode || ''} ${item.name || ''}`.trim();
           const dotClass = idx % 2 === 0 ? 'orange' : 'blue';
@@ -13957,8 +14231,19 @@
     }
 
     // ══════════════════════════════════════════════════════════
-    //  LOCATION HELPERS
+    //  LOCATION HELPERS & STORAGE TOGGLE
     // ══════════════════════════════════════════════════════════
+    var AP_STORAGE_MODE = 'shop'; // 'shop' | 'warehouse'
+
+    function setAPStorage(mode) {
+      AP_STORAGE_MODE = mode === 'warehouse' ? 'warehouse' : 'shop';
+      const shopBtn = document.getElementById('apStorageShop');
+      const whBtn = document.getElementById('apStorageWarehouse');
+      if (shopBtn) shopBtn.classList.toggle('active', AP_STORAGE_MODE === 'shop');
+      if (whBtn) whBtn.classList.toggle('active', AP_STORAGE_MODE === 'warehouse');
+      syncAPLoc();
+    }
+
     function adjAP(id, d) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -13968,10 +14253,7 @@
     }
 
     function syncAPLoc() {
-      const r = document.getElementById('apR')?.value || 1;
-      const l = document.getElementById('apL')?.value || 1;
-      const b = document.getElementById('apB')?.value || 1;
-      const loc = `R${r}L${l}B${b}`;
+      const loc = getAPLoc();
       const prev = document.getElementById('apLocPreview');
       if (prev) prev.textContent = loc;
     }
@@ -13980,11 +14262,17 @@
       const r = document.getElementById('apR')?.value || '1';
       const l = document.getElementById('apL')?.value || '1';
       const b = document.getElementById('apB')?.value || '1';
-      return 'R' + r + 'L' + l + 'B' + b;
+      const prefix = AP_STORAGE_MODE === 'warehouse' ? 'WR' : 'R';
+      return prefix + r + 'L' + l + 'B' + b;
     }
 
     function setAPLoc(loc) {
-      const m = (loc || '').match(/R(\d+)L(\d+)B(\d+)/i);
+      if (!loc) return;
+      const cleanLoc = String(loc).trim();
+      const isWh = isWarehouseLoc(cleanLoc);
+      setAPStorage(isWh ? 'warehouse' : 'shop');
+
+      const m = cleanLoc.match(/(?:WR|R)?(\d+)L(\d+)B(\d+)/i) || cleanLoc.match(/(\d+)L(\d+)B(\d+)/i);
       if (!m) return;
       const r = document.getElementById('apR');
       const l = document.getElementById('apL');
@@ -14304,6 +14592,9 @@
     // ══════════════════════════════════════════════════════════
     //  SAVE PRODUCT
     // ══════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════
+    //  SAVE PRODUCT (MULTI-LOCATION SKU SUPPORT)
+    // ══════════════════════════════════════════════════════════
     async function saveProduct() {
       // Safe getter helpers — never throw even if element missing
       const gv = id => (document.getElementById(id)?.value || '').trim();
@@ -14315,52 +14606,125 @@
       if (!name) { toast('Enter product name', 'err'); document.getElementById('apName')?.focus(); return; }
       if (!barcode) { toast('Enter or generate barcode', 'err'); return; }
 
-      if (isIdDuplicate(barcode, AP_EDIT_ID)) {
-        toast('Barcode already exists!', 'err');
-        alert('A product with this barcode already exists. Please use a unique barcode.');
-        return;
+      const targetLoc = getAPLoc();
+      const inputQty = gn('apQty');
+      const inputThresh = document.getElementById('apThreshold')?.value !== '' ? gn('apThreshold') : 5;
+      const locType = isWarehouseLoc(targetLoc) ? 'warehouse' : 'shop';
+
+      // Check if SKU exists across memory/storage
+      const existingProduct = (STATE.barcodeIndex ? STATE.barcodeIndex.get(barcode) : null) ||
+                              FS_PRODUCTS.find(p => p.barcode === barcode || p.sku === barcode || p.id === barcode) ||
+                              STATE.products.find(p => p.barcode === barcode || p.sku === barcode || p.id === barcode);
+
+      let product = null;
+
+      if (existingProduct && !AP_EDIT_ID) {
+        // ── Existing SKU + Location merge ──
+        product = { ...existingProduct };
+        product.locations = normalizeProductLocations(product);
+        
+        const locIdx = product.locations.findIndex(l => String(l.loc).trim().toUpperCase() === targetLoc.toUpperCase());
+        if (locIdx >= 0) {
+          // Existing SKU + SAME location -> update/merge
+          product.locations[locIdx].qty = inputQty;
+          product.locations[locIdx].threshold = inputThresh;
+          product.locations[locIdx].type = locType;
+        } else {
+          // Existing SKU + NEW location -> append new location entry
+          product.locations.push({
+            loc: targetLoc,
+            qty: inputQty,
+            threshold: inputThresh,
+            type: locType
+          });
+        }
+        
+        // Update product metadata if fields were supplied
+        if (name) product.name = name;
+        if (gv('apBrand')) product.brand = gv('apBrand');
+        if (gv('apCat')) product.category = gv('apCat');
+        if (gn('apMRP')) product.mrp = gn('apMRP');
+        if (gn('apSP')) product.sp = gn('apSP');
+        if (document.getElementById('intactToggle')?.classList.contains('on')) {
+          product.fitment_group = gv('apFG');
+          product.intact = true; product.is_intact = true;
+        }
+        if (AP_COMPAT_SEL.size > 0) product.compatibility = [...AP_COMPAT_SEL];
+        if (AP_PRODUCT_IMAGES.length > 0) {
+          product.images = [...AP_PRODUCT_IMAGES];
+          product.image = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || product.image;
+        }
+      } else {
+        // ── New SKU or Editing specific product instance ──
+        if (isIdDuplicate(barcode, AP_EDIT_ID) && !AP_EDIT_ID) {
+          toast('Barcode already exists!', 'err');
+          alert('A product with this barcode already exists. Please use a unique barcode.');
+          return;
+        }
+
+        const id = AP_EDIT_ID || barcode;
+        const primaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
+
+        let baseLocations = [];
+        if (AP_EDIT_ID && existingProduct && Array.isArray(existingProduct.locations)) {
+          baseLocations = [...existingProduct.locations];
+          const lIdx = baseLocations.findIndex(l => String(l.loc).trim().toUpperCase() === targetLoc.toUpperCase());
+          if (lIdx >= 0) {
+            baseLocations[lIdx] = { loc: targetLoc, qty: inputQty, threshold: inputThresh, type: locType };
+          } else {
+            baseLocations.push({ loc: targetLoc, qty: inputQty, threshold: inputThresh, type: locType });
+          }
+        } else {
+          baseLocations = [{ loc: targetLoc, qty: inputQty, threshold: inputThresh, type: locType }];
+        }
+
+        product = {
+          id,
+          name,
+          brand: gv('apBrand'),
+          category: gv('apCat'),
+          location: targetLoc,
+          loc: targetLoc,
+          locations: baseLocations,
+          qty: inputQty,
+          stock: inputQty,
+          threshold: inputThresh,
+          mrp: gn('apMRP'),
+          sp: gn('apSP'),
+          fitment_group: document.getElementById('intactToggle')?.classList.contains('on') ? gv('apFG') : '',
+          intact: document.getElementById('intactToggle')?.classList.contains('on') || false,
+          is_intact: document.getElementById('intactToggle')?.classList.contains('on') || false,
+          compatibility: [...AP_COMPAT_SEL],
+          barcode,
+          sku: barcode,
+          images: [...AP_PRODUCT_IMAGES],
+          image: primaryUrl,
+          updated_at: new Date().toISOString(),
+        };
       }
 
-      const id = AP_EDIT_ID || barcode;
-      const loc = getAPLoc();
-
-      const primaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
-
-      const product = {
-        id,
-        name,
-        brand: gv('apBrand'),
-        category: gv('apCat'),
-        location: loc,
-        loc,
-        qty: gn('apQty'),
-        stock: gn('apQty'),
-        threshold: document.getElementById('apThreshold')?.value !== '' ? gn('apThreshold') : 5,
-        mrp: gn('apMRP'),
-        sp: gn('apSP'),
-        fitment_group: document.getElementById('intactToggle')?.classList.contains('on')
-          ? gv('apFG') : '',
-        intact: document.getElementById('intactToggle')?.classList.contains('on') || false,
-        is_intact: document.getElementById('intactToggle')?.classList.contains('on') || false,
-        compatibility: [...AP_COMPAT_SEL],
-        barcode,
-        sku: barcode,
-        images: [...AP_PRODUCT_IMAGES],
-        image: primaryUrl,
-        updated_at: new Date().toISOString(),
-      };
+      // Recompute Shop and Warehouse totals for normalized state
+      product.stock = getProductShopStock(product);
+      product.qty = product.stock;
+      product.shop_qty = product.stock;
+      product.wh_qty = getProductWarehouseStock(product);
+      const shopLocObj = normalizeProductLocations(product).find(l => isShopLoc(l.loc));
+      if (shopLocObj) {
+        product.loc = shopLocObj.loc;
+        product.location = shopLocObj.loc;
+      }
 
       const btn = document.getElementById('apSaveBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
       try {
         // ── Update in-memory list ──
-        const existing = FS_PRODUCTS.findIndex(p => p.barcode === barcode || p.id === id);
+        const existing = FS_PRODUCTS.findIndex(p => p.barcode === barcode || p.id === product.id);
         if (existing >= 0) FS_PRODUCTS[existing] = product;
         else FS_PRODUCTS.push(product);
 
         // ── Merge into STATE for live use ──
-        const si = STATE.products.findIndex(p => p.barcode === barcode || p.id === id);
+        const si = STATE.products.findIndex(p => p.barcode === barcode || p.id === product.id);
         if (si >= 0) STATE.products[si] = { ...STATE.products[si], ...product };
         else STATE.products.push(product);
         STATE.barcodeIndex.set(barcode, product);
@@ -14388,9 +14752,9 @@
         }
         AP_LAST_PRODUCT = { ...product };
         STATE.logs.unshift({
-          orderId: AP_EDIT_ID ? 'EDIT-' + id : 'ADD-' + id,
+          orderId: AP_EDIT_ID ? 'EDIT-' + product.id : 'ADD-' + product.id,
           type: AP_EDIT_ID ? 'edit' : 'add',
-          productId: id, productName: name,
+          productId: product.id, productName: name,
           start: new Date(), end: new Date(),
           items: [{ barcode: barcode, product: product, status: 'picked', qty: product.qty || 0 }]
         });
@@ -14592,10 +14956,28 @@
       el.innerHTML = '';
       // Use FS_IMAGES (already loaded from file/IDB)
       data.slice(0, 80).forEach((p, i) => {
-        const qty = getEffectiveInventory(p.id || p.barcode, p.location || p.loc);
-        const thresh = p.threshold ?? 5;
-        const isLow = qty <= thresh;
+        const qty = getProductShopStock(p);
+        const refillInfo = typeof getSmartRefillStatus === 'function' ? getSmartRefillStatus(p.sku || p.barcode) : null;
+        if (refillInfo && typeof checkAndTriggerRefillNotification === 'function') {
+          checkAndTriggerRefillNotification(p, refillInfo);
+        }
+
+        const isLow = refillInfo ? (refillInfo.status === 'LOW STOCK' || refillInfo.status === 'REFILL REQUIRED' || refillInfo.status === 'OUT OF STOCK') : (qty <= (p.threshold ?? 5));
         const loc = p.location || p.loc || '—';
+
+        let badgeHtml = '';
+        if (refillInfo) {
+          if (refillInfo.status === 'REFILL REQUIRED') {
+            badgeHtml = '<div style="font-size:9px;font-weight:800;color:var(--or);letter-spacing:.5px;margin-top:2px;display:flex;align-items:center;gap:2px">↻ REFILL</div>';
+          } else if (refillInfo.status === 'OUT OF STOCK') {
+            badgeHtml = '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">OUT OF STOCK</div>';
+          } else if (refillInfo.status === 'LOW STOCK') {
+            badgeHtml = '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">LOW STOCK</div>';
+          }
+        } else if (isLow) {
+          badgeHtml = '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">LOW</div>';
+        }
+
         const div = document.createElement('div');
         div.className = 'pr-card';
         div.style.animationDelay = i * 15 + 'ms';
@@ -14609,7 +14991,7 @@
       <div class="pr-qty">
         <div class="pr-qty-val ${isLow ? 'low' : ''}">${qty}</div>
         <div class="pr-qty-lbl">units</div>
-        ${isLow ? '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px">LOW</div>' : ''}
+        ${badgeHtml}
       </div>`;
         div.onclick = (function (id) { return function () { openProdDetail(id); }; })(p.id || p.barcode);
         el.appendChild(div);
@@ -17259,11 +17641,53 @@
         transferId: t.id,
         sourceLocationId: t.sourceLocation.id,
         destinationLocationId: t.destinationLocation.id,
-        items: t.items.map(i => ({ productId: i.productId, quantity: i.transferQty })),
+        items: t.items.map(i => ({ productId: i.productId, sku: i.sku, quantity: i.transferQty })),
         createdAt: t.confirmedAt,
         status: 'pending_sync'
       };
       STATE.pendingTransferOverlays.push(overlay);
+
+      // 1.5 Update Location Stock on Local Product Records & Recalculate Refill State
+      if (t.items && t.items.length > 0) {
+        t.items.forEach(it => {
+          const prod = (STATE.barcodeIndex ? STATE.barcodeIndex.get(it.sku || it.productId) : null) ||
+                       STATE.products.find(p => p.sku === it.sku || p.barcode === it.productId || p.id === it.productId);
+          if (prod) {
+            prod.locations = normalizeProductLocations(prod);
+            const srcLocObj = prod.locations.find(l => String(l.loc).trim().toUpperCase() === String(t.sourceLocation.id).trim().toUpperCase());
+            const destLocObj = prod.locations.find(l => String(l.loc).trim().toUpperCase() === String(t.destinationLocation.id).trim().toUpperCase());
+
+            if (srcLocObj) {
+              srcLocObj.qty = Math.max(0, Number(srcLocObj.qty || 0) - Number(it.transferQty));
+            }
+            if (destLocObj) {
+              destLocObj.qty = Number(destLocObj.qty || 0) + Number(it.transferQty);
+            } else {
+              prod.locations.push({
+                loc: t.destinationLocation.id,
+                qty: Number(it.transferQty),
+                threshold: 5,
+                type: isWarehouseLoc(t.destinationLocation.id) ? 'warehouse' : 'shop'
+              });
+            }
+            prod.stock = getProductShopStock(prod);
+            prod.qty = prod.stock;
+            prod.shop_qty = prod.stock;
+            prod.wh_qty = getProductWarehouseStock(prod);
+
+            // Recalculate refill status & resolve notification if back to NORMAL
+            const refillInfo = getSmartRefillStatus(prod.sku || prod.barcode);
+            checkAndTriggerRefillNotification(prod, refillInfo);
+
+            if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+              window.SUPABASE_PRODUCTS.saveProduct(prod);
+            } else if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+              window.PICKER_DB.putProducts([prod]);
+            }
+          }
+        });
+        if (typeof renderProductsList === 'function') renderProductsList('');
+      }
 
       // 2. Queue for Sync
       STATE.transferQueue.push(t);

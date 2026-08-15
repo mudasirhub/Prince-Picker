@@ -121,6 +121,7 @@
       compatibility: Array.isArray(product.compatibility) ? product.compatibility : [],
       images: imagesList,
       image: primaryImageUrl,
+      locations: Array.isArray(product.locations) ? product.locations : [{ loc: product.location || product.loc || 'R1L1B1', qty: Number(product.stock ?? product.qty ?? 0), threshold: Number(product.threshold ?? 5), type: 'shop' }],
       updated_at: product.updated_at || new Date().toISOString()
     };
 
@@ -134,6 +135,7 @@
       category: product.category || '',
       location: product.location || product.loc || '',
       loc: product.loc || product.location || '',
+      locations: Array.isArray(product.locations) ? product.locations : [{ loc: product.location || product.loc || 'R1L1B1', qty: Number(product.stock ?? product.qty ?? 0), threshold: Number(product.threshold ?? 5), type: 'shop' }],
       stock: Number(product.stock ?? product.qty ?? 0),
       mrp: Number(product.mrp || 0),
       fitment_group: product.fitment_group || '',
