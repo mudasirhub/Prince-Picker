@@ -5,15 +5,18 @@
  */
 
 (function () {
-    // Dynamically connect to the PC's bridge server instead of assuming localhost
+    const savedServerUrl = (localStorage.getItem('pa_server_url') || localStorage.getItem('pa_bridge_url') || localStorage.getItem('bridge_server') || '').trim();
     const host = window.location.hostname || 'localhost';
-    const BRIDGE_URL = window.location.protocol + '//' + host + ':3002';
+    const isLocalEnv = host === 'localhost' || host === '127.0.0.1' || /^192\.168\./.test(host) || /^10\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+    const BRIDGE_URL = savedServerUrl || (isLocalEnv ? (window.location.protocol + '//' + host + ':3002') : '');
+
     let socket = null;
     let pickerId = localStorage.getItem('picker_id') || ('P-' + Math.floor(Math.random()*10000));
     localStorage.setItem('picker_id', pickerId);
     let activeTask = null;
     let pingInterval;
     let scriptLoadFailed = false;
+
     // Expose bridge status to the main app
     window.PICKER_BRIDGE = {
         connected: false,
@@ -34,14 +37,17 @@
     function loadSocketIO(callback) {
         if (typeof io !== 'undefined') { callback(); return; }
 
-        var bridgeSrc = BRIDGE_URL + '/socket.io/socket.io.js';
         var cdnSrc = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
-        var isLocalEnv = host === 'localhost' || host === '127.0.0.1' || /^192\.168\./.test(host);
+        var bridgeSrc = BRIDGE_URL ? (BRIDGE_URL + '/socket.io/socket.io.js') : null;
 
-        var primarySrc = isLocalEnv ? bridgeSrc : cdnSrc;
-        var fallbackSrc = isLocalEnv ? cdnSrc : bridgeSrc;
+        var primarySrc = isLocalEnv && bridgeSrc ? bridgeSrc : cdnSrc;
+        var fallbackSrc = (primarySrc === bridgeSrc) ? cdnSrc : (bridgeSrc || null);
 
         function tryLoad(src, fallback) {
+            if (!src) {
+                if (fallback) tryLoad(fallback, null);
+                return;
+            }
             var s = document.createElement('script');
             s.src = src;
             var timer = setTimeout(function() {
@@ -76,7 +82,7 @@
     loadSocketIO(initBridge);
 
     function initBridge() {
-        if (typeof io === 'undefined') return;
+        if (typeof io === 'undefined' || !BRIDGE_URL) return;
         
         var customServer = localStorage.getItem('bridge_server');
         // Do not auto-connect to port 3002 on public web deployments unless a custom bridge server is specified
