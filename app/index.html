@@ -3634,6 +3634,36 @@
     }
 
     /* intact / toggle */
+    .ap-toggle-group {
+      display: flex;
+      gap: 8px;
+      background: var(--card);
+      border: 1.5px solid var(--bd2);
+      border-radius: 14px;
+      padding: 4px
+    }
+
+    .ap-toggle-btn {
+      flex: 1;
+      height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      color: var(--t3);
+      cursor: pointer;
+      transition: all .15s ease
+    }
+
+    .ap-toggle-btn.active {
+      background: var(--or);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(236, 91, 19, .25)
+    }
+
     .ap-toggle-row {
       display: flex;
       align-items: center;
@@ -14784,12 +14814,17 @@
         var el = document.getElementById(fid);
         if (el) { el.value = ''; el.classList.remove('filled'); }
       });
+      ['apR', 'apL', 'apB'].forEach(function (fid) {
+        var el = document.getElementById(fid);
+        if (el) { el.value = '1'; }
+      });
       AP_COMPAT_SEL.clear();
       AP_PRODUCT_IMAGES = [];
       if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
       const intact = document.getElementById('intactToggle');
       if (intact) { intact.classList.remove('on'); document.getElementById('intactGroup').style.display = 'none'; }
       renderCompatList();
+      setAPStorage('shop');
     }
 
     function resetAPForm() {
