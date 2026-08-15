@@ -10278,6 +10278,25 @@
       renderPdmGalleryView();
     }
 
+    function resetPdmZoom() {
+      const imgEl = document.getElementById('pdmFullscreenImg');
+      if (!imgEl) return;
+      PRODUCT_GALLERY.scale = 1;
+      PRODUCT_GALLERY.tx = 0;
+      PRODUCT_GALLERY.ty = 0;
+      imgEl.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+      imgEl.style.transform = 'translate3d(0px, 0px, 0px) scale(1)';
+    }
+
+    function applyPdmZoomTransform() {
+      const imgEl = document.getElementById('pdmFullscreenImg');
+      if (!imgEl) return;
+      const sc = PRODUCT_GALLERY.scale || 1;
+      const tx = PRODUCT_GALLERY.tx || 0;
+      const ty = PRODUCT_GALLERY.ty || 0;
+      imgEl.style.transform = `translate3d(${tx}px, ${ty}px, 0px) scale(${sc})`;
+    }
+
     function openPdmFullscreen() {
       const N = PRODUCT_GALLERY.images.length;
       if (N === 0) return; // No image to expand
@@ -10293,6 +10312,7 @@
         fsViewer.style.display = 'flex';
       }
 
+      initPdmFullscreenGestures();
       syncPdmFullscreenView();
     }
 
@@ -10307,6 +10327,7 @@
         fsViewer.style.display = 'none';
       }
 
+      resetPdmZoom();
       // Ensure modal gallery reflects active image
       renderPdmGalleryView();
     }
@@ -10320,6 +10341,8 @@
       const dotsEl = document.getElementById('pdmFullscreenDots');
       const prevBtn = document.querySelector('#pdmFullscreenViewport .pdm-fullscreen-arrow.prev');
       const nextBtn = document.querySelector('#pdmFullscreenViewport .pdm-fullscreen-arrow.next');
+
+      resetPdmZoom();
 
       if (imgEl && PRODUCT_GALLERY.images[idx]) {
         imgEl.src = PRODUCT_GALLERY.images[idx];
@@ -10420,35 +10443,154 @@
 
     function initPdmFullscreenGestures() {
       const viewport = document.getElementById('pdmFullscreenViewport');
+      const imgEl = document.getElementById('pdmFullscreenImg');
       if (!viewport || viewport.dataset.gesturesInited) return;
       viewport.dataset.gesturesInited = 'true';
 
-      let startX = 0, startY = 0, isDragging = false;
+      let startDist = 0;
+      let startScale = 1;
+      let startX = 0, startY = 0;
+      let startTx = 0, startTy = 0;
+      let isPinching = false;
+      let isDragging = false;
+      let lastTapTime = 0;
 
+      function getDist(t1, t2) {
+        const dx = t1.clientX - t2.clientX;
+        const dy = t1.clientY - t2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      // Touch handling for Pinch & Drag / Inter-slide Swipe
       viewport.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) {
+        if (!PRODUCT_GALLERY.viewerOpen) return;
+
+        if (e.touches.length === 2) {
+          // 2 fingers = Pinch zoom
+          isPinching = true;
+          isDragging = false;
+          startDist = getDist(e.touches[0], e.touches[1]);
+          startScale = PRODUCT_GALLERY.scale || 1;
+          if (imgEl) imgEl.style.transition = 'none';
+        } else if (e.touches.length === 1) {
+          // 1 finger = Drag / Swipe
+          isPinching = false;
           startX = e.touches[0].clientX;
           startY = e.touches[0].clientY;
+          startTx = PRODUCT_GALLERY.tx || 0;
+          startTy = PRODUCT_GALLERY.ty || 0;
           isDragging = true;
+          if (imgEl) imgEl.style.transition = 'none';
+
+          // Double tap detection to toggle zoom
+          const now = Date.now();
+          if (now - lastTapTime < 300) {
+            if ((PRODUCT_GALLERY.scale || 1) > 1) {
+              resetPdmZoom();
+            } else {
+              PRODUCT_GALLERY.scale = 2.5;
+              PRODUCT_GALLERY.tx = 0;
+              PRODUCT_GALLERY.ty = 0;
+              if (imgEl) imgEl.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+              applyPdmZoomTransform();
+            }
+            lastTapTime = 0;
+            return;
+          }
+          lastTapTime = now;
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchmove', e => {
+        if (!PRODUCT_GALLERY.viewerOpen) return;
+
+        if (isPinching && e.touches.length === 2) {
+          const currentDist = getDist(e.touches[0], e.touches[1]);
+          if (startDist > 0) {
+            let newScale = startScale * (currentDist / startDist);
+            newScale = Math.min(Math.max(1, newScale), 4);
+            PRODUCT_GALLERY.scale = newScale;
+            if (newScale === 1) {
+              PRODUCT_GALLERY.tx = 0;
+              PRODUCT_GALLERY.ty = 0;
+            }
+            applyPdmZoomTransform();
+          }
+        } else if (isDragging && e.touches.length === 1) {
+          const dx = e.touches[0].clientX - startX;
+          const dy = e.touches[0].clientY - startY;
+
+          if ((PRODUCT_GALLERY.scale || 1) > 1.05) {
+            // Zoomed in: Pan image boundaries
+            const maxTx = Math.max(0, ((imgEl ? imgEl.clientWidth : 300) * (PRODUCT_GALLERY.scale - 1)) / 2);
+            const maxTy = Math.max(0, ((imgEl ? imgEl.clientHeight : 300) * (PRODUCT_GALLERY.scale - 1)) / 2);
+            PRODUCT_GALLERY.tx = Math.min(Math.max(-maxTx, startTx + dx), maxTx);
+            PRODUCT_GALLERY.ty = Math.min(Math.max(-maxTy, startTy + dy), maxTy);
+            applyPdmZoomTransform();
+          } else {
+            // Unzoomed: Horizontal drag visual feedback for inter-slide swipe
+            if (imgEl) imgEl.style.transform = `translate3d(${dx}px, 0px, 0px) scale(1)`;
+          }
         }
       }, { passive: true });
 
       viewport.addEventListener('touchend', e => {
-        if (!isDragging) return;
-        isDragging = false;
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const dx = endX - startX;
-        const dy = endY - startY;
+        if (!PRODUCT_GALLERY.viewerOpen) return;
 
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-          if (dx < 0) {
-            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1);
-          } else {
-            setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1);
+        if (isPinching) {
+          isPinching = false;
+          if ((PRODUCT_GALLERY.scale || 1) < 1.05) {
+            resetPdmZoom();
+          }
+          return;
+        }
+
+        if (isDragging) {
+          isDragging = false;
+          const endX = e.changedTouches[0] ? e.changedTouches[0].clientX : startX;
+          const endY = e.changedTouches[0] ? e.changedTouches[0].clientY : startY;
+          const dx = endX - startX;
+          const dy = endY - startY;
+
+          if ((PRODUCT_GALLERY.scale || 1) <= 1.05) {
+            if (imgEl) imgEl.style.transition = 'transform 0.25s ease';
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+              if (dx < 0) {
+                setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex + 1); // Swipe left → next
+              } else {
+                setPdmGalleryIndex(PRODUCT_GALLERY.currentIndex - 1); // Swipe right → prev
+              }
+            } else {
+              resetPdmZoom();
+            }
           }
         }
       }, { passive: true });
+
+      viewport.addEventListener('touchcancel', () => {
+        isPinching = false;
+        isDragging = false;
+        if ((PRODUCT_GALLERY.scale || 1) <= 1.05) resetPdmZoom();
+      }, { passive: true });
+
+      // Wheel zoom support for desktop
+      viewport.addEventListener('wheel', e => {
+        if (!PRODUCT_GALLERY.viewerOpen) return;
+        e.preventDefault();
+        let curScale = PRODUCT_GALLERY.scale || 1;
+        if (e.deltaY < 0) {
+          curScale = Math.min(4, curScale + 0.25);
+        } else {
+          curScale = Math.max(1, curScale - 0.25);
+        }
+        PRODUCT_GALLERY.scale = curScale;
+        if (curScale === 1) {
+          PRODUCT_GALLERY.tx = 0;
+          PRODUCT_GALLERY.ty = 0;
+        }
+        if (imgEl) imgEl.style.transition = 'transform 0.15s ease-out';
+        applyPdmZoomTransform();
+      }, { passive: false });
 
       // Keyboard navigation & Escape close
       document.addEventListener('keydown', e => {
@@ -14037,7 +14179,9 @@
       if (badge) badge.textContent = `${AP_PRODUCT_IMAGES.length} / 4`;
 
       let html = '';
-      for (let i = 0; i < 4; i++) {
+
+      // Render all uploaded images first
+      for (let i = 0; i < AP_PRODUCT_IMAGES.length; i++) {
         const imgObj = AP_PRODUCT_IMAGES[i];
         if (imgObj) {
           const url = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
@@ -14057,22 +14201,28 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
-              <div class="img-slot-badge">${infoStr}</div>
-            </div>`;
-        } else {
-          html += `
-            <div class="img-slot-card" id="imgSlot_${i}" onclick="triggerSlotAdd(${i})">
-              <div style="display:flex;flex-direction:column;align-items:center;color:var(--t3)">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span style="font-size:10px;font-weight:600;margin-top:4px">${i === 0 ? 'Primary' : ('Slot ' + (i + 1))}</span>
-              </div>
+              <div class="img-slot-badge">${isPrimary ? '★ Primary · ' : ''}${infoStr}</div>
             </div>`;
         }
       }
+
+      // Render Add Photo (+) tile at the VERY LAST position if count < 4
+      if (AP_PRODUCT_IMAGES.length < 4) {
+        const nextIdx = AP_PRODUCT_IMAGES.length;
+        html += `
+          <div class="img-slot-card add-slot" id="imgSlot_${nextIdx}" onclick="triggerSlotAdd(${nextIdx})" style="cursor:pointer;border:2px dashed var(--b2, #ec5b13);background:var(--bg2, rgba(236,91,19,0.05));transition:all 0.2s ease">
+            <div style="display:flex;flex-direction:column;align-items:center;color:var(--p, #ec5b13)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span style="font-size:11px;font-weight:700;margin-top:6px">${nextIdx === 0 ? 'Add Primary Photo' : 'Add Photo'}</span>
+            </div>
+          </div>`;
+      }
+
       grid.innerHTML = html;
 
       // Attach Desktop Drag & Drop handlers for each slot
-      for (let i = 0; i < 4; i++) {
+      const totalCards = AP_PRODUCT_IMAGES.length + (AP_PRODUCT_IMAGES.length < 4 ? 1 : 0);
+      for (let i = 0; i < totalCards; i++) {
         const slotEl = document.getElementById(`imgSlot_${i}`);
         if (slotEl && window.IMAGE_UTILS && typeof window.IMAGE_UTILS.setupDragAndDrop === 'function') {
           window.IMAGE_UTILS.setupDragAndDrop(slotEl, files => handleMultiImageFiles(files, i));
