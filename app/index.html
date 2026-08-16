@@ -8633,6 +8633,10 @@
           existingIds.add(key);
         }
       }
+
+      if (typeof evaluateStockNotifications === 'function') {
+        try { evaluateStockNotifications(); } catch (e) { }
+      }
     }
 
     function loadOrders(raw) {
@@ -14495,11 +14499,18 @@
       if (AP_EDIT_ID) {
         pExisting = FS_PRODUCTS.find(x => x.id === AP_EDIT_ID || x.barcode === barcode || x.sku === barcode);
         if (!pExisting) pExisting = STATE.products.find(x => x.id === AP_EDIT_ID || x.barcode === barcode || x.sku === barcode);
+      } else {
+        pExisting = FS_PRODUCTS.find(x => x.barcode === barcode || x.sku === barcode);
+        if (!pExisting) pExisting = STATE.products.find(x => x.barcode === barcode || x.sku === barcode);
       }
 
-      let locationsList = pExisting && Array.isArray(pExisting.locations) && pExisting.locations.length > 0 ? [...pExisting.locations] : [];
+      let locationsList = [];
+      if (pExisting) {
+        const normExisting = normalizeProduct(pExisting);
+        locationsList = Array.isArray(normExisting.locations) ? [...normExisting.locations] : [];
+      }
 
-      if (!AP_EDIT_ID || AP_LOC_MODE === 'NEW' || locationsList.length === 0) {
+      if (!pExisting || AP_LOC_MODE === 'NEW' || locationsList.length === 0) {
         locationsList = [{
           storage_type: storageType,
           location: loc,
@@ -14508,11 +14519,13 @@
           is_primary: true
         }];
       } else if (AP_LOC_MODE === 'ADD') {
-        // Check duplicate location protection (Rule 11)
+        // Check duplicate location protection (Rule 11 - Test E)
         const exists = locationsList.some(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
         if (exists) {
           alert(`This product already exists at ${loc}.`);
           toast(`This product already exists at ${loc}.`, 'err');
+          const btn = document.getElementById('apSaveBtn');
+          if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
           return;
         }
 
@@ -17102,7 +17115,23 @@
       renderTransferReviewStep();
     }
 
+    function evaluateStockNotifications() {
+      const suggestions = getSmartRefillSuggestions();
+      suggestions.forEach(s => {
+        addNotification({
+          dedupeKey: `smart_refill_${s.product.id}_${s.destLocation}`,
+          title: 'Low Stock Alert (Smart Refill)',
+          message: `${s.product.name} at SHOP (${s.destLocation}) is low (${s.destQty} pcs ≤ threshold ${s.destThreshold}). ${s.sourceQty} pcs available in WAREHOUSE (${s.sourceLocation}).`,
+          severity: 'warning',
+          entityType: 'product',
+          entityId: s.product.id,
+          actionRoute: 's-transfer'
+        });
+      });
+    }
+
     function renderTransferDashboard() {
+      evaluateStockNotifications();
       document.getElementById('activeTransferTitle').textContent = 'Stock Transfers';
 
       const pendingCount = STATE.transferQueue.length + STATE.transferHistory.filter(t => t.status === 'Waiting For POS').length;
