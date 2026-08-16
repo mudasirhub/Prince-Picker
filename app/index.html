@@ -4337,183 +4337,567 @@
       color: var(--or)
     }
 
-    /* ══════ NOTIFICATION SHEET ══════ */
+    /* ══════ MODERN NOTIFICATION MODAL (MIDDLE POPUP) ══════ */
     #notifSheet {
       position: fixed;
       inset: 0;
-      z-index: 500;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
       pointer-events: none;
+      transition: opacity .25s ease;
     }
 
     #notifSheet.open {
-      pointer-events: all;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     #notifBg {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, .4);
-      opacity: 0;
-      transition: opacity .25s;
-    }
-
-    #notifSheet.open #notifBg {
-      opacity: 1;
+      background: rgba(0, 0, 0, .55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
 
     #notifPanel {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--card);
-      border-radius: 20px 20px 0 0;
-      padding: 0 16px 16px;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
-      max-height: 85vh;
+      position: relative;
+      z-index: 10;
+      background: var(--card, #ffffff);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 760px;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
-      transform: translateY(100%);
-      transition: transform .3s cubic-bezier(.32, .72, 0, 1);
-    }
-
-    #notifSheet.open #notifPanel {
-      transform: translateY(0);
-    }
-
-    .notif-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 4px 16px;
-      border-bottom: 1px solid var(--bd);
-      margin-bottom: 8px;
-    }
-
-    .notif-title {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--t1);
-    }
-
-    .notif-mark-read {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--or);
-      background: none;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-
-    .notif-mark-read:disabled {
-      color: var(--t3);
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    #notifList {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 4px;
-    }
-
-    .notif-row-wrap {
-      position: relative;
-      margin-bottom: 8px;
-      border-radius: 16px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+      transform: translateY(-30px) scale(0.96);
+      transition: transform .3s cubic-bezier(.16, 1, .3, 1);
       overflow: hidden;
     }
 
-    .notif-swipe-bg {
-      position: absolute;
-      inset: 0;
-      background: var(--rd);
-      border-radius: 16px;
+    #notifSheet.open #notifPanel {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Modal Header */
+    .nc-header {
+      padding: 20px 24px 16px;
       display: flex;
+      align-items: flex-start;
       justify-content: space-between;
-      align-items: center;
-      padding: 0 20px;
-      color: #fff;
-      font-weight: 700;
-      font-size: 14px;
+      gap: 16px;
+      border-bottom: 1px solid var(--bd, #eeeeee);
     }
 
-    .notif-item {
-      position: relative;
-      background: var(--card);
-      border: 1px solid var(--bd);
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      gap: 12px;
-      box-shadow: var(--sh);
-      z-index: 1;
-      will-change: transform;
+    .nc-title-wrap {
+      flex: 1;
     }
 
-    .notif-item.unread {
-      background: var(--bg2);
-      border-left: 4px solid var(--or);
-    }
-
-    .notif-icon {
+    .nc-title {
       font-size: 20px;
-      flex-shrink: 0;
+      font-weight: 800;
+      color: var(--t1, #111111);
+      line-height: 1.2;
+    }
+
+    .nc-subtitle {
+      font-size: 13px;
+      color: var(--t3, #666666);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .nc-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nc-btn-read {
+      background: #ffffff;
+      border: 1px solid var(--bd, #dddddd);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--or, #ff6b00);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s ease;
+    }
+
+    .nc-btn-read:hover {
+      background: var(--bg2, #f5f5f5);
+    }
+
+    .nc-btn-clear {
+      background: var(--or, #ff6b00);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s ease;
+    }
+
+    .nc-btn-clear:hover {
+      opacity: 0.9;
+    }
+
+    .nc-btn-close {
+      background: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
+      color: var(--t3, #666666);
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .nc-btn-close:hover {
+      background: var(--bg2, #f5f5f5);
+    }
+
+    /* Tabs & Filters Bar */
+    .nc-bar {
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--bd, #f0f0f0);
+      background: var(--bg, #fafafa);
+      overflow-x: auto;
+    }
+
+    .nc-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .nc-tab {
+      background: #ffffff;
+      border: 1px solid var(--bd, #e0e0e0);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--t2, #555555);
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s ease;
+    }
+
+    .nc-tab.active {
+      background: var(--or, #ff6b00);
+      color: #ffffff;
+      border-color: var(--or, #ff6b00);
+    }
+
+    .nc-tab .nc-count {
+      background: rgba(0, 0, 0, 0.08);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+    }
+
+    .nc-tab.active .nc-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    .nc-sort-select {
+      background: #ffffff;
+      border: 1px solid var(--bd, #e0e0e0);
+      padding: 6px 12px;
       border-radius: 12px;
-      background: var(--bg);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t2, #444444);
+      cursor: pointer;
+      outline: none;
     }
 
-    .notif-icon.info {
-      background: #E3F2FD;
-      color: #1976D2;
+    /* Notification Content List */
+    .nc-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .notif-icon.success {
-      background: #E8F5E9;
-      color: #2E7D32;
+    /* Smart Refill Card */
+    .nc-card-refill {
+      background: #fff8f6;
+      border: 1.5px solid #ff6b00;
+      border-left: 6px solid #ff6b00;
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(255, 107, 0, 0.08);
+      flex-wrap: wrap;
     }
 
-    .notif-icon.warning {
-      background: #FFF8E1;
-      color: #F57C00;
+    .nc-refill-img-wrap {
+      width: 90px;
+      height: 90px;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #f0f0f0;
+      position: relative;
+      flex-shrink: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .notif-icon.critical {
-      background: #FFEBEE;
-      color: #D32F2F;
+    .nc-refill-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
-    .notif-content {
+    .nc-refill-warn-badge {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: #fff000;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      z-index: 2;
+    }
+
+    .nc-refill-main {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .nc-refill-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .nc-pill-refill {
+      background: #ffe8dd;
+      color: #ff6b00;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .nc-text-alert {
+      color: #d32f2f;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .nc-refill-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #111111;
+      margin-bottom: 4px;
+    }
+
+    .nc-refill-sub {
+      font-size: 13px;
+      color: #555555;
+      margin-bottom: 6px;
+    }
+
+    .nc-refill-avail {
+      font-size: 13px;
+      color: #00ab55;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .nc-refill-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .nc-tag {
+      background: #f0f0f0;
+      color: #555555;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .nc-tag.blue {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .nc-tag.purple {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+
+    .nc-refill-action-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+      min-width: 200px;
+    }
+
+    .nc-compare-card {
+      background: #fff0eb;
+      border: 1px solid #ffd5c6;
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .nc-cmp-item {
+      text-align: center;
+    }
+
+    .nc-cmp-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      color: #666666;
+      text-transform: uppercase;
+    }
+
+    .nc-cmp-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ff6b00;
+    }
+
+    .nc-cmp-sub {
+      font-size: 9px;
+      color: #888888;
+    }
+
+    .nc-btn-action {
+      background: var(--or, #ff6b00);
+      color: #ffffff;
+      border: none;
+      height: 42px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+      transition: all .15s ease;
+    }
+
+    .nc-btn-action:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Standard Card (Transfer / System / General) */
+    .nc-card-std {
+      background: #ffffff;
+      border: 1px solid var(--bd, #eef0f2);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all .15s ease;
+      cursor: pointer;
+    }
+
+    .nc-card-std:hover {
+      border-color: #d0d5dd;
+    }
+
+    .nc-std-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .nc-std-icon.transfer {
+      background: #eef6ff;
+      color: #2563eb;
+    }
+
+    .nc-std-icon.system {
+      background: #e6f9ed;
+      color: #00ab55;
+    }
+
+    .nc-std-icon.general {
+      background: #fff8e1;
+      color: #f57c00;
+    }
+
+    .nc-std-content {
       flex: 1;
       min-width: 0;
     }
 
-    .notif-content-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--t1);
+    .nc-std-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin-bottom: 4px;
     }
 
-    .notif-content-msg {
-      font-size: 13px;
-      color: var(--t2);
-      line-height: 1.4;
-      margin-bottom: 6px;
+    .nc-std-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
     }
 
-    .notif-content-time {
-      font-size: 11px;
-      color: var(--t3);
+    .nc-std-badge.transfer {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .nc-std-badge.system {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .nc-std-badge.general {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .nc-std-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #111111;
+    }
+
+    .nc-std-msg {
+      font-size: 12px;
+      color: #555555;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .nc-std-time {
+      font-size: 10px;
+      color: #888888;
       font-weight: 600;
+    }
+
+    /* Modal Footer */
+    .nc-footer {
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--bd, #eeeeee);
+      background: var(--bg, #fafafa);
+    }
+
+    .nc-footer-time {
+      font-size: 12px;
+      color: var(--t3, #777777);
+      font-weight: 600;
+    }
+
+    .nc-footer-btn {
+      background: #ffffff;
+      border: 1px solid var(--bd, #dddddd);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--or, #ff6b00);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    @media (max-width: 600px) {
+      #notifPanel {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 20px;
+      }
+
+      .nc-header {
+        padding: 16px;
+      }
+
+      .nc-title {
+        font-size: 18px;
+      }
+
+      .nc-bar {
+        padding: 10px 16px;
+      }
+
+      .nc-list-container {
+        padding: 12px 16px;
+      }
+
+      .nc-card-refill {
+        flex-direction: column;
+      }
+
+      .nc-refill-action-box {
+        width: 100%;
+      }
+
+      .nc-footer {
+        padding: 12px 16px;
+      }
     }
 
 
@@ -7414,15 +7798,62 @@
     </div>
   </div>
 
-  <!-- ══ NOTIFICATION SHEET ══ -->
+  <!-- ══ NOTIFICATION CENTER MODAL ══ -->
   <div id="notifSheet">
     <div id="notifBg" onclick="closeNotificationCenter()"></div>
     <div id="notifPanel">
-      <div class="notif-header">
-        <div class="notif-title">Notifications</div>
-        <button class="notif-mark-read" onclick="clearAllNotifications()">Clear all</button>
+      <!-- Modal Header -->
+      <div class="nc-header">
+        <div class="nc-title-wrap">
+          <div class="nc-title">Notifications</div>
+          <div class="nc-subtitle">Stay updated with important alerts and smart suggestions</div>
+        </div>
+        <div class="nc-header-actions">
+          <button class="nc-btn-read" onclick="markAllNotificationsAsRead()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Mark all as read
+          </button>
+          <button class="nc-btn-clear" onclick="clearAllNotifications()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Clear all
+          </button>
+          <button class="nc-btn-close" onclick="closeNotificationCenter()" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
       </div>
-      <div id="notifList"></div>
+
+      <!-- Filter & Sort Bar -->
+      <div class="nc-bar">
+        <div class="nc-tabs">
+          <button class="nc-tab active" onclick="filterNotifTab('all', this)">All <span class="nc-count" id="notifCountAll">0</span></button>
+          <button class="nc-tab" onclick="filterNotifTab('smart_refill', this)">⚠️ Smart Refill <span class="nc-count" id="notifCountRefill">0</span></button>
+          <button class="nc-tab" onclick="filterNotifTab('transfer', this)">🚚 Transfers <span class="nc-count" id="notifCountTransfer">0</span></button>
+          <button class="nc-tab" onclick="filterNotifTab('system', this)">⚙️ System <span class="nc-count" id="notifCountSystem">0</span></button>
+          <button class="nc-tab" onclick="filterNotifTab('general', this)">🔔 General <span class="nc-count" id="notifCountGeneral">0</span></button>
+        </div>
+        <div class="nc-sort-wrap">
+          <select class="nc-sort-select" onchange="sortNotifList(this.value)">
+            <option value="newest">≡ Newest first</option>
+            <option value="oldest">≡ Oldest first</option>
+            <option value="unread">≡ Unread first</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Scrollable List Area -->
+      <div id="notifList" class="nc-list-container"></div>
+
+      <!-- Footer Bar -->
+      <div class="nc-footer">
+        <div class="nc-footer-time">
+          📅 Last updated: <span id="notifLastUpdated">Just now</span>
+        </div>
+        <button class="nc-footer-btn" onclick="nav('s-transfers'); closeNotificationCenter();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          View All Notifications
+        </button>
+      </div>
     </div>
   </div>
 
@@ -10807,8 +11238,31 @@
       });
     }
 
+    let CURRENT_NOTIF_TAB = 'all';
+    let CURRENT_NOTIF_SORT = 'newest';
+
+    function filterNotifTab(tab, btnEl) {
+      CURRENT_NOTIF_TAB = tab;
+      const tabs = document.querySelectorAll('.nc-tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      renderNotificationList();
+    }
+
+    function sortNotifList(sortVal) {
+      CURRENT_NOTIF_SORT = sortVal;
+      renderNotificationList();
+    }
+
+    function markAllNotificationsAsRead() {
+      STATE.notifications.forEach(n => n.isRead = true);
+      try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) { }
+      updateNotificationBadge();
+      renderNotificationList();
+      toast('All notifications marked as read', 'ok');
+    }
+
     function clearAllNotifications() {
-      // Clear normal notifications, preserve unresolved critical ones
       STATE.notifications = STATE.notifications.filter(n => {
         if (n.severity === 'critical' && !n.isRead) return true;
         STATE.dismissedNotificationKeys.add(n.dedupeKey);
@@ -10826,6 +11280,7 @@
 
       updateNotificationBadge();
       renderNotificationList();
+      toast('Notifications cleared');
     }
 
     function dismissNotification(id) {
@@ -10843,16 +11298,22 @@
         STATE.notifications.splice(idx, 1);
         try { localStorage.setItem(LS_NOTIFICATIONS, JSON.stringify(STATE.notifications)); } catch (e) { }
         updateNotificationBadge();
+        renderNotificationList();
       }
     }
 
     function openNotificationCenter() {
+      if (typeof evaluateStockNotifications === 'function') {
+        try { evaluateStockNotifications(); } catch (e) { }
+      }
       renderNotificationList();
-      document.getElementById('notifSheet').classList.add('open');
+      const sheet = document.getElementById('notifSheet');
+      if (sheet) sheet.classList.add('open');
     }
 
     function closeNotificationCenter() {
-      document.getElementById('notifSheet').classList.remove('open');
+      const sheet = document.getElementById('notifSheet');
+      if (sheet) sheet.classList.remove('open');
     }
 
     function handleNotificationTap(id) {
@@ -10876,54 +11337,166 @@
 
     function renderNotificationList() {
       const list = document.getElementById('notifList');
-      const unreadCount = getUnreadNotificationCount();
-      document.querySelector('.notif-mark-read').disabled = unreadCount === 0;
+      if (!list) return;
 
-      if (STATE.notifications.length === 0) {
+      // Update counters
+      const countAll = STATE.notifications.length;
+      const countRefill = STATE.notifications.filter(n => n.dedupeKey?.startsWith('smart_refill_') || n.title?.includes('Smart Refill')).length;
+      const countTransfer = STATE.notifications.filter(n => n.entityType === 'transfer' || n.title?.includes('Transfer')).length;
+      const countSystem = STATE.notifications.filter(n => n.entityType === 'system' || n.title?.includes('Sync') || n.title?.includes('Data')).length;
+      const countGeneral = Math.max(0, countAll - countRefill - countTransfer - countSystem);
+
+      const elAll = document.getElementById('notifCountAll'); if (elAll) elAll.textContent = countAll;
+      const elRefill = document.getElementById('notifCountRefill'); if (elRefill) elRefill.textContent = countRefill;
+      const elTransfer = document.getElementById('notifCountTransfer'); if (elTransfer) elTransfer.textContent = countTransfer;
+      const elSystem = document.getElementById('notifCountSystem'); if (elSystem) elSystem.textContent = countSystem;
+      const elGeneral = document.getElementById('notifCountGeneral'); if (elGeneral) elGeneral.textContent = countGeneral;
+
+      const updatedEl = document.getElementById('notifLastUpdated');
+      if (updatedEl) updatedEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Filter
+      let filtered = [...STATE.notifications];
+      if (CURRENT_NOTIF_TAB === 'smart_refill') {
+        filtered = filtered.filter(n => n.dedupeKey?.startsWith('smart_refill_') || n.title?.includes('Smart Refill'));
+      } else if (CURRENT_NOTIF_TAB === 'transfer') {
+        filtered = filtered.filter(n => n.entityType === 'transfer' || n.title?.includes('Transfer'));
+      } else if (CURRENT_NOTIF_TAB === 'system') {
+        filtered = filtered.filter(n => n.entityType === 'system' || n.title?.includes('Sync') || n.title?.includes('Data'));
+      } else if (CURRENT_NOTIF_TAB === 'general') {
+        filtered = filtered.filter(n => !n.dedupeKey?.startsWith('smart_refill_') && n.entityType !== 'transfer' && n.entityType !== 'system');
+      }
+
+      // Sort
+      if (CURRENT_NOTIF_SORT === 'oldest') {
+        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      } else if (CURRENT_NOTIF_SORT === 'unread') {
+        filtered.sort((a, b) => (a.isRead === b.isRead ? 0 : a.isRead ? 1 : -1));
+      } else {
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+
+      if (filtered.length === 0) {
         list.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;height:100%;">
-            <div style="width:56px;height:56px;border-radius:28px;background:var(--bg2);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--t3);">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center;height:100%;">
+            <div style="width:56px;height:56px;border-radius:28px;background:var(--bg2, #f5f5f5);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--t3,#888);">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
             </div>
-            <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:8px;">You're all caught up</div>
-            <div style="font-size:14px;color:var(--t2);line-height:1.5;max-width:240px;margin:0 auto 12px;">Nothing needs your attention right now.</div>
-            <div style="font-size:12px;color:var(--t3);line-height:1.5;max-width:260px;margin:0 auto;">New tasks, audit decisions, transfers and important updates will appear here.</div>
+            <div style="font-size:16px;font-weight:800;color:var(--t1,#111);margin-bottom:6px;">You're all caught up</div>
+            <div style="font-size:13px;color:var(--t2,#666);max-width:240px;line-height:1.4;">No notifications found for this view.</div>
           </div>
         `;
         return;
       }
 
       let html = '';
-      STATE.notifications.forEach(n => {
-        let icon = 'ℹ️';
-        if (n.severity === 'success') icon = '✓';
-        if (n.severity === 'warning') icon = '⚠️';
-        if (n.severity === 'critical') icon = '‼️';
-
+      filtered.forEach(n => {
         const d = new Date(n.createdAt);
-        let timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        html += `
-          <div class="notif-row-wrap" id="notif_wrap_${n.id}">
-            <div class="notif-swipe-bg">
-              <span>Clear</span>
-              <span>Clear</span>
-            </div>
-            <div class="notif-item ${n.isRead ? '' : 'unread'}" id="notif_item_${n.id}" data-id="${n.id}">
-              <div class="notif-icon ${n.severity}">${icon}</div>
-              <div class="notif-content">
-                <div class="notif-content-title">${n.title}</div>
-                <div class="notif-content-msg">${n.message}</div>
-                <div class="notif-content-time">${timeStr}</div>
+        const isRefill = n.dedupeKey?.startsWith('smart_refill_') || n.title?.includes('Smart Refill') || n.title?.includes('Low Stock');
+
+        if (isRefill) {
+          const prodId = n.entityId;
+          const product = STATE.products.find(p => p.id === prodId || p.barcode === prodId) || STATE.barcodeIndex.get(prodId);
+          const pName = product ? product.name : (n.message.split(' at ')[0] || 'Product');
+          const skuStr = product ? (product.sku || product.barcode || 'TEST-WR') : 'TEST-WR';
+          const brandStr = product ? (product.brand || 'Honda') : 'Honda';
+          const catStr = product ? (product.category || 'Cable') : 'Cable';
+
+          let shopLoc = 'R1L1B1', shopQty = 2, shopThresh = 5, whLoc = 'WR1L1B1', whQty = 10;
+          if (product && Array.isArray(product.locations)) {
+            const sObj = product.locations.find(l => l.storage_type === 'SHOP' || String(l.location).startsWith('R'));
+            const wObj = product.locations.find(l => l.storage_type === 'WAREHOUSE' || String(l.location).startsWith('W'));
+            if (sObj) { shopLoc = sObj.location; shopQty = sObj.qty; shopThresh = sObj.threshold; }
+            if (wObj) { whLoc = wObj.location; whQty = wObj.qty; }
+          }
+
+          const refillQty = Math.max(1, shopThresh - shopQty);
+          const prodImgHtml = product ? renderProductImgHtml(product, '') : `<div style="font-size:24px;">📦</div>`;
+          const barcodeVal = product ? (product.barcode || product.sku) : 'TEST-WR';
+
+          html += `
+            <div class="nc-card-refill" onclick="handleNotificationTap('${n.id}')">
+              <div class="nc-refill-img-wrap">
+                <div class="nc-refill-warn-badge">⚠️</div>
+                ${prodImgHtml}
+              </div>
+              <div class="nc-refill-main">
+                <div class="nc-refill-badges">
+                  <span class="nc-pill-refill">SMART REFILL</span>
+                  <span class="nc-dot">•</span>
+                  <span class="nc-text-alert">Low Stock Alert</span>
+                </div>
+                <div class="nc-refill-title">${pName} at SHOP (${shopLoc}) is low!</div>
+                <div class="nc-refill-sub">Only <strong style="color:#d32f2f;">${shopQty} pcs</strong> left (threshold ${shopThresh}).</div>
+                <div class="nc-refill-avail">🏬 <strong>${whQty} pcs</strong> available in WAREHOUSE (${whLoc}).</div>
+                <div class="nc-refill-tags">
+                  <span class="nc-tag">SKU: ${skuStr}</span>
+                  <span class="nc-tag blue">${brandStr}</span>
+                  <span class="nc-tag purple">${catStr}</span>
+                </div>
+              </div>
+              <div class="nc-refill-action-box">
+                <div class="nc-compare-card">
+                  <div class="nc-cmp-item">
+                    <div class="nc-cmp-lbl">SHOP (${shopLoc})</div>
+                    <div class="nc-cmp-val" style="color:#d32f2f;">${shopQty} pcs</div>
+                    <div class="nc-cmp-sub">≤ ${shopThresh} (threshold)</div>
+                  </div>
+                  <div style="font-size:16px;color:#ff6b00;font-weight:800;">➔</div>
+                  <div class="nc-cmp-item">
+                    <div class="nc-cmp-lbl">WAREHOUSE (${whLoc})</div>
+                    <div class="nc-cmp-val" style="color:#00ab55;">${whQty} pcs</div>
+                    <div class="nc-cmp-sub">Available</div>
+                  </div>
+                </div>
+                <button class="nc-btn-action" onclick="event.stopPropagation(); createSmartRefillTransfer('${barcodeVal}','${whLoc}','${shopLoc}',${refillQty}); closeNotificationCenter();">
+                  🛒 Add to Cart ${refillQty} pcs ➔
+                </button>
               </div>
             </div>
-          </div>
-        `;
+          `;
+        } else {
+          let icon = 'ℹ️';
+          let iconClass = 'general';
+          let badgeClass = 'general';
+          let badgeText = 'GENERAL';
+
+          if (n.entityType === 'transfer' || n.title?.includes('Transfer')) {
+            icon = '🚚';
+            iconClass = 'transfer';
+            badgeClass = 'transfer';
+            badgeText = 'TRANSFER';
+          } else if (n.entityType === 'system' || n.title?.includes('Sync') || n.title?.includes('Data')) {
+            icon = '✓';
+            iconClass = 'system';
+            badgeClass = 'system';
+            badgeText = 'SYSTEM';
+          }
+
+          html += `
+            <div class="nc-card-std" onclick="handleNotificationTap('${n.id}')">
+              <div class="nc-std-icon ${iconClass}">${icon}</div>
+              <div class="nc-std-content">
+                <div class="nc-std-header">
+                  <span class="nc-std-badge ${badgeClass}">${badgeText}</span>
+                  <span class="nc-std-title">${n.title}</span>
+                </div>
+                <div class="nc-std-msg">${n.message}</div>
+                <div class="nc-std-time">🕒 ${timeStr}</div>
+              </div>
+              <div style="font-size:16px;color:#ccc;font-weight:700;">➔</div>
+            </div>
+          `;
+        }
       });
+
       list.innerHTML = html;
+    }
 
       const items = list.querySelectorAll('.notif-item');
       items.forEach(el => {

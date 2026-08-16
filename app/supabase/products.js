@@ -151,6 +151,23 @@
       transactionId: txId
     };
 
+    // Legacy fallback payload (for Supabase tables without multi-location SQL columns added yet)
+    const legacyPayload = {
+      id: id,
+      sku: sku,
+      barcode: barcode,
+      name: product.name || '',
+      brand: product.brand || '',
+      category: product.category || '',
+      location: product.location || product.loc || '',
+      stock: Number(product.stock ?? product.qty ?? 0),
+      mrp: Number(product.mrp || 0),
+      fitment_group: product.fitment_group || '',
+      intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
+      image: primaryImageUrl,
+      updated_at: product.updated_at || new Date().toISOString()
+    };
+
     console.log('[SAVE_PRODUCT] Product:', product);
 
     // 1. Update local IndexedDB cache first for instant offline UI
@@ -183,6 +200,7 @@
       { name: 'Full Payload (no loc, id conflict)', payload: fullNoLoc, conflict: 'id' },
       { name: 'Core Payload (id conflict)', payload: corePayload, conflict: 'id' },
       { name: 'Core Payload (no loc, id conflict)', payload: coreNoLoc, conflict: 'id' },
+      { name: 'Legacy Payload (no new columns, id conflict)', payload: legacyPayload, conflict: 'id' },
       { name: 'Core Payload (sku conflict)', payload: corePayload, conflict: 'sku' },
       { name: 'Core Payload (no loc, sku conflict)', payload: coreNoLoc, conflict: 'sku' },
       { name: 'Core Payload (barcode conflict)', payload: corePayload, conflict: 'barcode' },
@@ -208,7 +226,17 @@
         }
 
         lastError = error;
-        console.warn(`[SAVE_PRODUCT] Stage ${i + 1} failed (${att.name}):`, error?.message || error?.details || error, error);
+        const errStr = String(error?.message || error?.details || error?.hint || '');
+        console.warn(`[SAVE_PRODUCT] Stage ${i + 1} failed (${att.name}):`, errStr);
+
+        // If PostgreSQL schema cache missing column error, jump directly to legacy payload to avoid 400 spam
+        if ((errStr.includes('locations') || errStr.includes('primary_location') || errStr.includes('primary_storage') || errStr.includes('storage_type')) && att.name !== 'Legacy Payload (no new columns, id conflict)') {
+          const legacyIdx = attempts.findIndex(a => a.name === 'Legacy Payload (no new columns, id conflict)');
+          if (legacyIdx > i) {
+            i = legacyIdx - 1; // Jump loop counter to legacy stage
+            continue;
+          }
+        }
 
         if (isNetworkError(error)) {
           console.warn('[SAVE_PRODUCT] Network disconnect detected during stage. Queuing for background sync...');

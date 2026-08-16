@@ -164,15 +164,28 @@
       if (error) {
         console.error('[SAVE_PRODUCT] Error:', error);
 
-        // Fallback if 'loc' is a generated column in PostgreSQL
+        // Fallback if PostgreSQL schema does not have locations, primary_location, or loc columns
         const errMsg = String(error.message || error.details || '');
-        if (errMsg.includes('loc') && payload.loc) {
-          console.warn('[SAVE_PRODUCT] Retrying upsert without generated "loc" column...');
-          const payloadNoLoc = { ...payload };
-          delete payloadNoLoc.loc;
-          const retryRes = await client.from('products').upsert(payloadNoLoc, { onConflict: 'id' }).select();
+        if (errMsg.includes('locations') || errMsg.includes('primary_location') || errMsg.includes('primary_storage') || errMsg.includes('storage_type') || errMsg.includes('loc')) {
+          console.warn('[SAVE_PRODUCT] Retrying upsert without unrecognised SQL schema columns...');
+          const legacyPayload = {
+            id: payload.id,
+            sku: payload.sku,
+            barcode: payload.barcode,
+            name: payload.name,
+            brand: payload.brand,
+            category: payload.category,
+            location: payload.location,
+            stock: payload.stock,
+            mrp: payload.mrp,
+            fitment_group: payload.fitment_group,
+            intact: payload.intact,
+            image: payload.image,
+            updated_at: payload.updated_at
+          };
+          const retryRes = await client.from('products').upsert(legacyPayload, { onConflict: 'id' }).select();
           if (!retryRes.error && retryRes.data) {
-            console.log('[SAVE_PRODUCT] Retry without loc success:', retryRes.data);
+            console.log('[SAVE_PRODUCT] Retry with legacy payload success:', retryRes.data);
             if (retryRes.data.length > 0 && window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
               await window.PICKER_DB.putProducts(retryRes.data);
             }

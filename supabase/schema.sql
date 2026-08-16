@@ -2,7 +2,13 @@
 -- PRINCE PICKER INVENTORY MOVEMENT & IDEMPOTENCY SCHEMA PATCH
 -- =============================================================================
 
--- 1. Ensure transaction_id column exists on inventory_movements table with a UNIQUE constraint
+-- 1. Ensure multi-location columns exist on products table
+ALTER TABLE products ADD COLUMN IF NOT EXISTS locations JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS primary_storage TEXT DEFAULT 'SHOP';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS primary_location TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS storage_type TEXT DEFAULT 'SHOP';
+
+-- 2. Ensure transaction_id column exists on inventory_movements table with a UNIQUE constraint
 ALTER TABLE inventory_movements 
 ADD COLUMN IF NOT EXISTS transaction_id TEXT;
 
