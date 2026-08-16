@@ -5713,11 +5713,17 @@
 
         <!-- 3b. Storage -->
         <div class="ap-field">
-          <label class="ap-label">STORAGE</label>
-          <div class="storage-toggle-ctrl">
-            <button type="button" class="storage-toggle-btn on" id="storageShopBtn" onclick="setStorageType('SHOP')">SHOP</button>
-            <button type="button" class="storage-toggle-btn" id="storageWhBtn" onclick="setStorageType('WAREHOUSE')">WAREHOUSE</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="ap-label" style="margin:0">STORAGE</label>
+            <div id="apLocActionWrap" style="display:none;font-size:12px;color:var(--or);font-weight:700;cursor:pointer;" onclick="openLocActionModal()">
+              [ Change / Add Location ]
+            </div>
           </div>
+          <div class="storage-toggle-ctrl">
+            <button type="button" class="storage-toggle-btn on" id="storageShopBtn" onclick="onStorageToggleClick('SHOP')">SHOP</button>
+            <button type="button" class="storage-toggle-btn" id="storageWhBtn" onclick="onStorageToggleClick('WAREHOUSE')">WAREHOUSE</button>
+          </div>
+          <div id="apLocModeBadge" style="display:none;margin-top:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:var(--or-lt);color:var(--or);"></div>
         </div>
 
         <!-- 4. Location -->
@@ -7983,6 +7989,29 @@
       </div>
     </div>
   </div>
+
+  <!-- ══ LOCATION CONFIRMATION MODAL ══ -->
+  <div id="locConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--card,#fff);border-radius:20px;padding:24px;max-width:380px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,0.3);text-align:center;">
+      <div style="font-size:18px;font-weight:800;color:var(--t1,#111);margin-bottom:8px;">Change Location?</div>
+      <div style="font-size:13px;color:var(--t3,#666);margin-bottom:16px;">
+        This product is currently stored at:<br>
+        <strong id="locConfirmCurrentLoc" style="color:var(--or,#ff6b00);font-size:15px;display:block;margin-top:6px;">WAREHOUSE (WR1L1B1)</strong>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--t2,#333);margin-bottom:16px;">What do you want to do?</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-p" style="height:48px;font-size:14px;border-radius:12px;" onclick="chooseLocMode('CHANGE')">
+          Change Existing Location
+        </button>
+        <button class="btn-s" style="height:48px;font-size:14px;border-radius:12px;border:1.5px solid var(--bd);" onclick="chooseLocMode('ADD')">
+          Add New Location
+        </button>
+        <button style="background:none;border:none;color:var(--t4,#999);font-size:12px;margin-top:4px;cursor:pointer;" onclick="cancelLocConfirmModal()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
   <!-- ══ INSTALL BANNER ══ -->
   <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;
      background:var(--t1);color:#fff;padding:14px 16px;align-items:center;gap:12px;
@@ -8457,41 +8486,49 @@
       localStorage.removeItem(LS_ACTIVE_TRANSFER);
     }
 
-    // This calculates effective inventory = Base Cache + Pending Physical Movement Overlays
     function getEffectiveInventory(productId, locationId) {
-      const product = STATE.barcodeIndex.get(productId) || STATE.products.find(p => p.id === productId || p.barcode === productId);
+      const product = STATE.barcodeIndex.get(productId) || STATE.products.find(p => p.id === productId || p.barcode === productId || p.sku === productId);
       if (!product) return 0;
 
-      let baseQty = product.stock || 0;
-
-      // For now, if the system doesn't have per-location stock tracking, 
-      // we assume the product's total stock is what's being affected.
-      // If the app supports per-bin quantities in the future, baseQty should be pulled from that specific bin.
+      let baseQty = 0;
+      if (locationId) {
+        const locClean = String(locationId).trim().toUpperCase();
+        const locObj = Array.isArray(product.locations) ? product.locations.find(l => String(l.location).trim().toUpperCase() === locClean) : null;
+        if (locObj) {
+          baseQty = Number(locObj.qty) || 0;
+        } else if (String(product.primary_location || product.location || product.loc || '').trim().toUpperCase() === locClean) {
+          baseQty = Number(product.stock ?? product.qty ?? 0);
+        } else {
+          baseQty = 0;
+        }
+      } else {
+        const primaryObj = Array.isArray(product.locations) ? (product.locations.find(l => l.is_primary) || product.locations[0]) : null;
+        baseQty = primaryObj ? Number(primaryObj.qty) : Number(product.stock ?? product.qty ?? 0);
+      }
 
       if (!STATE.pendingTransferOverlays || STATE.pendingTransferOverlays.length === 0) {
-        return baseQty;
+        return Math.max(0, baseQty);
       }
 
       let effectiveQty = baseQty;
+      const checkLoc = locationId || product.primary_location || product.location || product.loc;
 
       STATE.pendingTransferOverlays.forEach(overlay => {
-        // If the location matches the overlay's source, subtract
-        if (overlay.sourceLocationId === locationId) {
-          const item = overlay.items.find(i => i.productId === product.id);
+        if (overlay.sourceLocationId === checkLoc) {
+          const item = overlay.items.find(i => i.productId === product.id || i.sku === product.sku);
           if (item) {
             effectiveQty -= item.quantity;
           }
         }
-        // If the location matches the overlay's destination, add
-        if (overlay.destinationLocationId === locationId) {
-          const item = overlay.items.find(i => i.productId === product.id);
+        if (overlay.destinationLocationId === checkLoc) {
+          const item = overlay.items.find(i => i.productId === product.id || i.sku === product.sku);
           if (item) {
             effectiveQty += item.quantity;
           }
         }
       });
 
-      return effectiveQty;
+      return Math.max(0, effectiveQty);
     }
 
     window.updateProductStock = async function (sku, newQty, transactionId) {
@@ -8609,9 +8646,39 @@
       const barcodeKey = String(f('barcode', 'Barcode', 'bar_code', 'ean', 'EAN', 'upc') || f('sku', 'item_code', 'code', 'id') || idx);
       const skuKey = String(f('sku', 'SKU', 'item_code', 'ItemCode', 'code', 'Code', 'id') || barcodeKey);
       const idKey = String(r.id || barcodeKey);
-      const locStr = f('loc', 'location', 'Location', 'rack', 'bin', 'shelf', 'LOC') || '';
+      const locStr = String(f('loc', 'location', 'Location', 'primary_location', 'PrimaryLocation', 'rack', 'bin', 'shelf', 'LOC') || '').trim();
+      const threshNum = Number(f('threshold', 'Threshold') ?? 5);
       const stockNum = Number(f('stock', 'qty', 'quantity', 'Quantity', 'QTY', 'qty_on_hand', 'available', 'balance') ?? 0);
       const mrpNum = Number(f('mrp', 'MRP', 'price', 'Price', 'rate', 'cost') ?? 0);
+
+      const primaryLoc = String(r.primary_location || locStr || 'R1L1B1').trim();
+      const isWh = primaryLoc.toUpperCase().startsWith('W') || (r.storage_type && String(r.storage_type).toUpperCase() === 'WAREHOUSE') || (r.primary_storage && String(r.primary_storage).toUpperCase() === 'WAREHOUSE');
+      const primaryStorage = isWh ? 'WAREHOUSE' : 'SHOP';
+
+      let locationsList = [];
+      if (Array.isArray(r.locations) && r.locations.length > 0) {
+        locationsList = r.locations.map(l => ({
+          storage_type: l.storage_type || (String(l.location || '').toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP'),
+          location: String(l.location || '').trim(),
+          qty: Number(l.qty ?? l.stock ?? 0),
+          threshold: Number(l.threshold !== undefined && l.threshold !== null ? l.threshold : threshNum),
+          is_primary: Boolean(l.is_primary)
+        }));
+      } else {
+        locationsList = [
+          {
+            storage_type: primaryStorage,
+            location: primaryLoc,
+            qty: stockNum,
+            threshold: threshNum,
+            is_primary: true
+          }
+        ];
+      }
+
+      const primaryObj = locationsList.find(l => l.is_primary) || locationsList[0];
+      const finalPrimaryLoc = primaryObj ? primaryObj.location : primaryLoc;
+      const finalPrimaryStorage = primaryObj ? primaryObj.storage_type : primaryStorage;
 
       const imagesList = Array.isArray(r.images) && r.images.length > 0
         ? r.images
@@ -8625,15 +8692,19 @@
         name: f('name', 'product_name', 'item_name', 'ProductName', 'title', 'description', 'Name') || '(No Name)',
         barcode: barcodeKey,
         sku: skuKey,
-        loc: locStr,
-        location: locStr,
+        primary_storage: finalPrimaryStorage,
+        primary_location: finalPrimaryLoc,
+        storage_type: finalPrimaryStorage,
+        loc: finalPrimaryLoc,
+        location: finalPrimaryLoc,
+        locations: locationsList,
         stock: stockNum,
-        qty: stockNum,
+        qty: primaryObj ? primaryObj.qty : stockNum,
         brand: f('brand', 'Brand', 'manufacturer', 'Manufacturer', 'make') || '',
         category: f('category', 'Category', 'cat', 'Cat') || '',
         mrp: mrpNum,
         sp: Number(f('sp', 'SP', 'selling_price', 'SellingPrice') ?? mrpNum),
-        threshold: Number(f('threshold', 'Threshold') ?? 5),
+        threshold: primaryObj ? primaryObj.threshold : threshNum,
         fitment_group: f('fitment_group', 'FitmentGroup') || '',
         compatibility: Array.isArray(r.compatibility) ? r.compatibility : [],
         images: imagesList,
@@ -9951,30 +10022,32 @@
       }
 
       // 5. Stock By Location Block
-      const primaryLoc = (p.loc || p.location || 'R1L1B3').trim();
-      let shopLocCode = primaryLoc;
-      let whLocCode = primaryLoc;
+      const primaryLoc = (p.primary_location || p.loc || p.location || 'R1L1B1').trim();
+      const locationsList = Array.isArray(p.locations) && p.locations.length > 0 ? p.locations : [
+        {
+          storage_type: p.primary_storage || p.storage_type || (primaryLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP'),
+          location: primaryLoc,
+          qty: shopQty,
+          threshold: threshold,
+          is_primary: true
+        }
+      ];
 
-      if (/^WR/i.test(primaryLoc)) {
-        shopLocCode = primaryLoc.replace(/^WR/i, 'R');
-        whLocCode = primaryLoc.toUpperCase();
-      } else if (/^R/i.test(primaryLoc)) {
-        shopLocCode = primaryLoc.toUpperCase();
-        whLocCode = primaryLoc.replace(/^R/i, 'WR').toUpperCase();
-      } else {
-        shopLocCode = primaryLoc.toUpperCase();
-        whLocCode = ('WR' + primaryLoc).toUpperCase();
-      }
+      const shopLocObj = locationsList.find(l => l.storage_type === 'SHOP' || String(l.location).startsWith('R'));
+      const whLocObj = locationsList.find(l => l.storage_type === 'WAREHOUSE' || String(l.location).startsWith('W'));
+
+      const shopLocCode = shopLocObj ? shopLocObj.location : (primaryLoc.startsWith('W') ? primaryLoc.replace(/^W/i,'') : primaryLoc);
+      const whLocCode = whLocObj ? whLocObj.location : (primaryLoc.startsWith('W') ? primaryLoc : 'W' + primaryLoc);
 
       const shopLocNameEl = document.getElementById('pdmShopLocName');
       const whLocNameEl = document.getElementById('pdmWhLocName');
       const shopQtyValEl = document.getElementById('pdmShopQtyVal');
       const whQtyValEl = document.getElementById('pdmWhQtyVal');
 
-      if (shopLocNameEl) shopLocNameEl.textContent = `SHOP (${shopLocCode})`;
-      if (whLocNameEl) whLocNameEl.textContent = `WAREHOUSE (${whLocCode})`;
-      if (shopQtyValEl) shopQtyValEl.textContent = `${shopQty} pcs`;
-      if (whQtyValEl) whQtyValEl.textContent = `${whQty} pcs`;
+      if (shopLocNameEl) shopLocNameEl.textContent = `SHOP (${shopLocCode})${shopLocObj && shopLocObj.is_primary ? ' ★' : ''}`;
+      if (whLocNameEl) whLocNameEl.textContent = `WAREHOUSE (${whLocCode})${whLocObj && whLocObj.is_primary ? ' ★' : ''}`;
+      if (shopQtyValEl) shopQtyValEl.textContent = `${shopLocObj ? shopLocObj.qty : 0} pcs`;
+      if (whQtyValEl) whQtyValEl.textContent = `${whLocObj ? whLocObj.qty : 0} pcs`;
 
       // 6. Intact Linked SKUs Block
       renderPdmIntactSection(p, shopLocCode, whLocCode);
@@ -13957,6 +14030,10 @@
     //  STORAGE & LOCATION HELPERS
     // ══════════════════════════════════════════════════════════
     let AP_STORAGE_TYPE = 'SHOP';
+    let AP_LOC_MODE = 'NEW'; // 'NEW', 'CHANGE', 'ADD'
+    let AP_ORIGINAL_LOC = null;
+    let AP_PROMPT_SHOWED = false;
+    let AP_PENDING_STORAGE_CHANGE = null;
 
     function setStorageType(type) {
       AP_STORAGE_TYPE = (type === 'WAREHOUSE') ? 'WAREHOUSE' : 'SHOP';
@@ -13974,7 +14051,64 @@
       syncAPLoc();
     }
 
+    function onStorageToggleClick(type) {
+      if (AP_EDIT_ID && !AP_PROMPT_SHOWED) {
+        AP_PENDING_STORAGE_CHANGE = type;
+        openLocActionModal();
+        return;
+      }
+      setStorageType(type);
+    }
+
+    function openLocActionModal() {
+      const modal = document.getElementById('locConfirmModal');
+      const curLocEl = document.getElementById('locConfirmCurrentLoc');
+      if (curLocEl && AP_ORIGINAL_LOC) {
+        curLocEl.textContent = `${AP_ORIGINAL_LOC.storage_type || 'WAREHOUSE'} (${AP_ORIGINAL_LOC.location || 'WR1L1B1'})`;
+      }
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function cancelLocConfirmModal() {
+      const modal = document.getElementById('locConfirmModal');
+      if (modal) modal.style.display = 'none';
+      AP_PENDING_STORAGE_CHANGE = null;
+    }
+
+    function chooseLocMode(mode) {
+      AP_LOC_MODE = mode; // 'CHANGE' or 'ADD'
+      AP_PROMPT_SHOWED = true;
+      const modal = document.getElementById('locConfirmModal');
+      if (modal) modal.style.display = 'none';
+
+      if (AP_PENDING_STORAGE_CHANGE) {
+        setStorageType(AP_PENDING_STORAGE_CHANGE);
+        AP_PENDING_STORAGE_CHANGE = null;
+      }
+
+      const badge = document.getElementById('apLocModeBadge');
+      if (badge) {
+        badge.style.display = 'inline-block';
+        if (mode === 'ADD') {
+          badge.textContent = 'Mode: Add New Inventory Location';
+          badge.style.background = 'var(--gr-lt, #e6f9ed)';
+          badge.style.color = 'var(--gr, #00ab55)';
+          const qInput = document.getElementById('apQty');
+          const tInput = document.getElementById('apThreshold');
+          if (qInput) qInput.value = '';
+          if (tInput) tInput.value = '5';
+        } else {
+          badge.textContent = 'Mode: Change Existing Location';
+          badge.style.background = 'var(--or-lt, #fff4e5)';
+          badge.style.color = 'var(--or, #ff6b00)';
+        }
+      }
+    }
+
     function adjAP(id, d) {
+      if (AP_EDIT_ID && !AP_PROMPT_SHOWED) {
+        openLocActionModal();
+      }
       const el = document.getElementById(id);
       if (!el) return;
       const min = Number(el.min) || 1, max = Number(el.max) || 100;
@@ -14007,6 +14141,15 @@
 
       const m = str.match(/(?:W)?R(\d+)L(\d+)B(\d+)/i);
       if (m) {
+        const r = document.getElementById('apR');
+        const l = document.getElementById('apL');
+        const b = document.getElementById('apB');
+        if (r) r.value = m[1];
+        if (l) l.value = m[2];
+        if (b) b.value = m[3];
+      }
+      syncAPLoc();
+    }
         const r = document.getElementById('apR');
         const l = document.getElementById('apL');
         const b = document.getElementById('apB');
@@ -14353,6 +14496,69 @@
 
       const id = AP_EDIT_ID || barcode;
       const loc = getAPLoc();
+      const storageType = AP_STORAGE_TYPE;
+      const qtyInput = gn('apQty');
+      const threshInput = document.getElementById('apThreshold')?.value !== '' ? gn('apThreshold') : 5;
+
+      let pExisting = null;
+      if (AP_EDIT_ID) {
+        pExisting = FS_PRODUCTS.find(x => x.id === AP_EDIT_ID || x.barcode === barcode || x.sku === barcode);
+        if (!pExisting) pExisting = STATE.products.find(x => x.id === AP_EDIT_ID || x.barcode === barcode || x.sku === barcode);
+      }
+
+      let locationsList = pExisting && Array.isArray(pExisting.locations) && pExisting.locations.length > 0 ? [...pExisting.locations] : [];
+
+      if (!AP_EDIT_ID || AP_LOC_MODE === 'NEW' || locationsList.length === 0) {
+        locationsList = [{
+          storage_type: storageType,
+          location: loc,
+          qty: qtyInput,
+          threshold: threshInput,
+          is_primary: true
+        }];
+      } else if (AP_LOC_MODE === 'ADD') {
+        // Check duplicate location protection (Rule 11)
+        const exists = locationsList.some(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
+        if (exists) {
+          alert(`This product already exists at ${loc}.`);
+          toast(`This product already exists at ${loc}.`, 'err');
+          return;
+        }
+
+        // Add new location entry (Rule 6, 7, 12 - Primary location remains unchanged!)
+        locationsList.push({
+          storage_type: storageType,
+          location: loc,
+          qty: qtyInput,
+          threshold: threshInput,
+          is_primary: false
+        });
+      } else if (AP_LOC_MODE === 'CHANGE') {
+        // Change existing location (Rule 5)
+        const primaryIdx = locationsList.findIndex(l => l.is_primary);
+        if (primaryIdx >= 0) {
+          locationsList[primaryIdx] = {
+            storage_type: storageType,
+            location: loc,
+            qty: qtyInput,
+            threshold: threshInput,
+            is_primary: true
+          };
+        } else {
+          locationsList = [{
+            storage_type: storageType,
+            location: loc,
+            qty: qtyInput,
+            threshold: threshInput,
+            is_primary: true
+          }];
+        }
+      }
+
+      const primaryLocObj = locationsList.find(l => l.is_primary) || locationsList[0];
+      const primaryLocCode = primaryLocObj ? primaryLocObj.location : loc;
+      const primaryStorageType = primaryLocObj ? primaryLocObj.storage_type : storageType;
+      const totalStock = locationsList.reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
 
       const primaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
 
@@ -14361,12 +14567,15 @@
         name,
         brand: gv('apBrand'),
         category: gv('apCat'),
-        storage_type: AP_STORAGE_TYPE,
-        location: loc,
-        loc,
-        qty: gn('apQty'),
-        stock: gn('apQty'),
-        threshold: document.getElementById('apThreshold')?.value !== '' ? gn('apThreshold') : 5,
+        primary_storage: primaryStorageType,
+        primary_location: primaryLocCode,
+        storage_type: primaryStorageType,
+        location: primaryLocCode,
+        loc: primaryLocCode,
+        locations: locationsList,
+        qty: primaryLocObj ? primaryLocObj.qty : qtyInput,
+        stock: totalStock,
+        threshold: primaryLocObj ? primaryLocObj.threshold : threshInput,
         mrp: gn('apMRP'),
         sp: gn('apSP'),
         fitment_group: document.getElementById('intactToggle')?.classList.contains('on')
@@ -14434,7 +14643,6 @@
 
       } catch (e) {
         console.error('[Save]', e);
-        // Atomic Rollback: Delete newly uploaded R2 images if database save fails
         const newlyUploadedUrls = AP_PRODUCT_IMAGES.filter(img => img && img.uploaded && img.url).map(img => img.url);
         if (newlyUploadedUrls.length > 0 && window.PRODUCT_STORAGE && typeof window.PRODUCT_STORAGE.rollbackOrphanedR2Images === 'function') {
           window.PRODUCT_STORAGE.rollbackOrphanedR2Images(newlyUploadedUrls);
@@ -14465,6 +14673,15 @@
       const intact = document.getElementById('intactToggle');
       if (intact) { intact.classList.remove('on'); document.getElementById('intactGroup').style.display = 'none'; }
       renderCompatList();
+
+      AP_EDIT_ID = null;
+      AP_LOC_MODE = 'NEW';
+      AP_ORIGINAL_LOC = null;
+      AP_PROMPT_SHOWED = false;
+      const locActionWrap = document.getElementById('apLocActionWrap');
+      if (locActionWrap) locActionWrap.style.display = 'none';
+      const badge = document.getElementById('apLocModeBadge');
+      if (badge) badge.style.display = 'none';
     }
 
     function resetAPForm() {
@@ -14484,7 +14701,7 @@
       document.getElementById('apThreshold').value = (p.threshold !== undefined && p.threshold !== null) ? p.threshold : 5;
       document.getElementById('apMRP').value = p.mrp || '';
       document.getElementById('apSP').value = p.sp || '';
-      setAPLoc(p.location);
+      setAPLoc(p.primary_location || p.location);
       AP_COMPAT_SEL = new Set(p.compatibility || []);
       renderCompatList();
       toast('Duplicated ✓ — adjust and save');
@@ -14506,8 +14723,33 @@
       if (!p) { toast('Product details not found', 'err'); return; }
 
       AP_EDIT_ID = p.id || p.barcode || id;
+      AP_LOC_MODE = 'CHANGE';
+      AP_PROMPT_SHOWED = false;
+
       const titleEl = document.getElementById('apTitle');
       if (titleEl) titleEl.textContent = 'Edit Product';
+
+      const locActionWrap = document.getElementById('apLocActionWrap');
+      if (locActionWrap) locActionWrap.style.display = 'block';
+
+      const badge = document.getElementById('apLocModeBadge');
+      if (badge) {
+        badge.style.display = 'inline-block';
+        badge.textContent = 'Mode: Editing Primary Location';
+        badge.style.background = 'var(--or-lt, #fff4e5)';
+        badge.style.color = 'var(--or, #ff6b00)';
+      }
+
+      const primaryLocStr = p.primary_location || p.location || p.loc || '';
+      const primaryStorageStr = p.primary_storage || p.storage_type || (primaryLocStr.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP');
+      const primaryLocObj = Array.isArray(p.locations) ? (p.locations.find(l => l.is_primary) || p.locations[0]) : null;
+
+      AP_ORIGINAL_LOC = {
+        storage_type: primaryStorageStr,
+        location: primaryLocStr,
+        qty: primaryLocObj ? primaryLocObj.qty : (p.qty ?? p.stock ?? 0),
+        threshold: primaryLocObj ? primaryLocObj.threshold : (p.threshold ?? 5)
+      };
 
       const setVal = (fid, val) => {
         const el = document.getElementById(fid);
@@ -14517,13 +14759,13 @@
       setVal('apName', p.name || '');
       setVal('apBrand', p.brand || '');
       setVal('apCat', p.category || '');
-      setVal('apQty', p.qty ?? p.stock ?? '');
-      setVal('apThreshold', p.threshold !== undefined && p.threshold !== null ? p.threshold : 5);
+      setVal('apQty', AP_ORIGINAL_LOC.qty);
+      setVal('apThreshold', AP_ORIGINAL_LOC.threshold);
       setVal('apMRP', p.mrp || '');
       setVal('apSP', p.sp || '');
       setVal('apBarcode', p.barcode || p.sku || id);
 
-      setAPLoc(p.location || p.loc);
+      setAPLoc(primaryLocStr);
 
       if (p.fitment_group) {
         const intact = document.getElementById('intactToggle');
@@ -14631,17 +14873,19 @@
       el.innerHTML = '';
       // Use FS_IMAGES (already loaded from file/IDB)
       data.slice(0, 80).forEach((p, i) => {
-        const qty = getEffectiveInventory(p.id || p.barcode, p.location || p.loc);
+        const primaryLoc = p.primary_location || p.location || p.loc || '—';
+        const primaryStorage = p.primary_storage || p.storage_type || (primaryLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP');
+        const qty = getEffectiveInventory(p.id || p.barcode, primaryLoc);
         const thresh = p.threshold ?? 5;
         const isLow = qty <= thresh;
-        const loc = p.location || p.loc || '—';
+        const locDisplay = `${primaryStorage === 'WAREHOUSE' || primaryLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP'} · ${primaryLoc}`;
         const div = document.createElement('div');
         div.className = 'pr-card';
         div.style.animationDelay = i * 15 + 'ms';
         div.innerHTML = `
       ${renderProductImgHtml(p, 'pr-img')}
       <div class="pr-info">
-        <div class="pr-loc">${loc}</div>
+        <div class="pr-loc">${locDisplay}</div>
         <div class="pr-name">${p.name || '—'}</div>
         <div class="pr-brand">${p.brand || ''} ${p.category ? '· ' + p.category : ''}</div>
       </div>
@@ -16810,12 +17054,100 @@
       });
     }
 
+    function getSmartRefillSuggestions() {
+      const suggestions = [];
+      const allProds = (typeof FS_PRODUCTS !== 'undefined' && Array.isArray(FS_PRODUCTS) ? FS_PRODUCTS : []).concat(STATE.products || []);
+      const seenSkus = new Set();
+
+      for (const p of allProds) {
+        if (!p || !p.barcode) continue;
+        const key = String(p.barcode || p.sku || p.id).trim();
+        if (seenSkus.has(key)) continue;
+        seenSkus.add(key);
+
+        const normP = normalizeProduct(p);
+        const locations = Array.isArray(normP.locations) ? normP.locations : [];
+
+        const needyShopLocs = locations.filter(l => (l.storage_type === 'SHOP' || String(l.location).startsWith('R')) && Number(l.qty) <= Number(l.threshold) && Number(l.threshold) > 0);
+        const availWhLocs = locations.filter(l => (l.storage_type === 'WAREHOUSE' || String(l.location).startsWith('W')) && Number(l.qty) > 0);
+
+        needyShopLocs.forEach(shopLoc => {
+          availWhLocs.forEach(whLoc => {
+            const neededQty = Math.max(1, (Number(shopLoc.threshold) || 5) - Number(shopLoc.qty));
+            suggestions.push({
+              product: normP,
+              sourceLocation: whLoc.location,
+              sourceStorage: 'WAREHOUSE',
+              sourceQty: whLoc.qty,
+              destLocation: shopLoc.location,
+              destStorage: 'SHOP',
+              destQty: shopLoc.qty,
+              destThreshold: shopLoc.threshold,
+              suggestedRefillQty: Math.min(whLoc.qty, neededQty)
+            });
+          });
+        });
+      }
+      return suggestions;
+    }
+
+    function createSmartRefillTransfer(barcode, sourceLoc, destLoc, qty) {
+      const product = STATE.barcodeIndex.get(barcode) || STATE.products.find(p => p.barcode === barcode || p.sku === barcode);
+      if (!product) { toast('Product not found', 'err'); return; }
+
+      startNewTransfer();
+      window.activeTransfer.sourceLocation = { id: sourceLoc, label: sourceLoc };
+      window.activeTransfer.destinationLocation = { id: destLoc, label: destLoc };
+      window.activeTransfer.items.push({
+        productId: product.id || product.barcode,
+        sku: product.sku || product.barcode,
+        barcode: product.barcode || product.sku,
+        productName: product.name,
+        transferQty: qty,
+        effectiveAvail: getEffectiveInventory(product.barcode || product.sku, sourceLoc)
+      });
+      saveActiveTransfer();
+      toast(`Created Smart Refill Transfer: ${product.name} (${qty} pcs)`, 'ok');
+      renderTransferReviewStep();
+    }
+
     function renderTransferDashboard() {
       document.getElementById('activeTransferTitle').textContent = 'Stock Transfers';
 
       const pendingCount = STATE.transferQueue.length + STATE.transferHistory.filter(t => t.status === 'Waiting For POS').length;
       const conflicts = STATE.transferHistory.filter(t => t.physicalReconciliationRequired).length;
       const todayTransfers = STATE.transferHistory.filter(t => t.startTime && t.startTime.startsWith(new Date().toISOString().split('T')[0])).length;
+
+      const refillSuggestions = getSmartRefillSuggestions();
+
+      let refillWidgetHtml = '';
+      if (refillSuggestions.length > 0) {
+        refillWidgetHtml = `
+          <div style="background:var(--or-lt, #fff4e5);border:1.5px solid var(--or, #ff6b00);border-radius:16px;padding:16px;margin-top:16px;margin-bottom:20px;">
+            <div style="font-size:14px;font-weight:800;color:var(--or,#ff6b00);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              ⚡ Smart Refill Recommendations (${refillSuggestions.length})
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${refillSuggestions.slice(0, 5).map(s => `
+                <div style="background:var(--card,#fff);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                  <div>
+                    <div style="font-size:13px;font-weight:800;color:var(--t1);">${s.product.name}</div>
+                    <div style="font-size:11px;color:var(--rd);font-weight:700;">
+                      SHOP (${s.destLocation}) Stock: ${s.destQty} pcs (Low Stock Alert ≤ ${s.destThreshold})
+                    </div>
+                    <div style="font-size:11px;color:var(--gr,#00ab55);font-weight:700;margin-top:2px;">
+                      Source: WAREHOUSE (${s.sourceLocation}) — ${s.sourceQty} available
+                    </div>
+                  </div>
+                  <button class="btn-p" style="height:36px;font-size:12px;padding:0 12px;white-space:nowrap;" onclick="createSmartRefillTransfer('${s.product.barcode}','${s.sourceLocation}','${s.destLocation}',${s.suggestedRefillQty})">
+                    Refill ${s.suggestedRefillQty} pcs
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
 
       document.getElementById('transferMetricsContainer').innerHTML = `
         <div class="stat-card" style="background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--sh);">
@@ -16831,6 +17163,7 @@
           <div style="font-size:11px;font-weight:700;color:var(--rd);margin-bottom:6px;">PHYSICAL RECONCILIATION REQUIRED</div>
           <div style="font-size:24px;font-weight:800;color:var(--rd);">${conflicts} transfers need review</div>
         </div>` : ''}
+        ${refillWidgetHtml}
       `;
 
       let qHtml = '';
