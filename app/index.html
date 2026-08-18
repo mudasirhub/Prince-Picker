@@ -13415,31 +13415,86 @@
       // 4. Pre-mutation State Snapshot
       const origStock = prod.stock;
       const origQty = prod.qty;
+      const origLocations = Array.isArray(prod.locations) ? JSON.parse(JSON.stringify(prod.locations)) : null;
       const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
       const origFSStock = fpIdx >= 0 ? FS_PRODUCTS[fpIdx].stock : undefined;
       const origFSQty = fpIdx >= 0 ? FS_PRODUCTS[fpIdx].qty : undefined;
 
-      // Calculate Stock (immediate read)
-      const currentStock = typeof getEffectiveInventory === 'function'
-        ? getEffectiveInventory(prod.sku || prod.barcode || prod.id, location || prod.loc)
-        : Number(prod.stock ?? prod.qty ?? 0) || 0;
+      const srcLoc = opts.sourceLocation || (type.includes('SRC') || legDir.includes('src') ? location : null);
+      const destLoc = opts.destinationLocation || (type.includes('DEST') || legDir.includes('dest') ? location : null);
+      const isMultiLocTransfer = (type.startsWith('TRANSFER') || type === 'TRANSFER') && srcLoc && destLoc;
 
-      let newStock = currentStock;
-      const legDir = (opts.direction || opts.leg || '').toLowerCase();
-      if (type === 'DROP') {
-        newStock = currentStock + qty;
-      } else if (type === 'PICK') {
-        newStock = Math.max(0, currentStock - qty);
-      } else if (type === 'AUDIT') {
-        newStock = qty; // AUDIT target count
-      } else if (type.startsWith('TRANSFER') || type === 'TRANSFER') {
-        if (legDir === 'src' || legDir === 'source' || legDir === 'out' || type === 'TRANSFER_SRC' || type === 'TRANSFER_OUT') {
-          newStock = Math.max(0, currentStock - qty); // TRANSFER SOURCE leg: subtract
-        } else {
-          newStock = currentStock + qty; // TRANSFER DESTINATION leg: add
+      let newStock = Number(prod.stock ?? prod.qty ?? 0);
+
+      if (isMultiLocTransfer) {
+        if (!Array.isArray(prod.locations) || prod.locations.length === 0) {
+          const primLoc = String(prod.primary_location || prod.location || prod.loc || srcLoc || 'R1L1B1').trim();
+          const isWh = primLoc.toUpperCase().startsWith('W') || (prod.storage_type && String(prod.storage_type).toUpperCase() === 'WAREHOUSE');
+          prod.locations = [{
+            storage_type: isWh ? 'WAREHOUSE' : 'SHOP',
+            location: primLoc,
+            qty: Number(prod.stock ?? prod.qty ?? 0),
+            threshold: Number(prod.threshold ?? 5),
+            is_primary: true
+          }];
         }
+
+        const srcClean = String(srcLoc).trim().toUpperCase();
+        const destClean = String(destLoc).trim().toUpperCase();
+
+        const srcObj = prod.locations.find(l => String(l.location).trim().toUpperCase() === srcClean);
+        const srcAvailable = srcObj ? Number(srcObj.qty || 0) : (String(prod.primary_location || prod.location || prod.loc || '').trim().toUpperCase() === srcClean ? Number(prod.stock ?? 0) : 0);
+
+        if (srcAvailable < qty) {
+          window._activeTxLocks.delete(transactionId);
+          console.error(`[TRANSFER FAILED] Transfer: ${transactionId} | SKU: ${sku} | Source: ${srcLoc} | Destination: ${destLoc} | Qty: ${qty} | Source Stock: ${srcAvailable} | Error: Insufficient stock`);
+          return { success: false, error: `OUT OF STOCK: Insufficient stock at ${srcLoc} (${srcAvailable} pcs available)` };
+        }
+
+        // Deduct from Source Location
+        if (srcObj) {
+          srcObj.qty = Math.max(0, Number(srcObj.qty) - qty);
+        } else {
+          prod.locations.push({
+            storage_type: srcLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP',
+            location: srcLoc,
+            qty: Math.max(0, srcAvailable - qty),
+            threshold: Number(prod.threshold ?? 5),
+            is_primary: true
+          });
+        }
+
+        // Add to Destination Location
+        const destObj = prod.locations.find(l => String(l.location).trim().toUpperCase() === destClean);
+        if (destObj) {
+          destObj.qty = Number(destObj.qty || 0) + qty;
+        } else {
+          prod.locations.push({
+            storage_type: destLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP',
+            location: destLoc,
+            qty: qty,
+            threshold: Number(prod.threshold ?? 5),
+            is_primary: false
+          });
+        }
+
+        // Project primary location stock without changing primary_location
+        const primaryObj = prod.locations.find(l => l.is_primary) || prod.locations[0];
+        newStock = primaryObj ? Number(primaryObj.qty) : Number(prod.locations.reduce((s, l) => s + Number(l.qty || 0), 0));
       } else {
-        newStock = Math.max(0, currentStock - qty);
+        const currentStock = typeof getEffectiveInventory === 'function'
+          ? getEffectiveInventory(prod.sku || prod.barcode || prod.id, location || prod.loc)
+          : Number(prod.stock ?? prod.qty ?? 0) || 0;
+
+        if (type === 'DROP') {
+          newStock = currentStock + qty;
+        } else if (type === 'PICK') {
+          newStock = Math.max(0, currentStock - qty);
+        } else if (type === 'AUDIT') {
+          newStock = qty;
+        } else {
+          newStock = Math.max(0, currentStock - qty);
+        }
       }
 
       // 5. Apply local stock mutation
@@ -13449,6 +13504,9 @@
       if (fpIdx >= 0) {
         FS_PRODUCTS[fpIdx].stock = newStock;
         FS_PRODUCTS[fpIdx].qty = newStock;
+        if (origLocations && Array.isArray(prod.locations)) {
+          FS_PRODUCTS[fpIdx].locations = JSON.parse(JSON.stringify(prod.locations));
+        }
       }
       if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
       if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
@@ -13457,9 +13515,11 @@
       const rollbackLocalState = async () => {
         prod.stock = origStock;
         prod.qty = origQty;
+        if (origLocations) prod.locations = origLocations;
         if (fpIdx >= 0) {
           FS_PRODUCTS[fpIdx].stock = origFSStock;
           FS_PRODUCTS[fpIdx].qty = origFSQty;
+          if (origLocations) FS_PRODUCTS[fpIdx].locations = origLocations;
         }
         if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
         if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
@@ -18153,21 +18213,46 @@
       renderTransferReviewStep();
     }
 
+    function updateReviewItemQty(index, newQty) {
+      const t = window.activeTransfer;
+      if (!t || !t.items || !t.items[index]) return;
+      const q = parseInt(newQty, 10);
+      if (isNaN(q) || q <= 0) return;
+      t.items[index].transferQty = q;
+      saveActiveTransfer();
+      renderTransferReviewStep();
+    }
+
     // ── Step: Review & Confirm ──
     function renderTransferReviewStep() {
       const t = window.activeTransfer;
-      const totalUnits = t.items.reduce((sum, it) => sum + it.transferQty, 0);
+      if (!t || !t.items) return;
+      const totalUnits = t.items.reduce((sum, it) => sum + (Number(it.transferQty) || 0), 0);
 
       let itemsHtml = '';
-      t.items.forEach(it => {
+      t.items.forEach((it, idx) => {
+        const srcStock = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(it.sku || it.barcode || it.productId, t.sourceLocation.id) : (it.cachedQtyAtTransfer || 0);
+        const destCurrent = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(it.sku || it.barcode || it.productId, t.destinationLocation.id) : 0;
+        const destAfter = destCurrent + Number(it.transferQty || 0);
+
         itemsHtml += `
-          <div style="padding:10px 0;border-bottom:1px solid var(--bd);">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <div style="font-size:13px;font-weight:800;color:var(--t1);">${it.productName}</div>
-              <div style="font-size:14px;font-weight:800;color:var(--t1);">${it.transferQty} units</div>
+          <div style="padding:12px 0;border-bottom:1px solid var(--bd);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+              <div>
+                <div style="font-size:14px;font-weight:800;color:var(--t1);">${it.productName}</div>
+                <div style="font-size:11px;color:var(--t3);">SKU: ${it.sku}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;background:var(--bg);padding:4px 8px;border-radius:10px;border:1px solid var(--bd);">
+                <button onclick="updateReviewItemQty(${idx}, ${Math.max(1, it.transferQty - 1)})" style="width:28px;height:28px;border-radius:6px;border:none;background:var(--card);font-size:16px;font-weight:800;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;">-</button>
+                <input type="number" min="1" value="${it.transferQty}" onchange="updateReviewItemQty(${idx}, this.value)" style="width:40px;height:28px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:800;color:var(--t1);outline:none;">
+                <button onclick="updateReviewItemQty(${idx}, ${it.transferQty + 1})" style="width:28px;height:28px;border-radius:6px;border:none;background:var(--card);font-size:16px;font-weight:800;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+              </div>
             </div>
-            <div style="font-size:11px;color:var(--t3);">SKU: ${it.sku}</div>
-            ${it.warnings && it.warnings.length > 0 ? `<div style="font-size:11px;color:var(--rd);margin-top:2px;">⚠️ ${it.warnings.join(', ')}</div>` : ''}
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-top:4px;">
+              <span>Source: <strong style="color:var(--t1);">${t.sourceLocation.label} — ${srcStock} pcs</strong></span>
+              <span>Destination: <strong style="color:var(--gr,#00ab55);">${t.destinationLocation.label} — ${destCurrent} pcs → ${destAfter} pcs</strong></span>
+            </div>
+            ${it.warnings && it.warnings.length > 0 ? `<div style="font-size:11px;color:var(--rd);margin-top:4px;">⚠️ ${it.warnings.join(', ')}</div>` : ''}
           </div>
         `;
       });
@@ -18211,45 +18296,93 @@
       }
     }
 
-    function confirmTransfer() {
+    async function confirmTransfer() {
       const t = window.activeTransfer;
+      if (!t || !t.items || t.items.length === 0) {
+        toast('No items in transfer', 'err');
+        return;
+      }
+      if (!t.sourceLocation || !t.sourceLocation.id) {
+        toast('Source location required', 'err');
+        return;
+      }
+      if (!t.destinationLocation || !t.destinationLocation.id) {
+        toast('Destination location required', 'err');
+        return;
+      }
+      if (String(t.sourceLocation.id).trim().toUpperCase() === String(t.destinationLocation.id).trim().toUpperCase()) {
+        toast('Destination cannot equal Source', 'err');
+        return;
+      }
+
+      // Re-validate quantities & source stock availability for all items before confirmation
+      for (const item of t.items) {
+        const qty = parseInt(item.transferQty, 10);
+        if (isNaN(qty) || qty <= 0) {
+          toast('Invalid transfer quantity for ' + (item.productName || item.sku), 'err');
+          return;
+        }
+        const currentAvail = typeof getEffectiveInventory === 'function'
+          ? getEffectiveInventory(item.sku || item.barcode || item.productId, t.sourceLocation.id)
+          : 0;
+        if (currentAvail < qty) {
+          console.error(`[TRANSFER FAILED] Transfer: ${t.id} | SKU: ${item.sku} | Source: ${t.sourceLocation.id} | Destination: ${t.destinationLocation.id} | Qty: ${qty} | Source Stock: ${currentAvail} | Error: Insufficient stock`);
+          toast(`OUT OF STOCK: Insufficient stock at ${t.sourceLocation.id} for ${item.productName || item.sku}`, 'err');
+          return;
+        }
+      }
+
+      // Execute inventory transaction via inventoryTransaction() for each item
+      let allSuccess = true;
+      let lastErr = '';
+
+      for (const item of t.items) {
+        const qty = parseInt(item.transferQty, 10);
+        const res = await inventoryTransaction({
+          type: 'TRANSFER',
+          sku: item.sku || item.barcode || item.productId,
+          sourceLocation: t.sourceLocation.id,
+          destinationLocation: t.destinationLocation.id,
+          qty: qty,
+          sessionId: t.id
+        });
+
+        if (!res || !res.success) {
+          allSuccess = false;
+          lastErr = res?.error || 'Inventory transaction failed';
+          console.error(`[TRANSFER FAILED] Transfer: ${t.id} | SKU: ${item.sku} | Source: ${t.sourceLocation.id} | Destination: ${t.destinationLocation.id} | Qty: ${qty} | Error: ${lastErr}`);
+          break;
+        }
+      }
+
+      if (!allSuccess) {
+        toast('Transfer Failed: ' + lastErr, 'err');
+        return;
+      }
+
       t.confirmedAt = new Date().toISOString();
-      t.status = 'Queued';
+      t.status = 'COMPLETED';
 
       logTransferEvent(t, 'transfer_confirmed');
 
-      // 1. Create Local Pending Overlay
-      const overlay = {
-        transferId: t.id,
-        sourceLocationId: t.sourceLocation.id,
-        destinationLocationId: t.destinationLocation.id,
-        items: t.items.map(i => ({ productId: i.productId, quantity: i.transferQty })),
-        createdAt: t.confirmedAt,
-        status: 'pending_sync'
-      };
-      STATE.pendingTransferOverlays.push(overlay);
-
-      // 2. Queue for Sync
-      STATE.transferQueue.push(t);
+      // Add to Transfer History
+      STATE.transferHistory.push(t);
       saveTransfers();
 
-      // 3. Global Activity Log
+      // Global Activity Log
       STATE.logs.push({
-        type: 'transfer_queued',
+        type: 'transfer_completed',
         id: t.id,
         items: t.items.length,
         time: t.confirmedAt
       });
       localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs));
 
-      // 4. Cleanup
+      // Cleanup
       clearActiveTransfer();
       toast('Physical Transfer Confirmed', 'ok');
       nav('s-transfer');
       renderTransferDashboard();
-
-      // 5. Trigger Sync
-      trySyncTransfers();
     }
 
     // ── Bridge Sync & POS Decisions ──
