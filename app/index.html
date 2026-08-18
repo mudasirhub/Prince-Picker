@@ -7849,7 +7849,7 @@
         <div class="nc-footer-time">
           📅 Last updated: <span id="notifLastUpdated">Just now</span>
         </div>
-        <button class="nc-footer-btn" onclick="nav('s-transfers'); closeNotificationCenter();">
+        <button class="nc-footer-btn" onclick="nav('s-transfer'); closeNotificationCenter();">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           View All Notifications
         </button>
@@ -8417,6 +8417,23 @@
         <button class="btn-s"
           style="height:48px;font-size:15px;color:var(--rd);border-color:var(--rd-bg);background:var(--rd-bg);"
           onclick="discardActiveTransfer()">Discard</button>
+      </div>
+    </div>
+  <!-- ══ TRANSFER LOGS DETAIL MODAL ══ -->
+  <div id="transferLogsModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:440px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--bd);padding-bottom:12px;">
+        <div>
+          <div id="tlmTitle" style="font-size:18px;font-weight:800;color:var(--t1);">Transfer Logs</div>
+          <div id="tlmSub" style="font-size:12px;color:var(--t3);margin-top:2px;"></div>
+        </div>
+        <button onclick="closeTransferLogsModal()" style="background:none;border:none;color:var(--t2);padding:6px;cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="tlmBody" style="flex:1;overflow-y:auto;padding-right:4px;"></div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--bd);">
+        <button class="btn-s" style="width:100%;height:44px;font-size:14px;" onclick="closeTransferLogsModal()">Close</button>
       </div>
     </div>
   </div>
@@ -17762,6 +17779,113 @@
       });
     }
 
+    function closeTransferLogsModal() {
+      const modal = document.getElementById('transferLogsModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function showTransferLogsModal(transferId) {
+      const modal = document.getElementById('transferLogsModal');
+      if (!modal) return;
+
+      const t = (STATE.transferHistory || []).find(x => x.id === transferId) || 
+                (STATE.transferQueue || []).find(x => x.id === transferId) || 
+                (window.activeTransfer && window.activeTransfer.id === transferId ? window.activeTransfer : null);
+
+      const titleEl = document.getElementById('tlmTitle');
+      const subEl = document.getElementById('tlmSub');
+      const bodyEl = document.getElementById('tlmBody');
+
+      if (!t) {
+        titleEl.textContent = 'Transfer Details';
+        subEl.textContent = transferId;
+        bodyEl.innerHTML = `<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">Transfer details not found for ${transferId}.</div>`;
+        modal.style.display = 'flex';
+        return;
+      }
+
+      titleEl.textContent = `Transfer: ${t.id}`;
+      const statusCol = (t.status === 'COMPLETED' || t.status === 'Accepted') ? 'var(--gr,#00ab55)' : 'var(--or,#ff6b00)';
+      subEl.innerHTML = `Status: <strong style="color:${statusCol}">${t.status || 'Completed'}</strong> • ${t.items ? t.items.length : 0} items`;
+
+      let itemsHtml = '';
+      if (t.items && t.items.length > 0) {
+        t.items.forEach(it => {
+          itemsHtml += `
+            <div style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-size:13px;font-weight:800;color:var(--t1);">${it.productName || it.sku}</div>
+                <div style="font-size:11px;color:var(--t3);">SKU: ${it.sku || it.barcode}</div>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:var(--t1);">${it.transferQty} pcs</div>
+            </div>`;
+        });
+      } else {
+        itemsHtml = `<div style="font-size:12px;color:var(--t3);">No item breakdown recorded.</div>`;
+      }
+
+      let eventsHtml = '';
+      const events = Array.isArray(t.eventHistory) && t.eventHistory.length > 0 ? t.eventHistory : [];
+      if (events.length > 0) {
+        events.forEach(ev => {
+          const timeStr = new Date(ev.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          eventsHtml += `
+            <div style="padding:8px 0;border-left:2.5px solid var(--or,#ff6b00);padding-left:12px;margin-bottom:8px;">
+              <div style="font-size:12px;font-weight:800;color:var(--t1);">${ev.type.replace(/_/g, ' ').toUpperCase()}</div>
+              <div style="font-size:11px;color:var(--t3);">${timeStr} • By ${ev.user || 'Picker'}</div>
+              ${ev.metadata ? `<div style="font-size:10px;color:var(--t2);margin-top:2px;">${JSON.stringify(ev.metadata)}</div>` : ''}
+            </div>`;
+        });
+      }
+
+      // Also search global activity logs matching transfer ID
+      const matchingGlobalLogs = (STATE.logs || []).filter(l => l.id === t.id || l.orderId === t.id || l.transactionId === t.id);
+      let globalLogsHtml = '';
+      if (matchingGlobalLogs.length > 0) {
+        matchingGlobalLogs.forEach(gl => {
+          const gTimeStr = gl.timestamp || gl.time ? new Date(gl.timestamp || gl.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+          globalLogsHtml += `
+            <div style="font-size:11px;color:var(--t2);background:var(--bg);padding:6px 10px;border-radius:6px;margin-top:4px;">
+              <strong>${gl.type}</strong> ${gl.sku ? `• SKU: ${gl.sku} (${gl.qty} pcs)` : ''} ${gl.location ? `• ${gl.location}` : ''} <span style="color:var(--t3)">${gTimeStr}</span>
+            </div>`;
+        });
+      }
+
+      const srcLabel = t.sourceLocation ? (t.sourceLocation.label || t.sourceLocation.id) : 'Warehouse';
+      const destLabel = t.destinationLocation ? (t.destinationLocation.label || t.destinationLocation.id) : 'Shop';
+
+      let html = `
+        <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+            <span style="color:var(--t3);">Source:</span>
+            <strong style="color:var(--t1);">${srcLabel}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+            <span style="color:var(--t3);">Destination:</span>
+            <strong style="color:var(--gr,#00ab55);">${destLabel}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t3);">
+            <span>Started: ${t.startTime ? new Date(t.startTime).toLocaleTimeString() : 'N/A'}</span>
+            <span>Confirmed: ${t.confirmedAt ? new Date(t.confirmedAt).toLocaleTimeString() : 'N/A'}</span>
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:800;color:var(--t1);margin-bottom:8px;text-transform:uppercase;">Items Transferred</div>
+        ${itemsHtml}
+
+        <div style="font-size:12px;font-weight:800;color:var(--t1);margin-top:16px;margin-bottom:8px;text-transform:uppercase;">Transfer Event Timeline</div>
+        ${eventsHtml || '<div style="font-size:11px;color:var(--t3);">No timeline events recorded.</div>'}
+
+        ${globalLogsHtml ? `
+          <div style="font-size:12px;font-weight:800;color:var(--t1);margin-top:16px;margin-bottom:8px;text-transform:uppercase;">Activity Ledger Logs</div>
+          ${globalLogsHtml}
+        ` : ''}
+      `;
+
+      bodyEl.innerHTML = html;
+      modal.style.display = 'flex';
+    }
+
     function renderTransferDashboard() {
       evaluateStockNotifications();
       document.getElementById('activeTransferTitle').textContent = 'Stock Transfers';
@@ -17834,7 +17958,7 @@
           }
 
           qHtml += `
-            <div style="background:var(--card);border:1.5px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div onclick="showTransferLogsModal('${t.id}')" style="background:var(--card);border:1.5px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
               <div>
                 <div style="font-size:14px;font-weight:800;color:var(--t1);margin-bottom:4px;">${t.id}</div>
                 <div style="font-size:11px;color:var(--t3);font-weight:600;">${t.items.length} items • ${t.sourceLocation?.label || 'Src'} ➔ ${t.destinationLocation?.label || 'Dest'}</div>
@@ -17863,10 +17987,10 @@
             badgeHtml = `<div style="font-size:10px;font-weight:800;color:${col};background:${bg};padding:4px 8px;border-radius:6px;text-transform:uppercase;">${t.status}</div>`;
           }
           hHtml += `
-            <div style="background:var(--card);border:1.5px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div onclick="showTransferLogsModal('${t.id}')" style="background:var(--card);border:1.5px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
               <div>
                 <div style="font-size:14px;font-weight:800;color:var(--t1);margin-bottom:4px;">${t.id}</div>
-                <div style="font-size:11px;color:var(--t3);font-weight:600;">${new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${t.items.length} items</div>
+                <div style="font-size:11px;color:var(--t3);font-weight:600;">${new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${t.items.length} items • <span style="color:var(--or)">Click for logs</span></div>
               </div>
               ${badgeHtml}
             </div>`;
