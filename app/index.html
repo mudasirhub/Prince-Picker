@@ -6099,15 +6099,16 @@
         <div class="ap-field">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <label class="ap-label" style="margin:0">STORAGE</label>
-            <div id="apLocActionWrap" style="display:none;font-size:12px;color:var(--or);font-weight:700;cursor:pointer;" onclick="openLocActionModal()">
-              [ Change / Add Location ]
+            <div id="apLocActionWrap" style="font-size:12px;color:var(--or);font-weight:800;cursor:pointer;background:var(--or-lt);padding:4px 10px;border-radius:8px;border:1px solid var(--or-md);" onclick="openLocActionModal()">
+              ⚙️ Change / Add Location Mode
             </div>
           </div>
           <div class="storage-toggle-ctrl">
             <button type="button" class="storage-toggle-btn on" id="storageShopBtn" onclick="onStorageToggleClick('SHOP')">SHOP</button>
             <button type="button" class="storage-toggle-btn" id="storageWhBtn" onclick="onStorageToggleClick('WAREHOUSE')">WAREHOUSE</button>
           </div>
-          <div id="apLocModeBadge" style="display:none;margin-top:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:var(--or-lt);color:var(--or);"></div>
+          <div id="apLocModeBadge" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:var(--or-lt);color:var(--or);">Mode: Set Location</div>
+          <div id="apExistingLocationsList" style="margin-top:8px;display:none;"></div>
         </div>
 
         <!-- 4. Location -->
@@ -14713,6 +14714,69 @@
       setStorageType(type);
     }
 
+    function renderAPExistingLocations() {
+      const container = document.getElementById('apExistingLocationsList');
+      if (!container) return;
+
+      let p = null;
+      if (AP_EDIT_ID) {
+        p = FS_PRODUCTS.find(x => x.id === AP_EDIT_ID || x.barcode === AP_EDIT_ID || x.sku === AP_EDIT_ID) ||
+            STATE.products.find(x => x.id === AP_EDIT_ID || x.barcode === AP_EDIT_ID || x.sku === AP_EDIT_ID);
+      } else {
+        const bc = document.getElementById('apBarcode')?.value.trim();
+        if (bc) {
+          p = FS_PRODUCTS.find(x => x.barcode === bc || x.sku === bc) ||
+              STATE.products.find(x => x.barcode === bc || x.sku === bc);
+        }
+      }
+
+      if (!p) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      const normP = normalizeProduct(p);
+      const locs = Array.isArray(normP.locations) && normP.locations.length > 0 ? normP.locations : [{
+        storage_type: normP.primary_storage || normP.storage_type || 'SHOP',
+        location: normP.primary_location || normP.location || 'R1L1B1',
+        qty: normP.stock ?? normP.qty ?? 0,
+        threshold: normP.threshold ?? 5,
+        is_primary: true
+      }];
+
+      let html = `<div style="font-size:11px;font-weight:800;color:var(--t3);margin-bottom:6px;text-transform:uppercase;">Existing Product Locations (${locs.length}):</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+      locs.forEach((l) => {
+        const isPrim = l.is_primary;
+        const icon = (l.storage_type === 'WAREHOUSE' || String(l.location).startsWith('W')) ? '🏢' : '🏪';
+        html += `
+          <div onclick="selectAPLocationToEdit('${l.location}', '${l.storage_type}', ${l.qty}, ${l.threshold})" style="background:${isPrim ? 'var(--or-lt)' : 'var(--bg)'};border:1.5px solid ${isPrim ? 'var(--or)' : 'var(--bd)'};border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--t1);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <span>${icon} ${l.location}</span>
+            <span style="color:${isPrim ? 'var(--or)' : 'var(--t3)'};font-size:11px;">(${l.qty} pcs${isPrim ? ' • Primary' : ''})</span>
+          </div>
+        `;
+      });
+      html += `
+        <button type="button" onclick="chooseLocMode('ADD')" style="background:var(--gr-lt);border:1.5px solid var(--gr);color:var(--gr);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;">
+          + Add New Location
+        </button>
+      </div>`;
+
+      container.innerHTML = html;
+      container.style.display = 'block';
+    }
+
+    function selectAPLocationToEdit(locStr, storageTypeStr, qtyNum, thresholdNum) {
+      chooseLocMode('CHANGE');
+      setAPLoc(locStr);
+      setStorageType(storageTypeStr);
+      const qInp = document.getElementById('apQty');
+      const tInp = document.getElementById('apThreshold');
+      if (qInp) qInp.value = qtyNum;
+      if (tInp) tInp.value = thresholdNum;
+      toast(`Selected location ${locStr} to edit`, 'ok');
+    }
+
     function openLocActionModal() {
       const modal = document.getElementById('locConfirmModal');
       const curLocEl = document.getElementById('locConfirmCurrentLoc');
@@ -15156,10 +15220,10 @@
       let locationsList = [];
       if (pExisting) {
         const normExisting = normalizeProduct(pExisting);
-        locationsList = Array.isArray(normExisting.locations) ? [...normExisting.locations] : [];
+        locationsList = Array.isArray(normExisting.locations) ? JSON.parse(JSON.stringify(normExisting.locations)) : [];
       }
 
-      if (!pExisting || AP_LOC_MODE === 'NEW' || locationsList.length === 0) {
+      if (!pExisting || locationsList.length === 0) {
         locationsList = [{
           storage_type: storageType,
           location: loc,
@@ -15168,43 +15232,45 @@
           is_primary: true
         }];
       } else if (AP_LOC_MODE === 'ADD') {
-        // Check duplicate location protection (Rule 11 - Test E)
-        const exists = locationsList.some(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
-        if (exists) {
-          alert(`This product already exists at ${loc}.`);
-          toast(`This product already exists at ${loc}.`, 'err');
-          const btn = document.getElementById('apSaveBtn');
-          if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
-          return;
-        }
-
-        // Add new location entry (Rule 6, 7, 12 - Primary location remains unchanged!)
-        locationsList.push({
-          storage_type: storageType,
-          location: loc,
-          qty: qtyInput,
-          threshold: threshInput,
-          is_primary: false
-        });
-      } else if (AP_LOC_MODE === 'CHANGE') {
-        // Change existing location (Rule 5)
-        const primaryIdx = locationsList.findIndex(l => l.is_primary);
-        if (primaryIdx >= 0) {
-          locationsList[primaryIdx] = {
-            storage_type: storageType,
-            location: loc,
-            qty: qtyInput,
-            threshold: threshInput,
-            is_primary: true
-          };
+        const existingIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
+        if (existingIdx >= 0) {
+          locationsList[existingIdx].qty = qtyInput;
+          locationsList[existingIdx].threshold = threshInput;
+          locationsList[existingIdx].storage_type = storageType;
         } else {
-          locationsList = [{
+          locationsList.push({
             storage_type: storageType,
             location: loc,
             qty: qtyInput,
             threshold: threshInput,
-            is_primary: true
-          }];
+            is_primary: false
+          });
+        }
+      } else {
+        const existingLocIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
+        if (existingLocIdx >= 0) {
+          locationsList[existingLocIdx].qty = qtyInput;
+          locationsList[existingLocIdx].threshold = threshInput;
+          locationsList[existingLocIdx].storage_type = storageType;
+        } else {
+          const primaryIdx = locationsList.findIndex(l => l.is_primary);
+          if (primaryIdx >= 0) {
+            locationsList[primaryIdx] = {
+              storage_type: storageType,
+              location: loc,
+              qty: qtyInput,
+              threshold: threshInput,
+              is_primary: true
+            };
+          } else {
+            locationsList.push({
+              storage_type: storageType,
+              location: loc,
+              qty: qtyInput,
+              threshold: threshInput,
+              is_primary: true
+            });
+          }
         }
       }
 
@@ -15439,6 +15505,7 @@
         AP_PRODUCT_IMAGES = [];
       }
       if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
+      renderAPExistingLocations();
       nav('s-add-product');
     }
 
