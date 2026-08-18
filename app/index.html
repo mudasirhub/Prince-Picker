@@ -17914,6 +17914,7 @@
     }
 
     // ── Start Transfer ──
+    // ── Start Transfer ──
     function startNewTransfer() {
       window.activeTransfer = {
         id: 'TRF-' + new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14),
@@ -17942,7 +17943,7 @@
       logTransferEvent(window.activeTransfer, 'transfer_started');
       saveActiveTransfer();
       nav('s-transfer-active');
-      renderTransferSourceStep();
+      renderTransferProductStep();
     }
 
     function routeTransferStep(step) {
@@ -17968,17 +17969,20 @@
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
           <div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:4px;">Where is the stock coming from?</div>
-          <div style="font-size:13px;color:var(--t3);">Scan the Rack, Shelf, or Bin barcode.</div>
+          <div style="font-size:13px;color:var(--t3);">Scan the Rack, Shelf, or Bin barcode (or skip to scan products directly).</div>
         </div>
         
-        <button class="btn-p" style="width:100%;height:56px;font-size:16px;" onclick="openScanner(onTransferSourceScan, 'Scan Source Location')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px">
-            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/>
-            <line x1="7" y1="8" x2="7" y2="16"/>
-            <line x1="14" y1="8" x2="14" y2="16"/>
-          </svg>
-          Scan Source
-        </button>
+        <div style="display:flex;gap:12px;">
+          <button class="btn-s" style="flex:1;height:56px;font-size:15px;" onclick="renderTransferProductStep()">Skip / Scan Products</button>
+          <button class="btn-p" style="flex:2;height:56px;font-size:16px;" onclick="openScanner(onTransferSourceScan, 'Scan Source Location')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px">
+              <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/>
+              <line x1="7" y1="8" x2="7" y2="16"/>
+              <line x1="14" y1="8" x2="14" y2="16"/>
+            </svg>
+            Scan Source
+          </button>
+        </div>
       `;
       document.getElementById('transferWorkflowContainer').innerHTML = html;
 
@@ -17992,7 +17996,7 @@
 
     function onTransferSourceScan(val) {
       if (!val) return;
-      window.activeTransfer.sourceLocation = { id: val, label: val }; // Use valid location lookup if available
+      window.activeTransfer.sourceLocation = { id: val, label: val };
       logTransferEvent(window.activeTransfer, 'source_scanned', { location: val });
       saveActiveTransfer();
       playSound('scan_success');
@@ -18000,11 +18004,11 @@
       renderTransferProductStep();
     }
 
-    // ── Step: Products ──
+    // ── Step: Products (Temp Transfer Cart) ──
     function renderTransferProductStep() {
       let itemsHtml = '';
       if (window.activeTransfer.items.length === 0) {
-        itemsHtml = '<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">No items added yet.</div>';
+        itemsHtml = '<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">No items in transfer cart yet. Click below to scan/add products.</div>';
       } else {
         window.activeTransfer.items.forEach((it, idx) => {
           itemsHtml += `
@@ -18014,7 +18018,7 @@
                 <div style="font-size:11px;color:var(--t3);font-weight:600;">SKU: ${it.sku}</div>
               </div>
               <div style="display:flex;align-items:center;gap:12px;">
-                <div style="font-size:18px;font-weight:800;color:var(--t1);">${it.transferQty}</div>
+                <div style="font-size:18px;font-weight:800;color:var(--t1);">${it.transferQty} units</div>
                 <button onclick="window.activeTransfer.items.splice(${idx}, 1); saveActiveTransfer(); renderTransferProductStep();" style="background:none;border:none;color:var(--rd);padding:4px;cursor:pointer;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -18023,14 +18027,17 @@
         });
       }
 
+      const srcLabel = window.activeTransfer.sourceLocation ? window.activeTransfer.sourceLocation.label : 'Auto (Primary Location)';
+
       let html = `
         <div style="text-align:center;margin-bottom:20px;">
-          <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Step 2 of 4</div>
+          <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Transfer Cart</div>
           <div style="font-size:22px;font-weight:800;color:var(--t1);">Scan Products</div>
         </div>
         
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:0.5px;text-transform:uppercase;">Source: <span style="color:var(--or)">${window.activeTransfer.sourceLocation.label}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;background:var(--bg);padding:8px 12px;border-radius:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:0.5px;text-transform:uppercase;">From Source: <span style="color:var(--or)">${srcLabel}</span></div>
+          <button style="background:none;border:none;color:var(--or);font-size:11px;font-weight:800;cursor:pointer;" onclick="renderTransferSourceStep()">Change</button>
         </div>
 
         <div style="margin-bottom:24px;">${itemsHtml}</div>
@@ -18043,8 +18050,8 @@
         </div>
         
         ${window.activeTransfer.items.length > 0 ? `
-          <button class="btn-p" style="width:100%;height:52px;font-size:15px;margin-top:20px;" onclick="renderTransferDestStep()">
-            Continue to Destination
+          <button class="btn-p" style="width:100%;height:52px;font-size:15px;margin-top:20px;background:var(--gr);border-color:var(--gr);" onclick="renderTransferDestStep()">
+            Reach Destination & Drop Bins ➔
           </button>
         ` : ''}
       `;
@@ -18067,6 +18074,11 @@
         return;
       }
 
+      if (!window.activeTransfer.sourceLocation || !window.activeTransfer.sourceLocation.id) {
+        const defaultSrc = String(product.primary_location || product.location || product.loc || 'WR1L1B1').trim();
+        window.activeTransfer.sourceLocation = { id: defaultSrc, label: defaultSrc };
+      }
+
       // If product is already in the transfer, we could increment. But we'll route to Qty step to let them adjust.
       playSound('scan_success');
       toast('Product found', 'ok');
@@ -18075,6 +18087,11 @@
 
     // ── Step: Quantity ──
     function renderTransferQtyStep(product) {
+      if (!window.activeTransfer.sourceLocation || !window.activeTransfer.sourceLocation.id) {
+        const defaultSrc = String(product.primary_location || product.location || product.loc || 'WR1L1B1').trim();
+        window.activeTransfer.sourceLocation = { id: defaultSrc, label: defaultSrc };
+      }
+
       const existingItem = window.activeTransfer.items.find(i => i.productId === product.id || i.sku === product.sku);
       const currentQty = existingItem ? existingItem.transferQty : 1;
       const effectiveAvail = getEffectiveInventory(product.barcode || product.sku, window.activeTransfer.sourceLocation.id);
@@ -18124,12 +18141,14 @@
         return;
       }
 
+      if (!window.activeTransfer.sourceLocation || !window.activeTransfer.sourceLocation.id) {
+        const defaultSrc = String(product.primary_location || product.location || product.loc || 'WR1L1B1').trim();
+        window.activeTransfer.sourceLocation = { id: defaultSrc, label: defaultSrc };
+      }
+
       const effectiveAvail = getEffectiveInventory(product.barcode || product.sku, window.activeTransfer.sourceLocation.id);
       let warnings = [];
       if (qty > effectiveAvail) {
-        if (!confirm(`Warning: Requested transfer (${qty}) exceeds effective available (${effectiveAvail}). Flag for POS review?`)) {
-          return;
-        }
         warnings.push('Quantity Exceeds Effective Local Availability');
       }
 
