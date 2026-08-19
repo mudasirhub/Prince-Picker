@@ -14476,6 +14476,28 @@
     let AP_COMPAT_SEL = new Set();
     let AP_EDIT_ID = null;
 
+    function isIdDuplicate(barcode, currentEditId) {
+      if (!barcode) return false;
+      const cleanBc = String(barcode).trim().toUpperCase();
+      const cleanEdit = currentEditId ? String(currentEditId).trim().toUpperCase() : null;
+
+      const inFs = FS_PRODUCTS.find(p => {
+        const pBc = String(p.barcode || p.sku || p.id || '').trim().toUpperCase();
+        const pId = String(p.id || '').trim().toUpperCase();
+        if (cleanEdit && (pBc === cleanEdit || pId === cleanEdit)) return false;
+        return pBc === cleanBc || pId === cleanBc;
+      });
+      if (inFs) return true;
+
+      const inState = STATE.products.find(p => {
+        const pBc = String(p.barcode || p.sku || p.id || '').trim().toUpperCase();
+        const pId = String(p.id || '').trim().toUpperCase();
+        if (cleanEdit && (pBc === cleanEdit || pId === cleanEdit)) return false;
+        return pBc === cleanBc || pId === cleanBc;
+      });
+      return Boolean(inState);
+    }
+
     // ══════════════════════════════════════════════════════════
     //  STORAGE & LOCATION HELPERS
     // ══════════════════════════════════════════════════════════
