@@ -14686,6 +14686,7 @@
     let AP_STORAGE_TYPE = 'SHOP';
     let AP_LOC_MODE = 'NEW'; // 'NEW', 'CHANGE', 'ADD'
     let AP_ORIGINAL_LOC = null;
+    let AP_TARGET_EDIT_LOC = null;
     let AP_PROMPT_SHOWED = false;
     let AP_PENDING_STORAGE_CHANGE = null;
 
@@ -14767,6 +14768,7 @@
     }
 
     function selectAPLocationToEdit(locStr, storageTypeStr, qtyNum, thresholdNum) {
+      AP_TARGET_EDIT_LOC = locStr;
       chooseLocMode('CHANGE');
       setAPLoc(locStr);
       setStorageType(storageTypeStr);
@@ -14774,6 +14776,13 @@
       const tInp = document.getElementById('apThreshold');
       if (qInp) qInp.value = qtyNum;
       if (tInp) tInp.value = thresholdNum;
+      const badge = document.getElementById('apLocModeBadge');
+      if (badge) {
+        badge.style.display = 'inline-block';
+        badge.textContent = `Mode: Editing Location (${locStr})`;
+        badge.style.background = 'var(--or-lt, #fff4e5)';
+        badge.style.color = 'var(--or, #ff6b00)';
+      }
       toast(`Selected location ${locStr} to edit`, 'ok');
     }
 
@@ -14807,6 +14816,7 @@
       if (badge) {
         badge.style.display = 'inline-block';
         if (mode === 'ADD') {
+          AP_TARGET_EDIT_LOC = null;
           badge.textContent = 'Mode: Add New Inventory Location';
           badge.style.background = 'var(--gr-lt, #e6f9ed)';
           badge.style.color = 'var(--gr, #00ab55)';
@@ -14815,7 +14825,10 @@
           if (qInput) qInput.value = '';
           if (tInput) tInput.value = '5';
         } else {
-          badge.textContent = 'Mode: Change Existing Location';
+          if (!AP_TARGET_EDIT_LOC && AP_ORIGINAL_LOC) {
+            AP_TARGET_EDIT_LOC = AP_ORIGINAL_LOC.location;
+          }
+          badge.textContent = AP_TARGET_EDIT_LOC ? `Mode: Change Location (${AP_TARGET_EDIT_LOC})` : 'Mode: Change Existing Location';
           badge.style.background = 'var(--or-lt, #fff4e5)';
           badge.style.color = 'var(--or, #ff6b00)';
         }
@@ -15247,30 +15260,34 @@
           });
         }
       } else {
-        const existingLocIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
-        if (existingLocIdx >= 0) {
-          locationsList[existingLocIdx].qty = qtyInput;
-          locationsList[existingLocIdx].threshold = threshInput;
-          locationsList[existingLocIdx].storage_type = storageType;
+        // Mode: CHANGE (or default edit)
+        let targetIdx = -1;
+        if (AP_TARGET_EDIT_LOC) {
+          targetIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === String(AP_TARGET_EDIT_LOC).trim().toUpperCase());
+        }
+        if (targetIdx < 0) {
+          targetIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
+        }
+        if (targetIdx < 0) {
+          targetIdx = locationsList.findIndex(l => l.is_primary);
+        }
+
+        if (targetIdx >= 0) {
+          locationsList[targetIdx] = {
+            storage_type: storageType,
+            location: loc,
+            qty: qtyInput,
+            threshold: threshInput,
+            is_primary: locationsList[targetIdx].is_primary ?? (targetIdx === 0)
+          };
         } else {
-          const primaryIdx = locationsList.findIndex(l => l.is_primary);
-          if (primaryIdx >= 0) {
-            locationsList[primaryIdx] = {
-              storage_type: storageType,
-              location: loc,
-              qty: qtyInput,
-              threshold: threshInput,
-              is_primary: true
-            };
-          } else {
-            locationsList.push({
-              storage_type: storageType,
-              location: loc,
-              qty: qtyInput,
-              threshold: threshInput,
-              is_primary: true
-            });
-          }
+          locationsList.push({
+            storage_type: storageType,
+            location: loc,
+            qty: qtyInput,
+            threshold: threshInput,
+            is_primary: true
+          });
         }
       }
 
@@ -15396,11 +15413,13 @@
       AP_EDIT_ID = null;
       AP_LOC_MODE = 'NEW';
       AP_ORIGINAL_LOC = null;
+      AP_TARGET_EDIT_LOC = null;
       AP_PROMPT_SHOWED = false;
       const locActionWrap = document.getElementById('apLocActionWrap');
-      if (locActionWrap) locActionWrap.style.display = 'none';
+      if (locActionWrap) locActionWrap.style.display = 'block';
       const badge = document.getElementById('apLocModeBadge');
       if (badge) badge.style.display = 'none';
+      renderAPExistingLocations();
     }
 
     function resetAPForm() {
@@ -15444,6 +15463,8 @@
       AP_EDIT_ID = p.id || p.barcode || id;
       AP_LOC_MODE = 'CHANGE';
       AP_PROMPT_SHOWED = false;
+      const primaryLocStr = p.primary_location || p.location || p.loc || '';
+      AP_TARGET_EDIT_LOC = primaryLocStr;
 
       const titleEl = document.getElementById('apTitle');
       if (titleEl) titleEl.textContent = 'Edit Product';
@@ -15454,12 +15475,11 @@
       const badge = document.getElementById('apLocModeBadge');
       if (badge) {
         badge.style.display = 'inline-block';
-        badge.textContent = 'Mode: Editing Primary Location';
+        badge.textContent = `Mode: Editing Location (${primaryLocStr})`;
         badge.style.background = 'var(--or-lt, #fff4e5)';
         badge.style.color = 'var(--or, #ff6b00)';
       }
 
-      const primaryLocStr = p.primary_location || p.location || p.loc || '';
       const primaryStorageStr = p.primary_storage || p.storage_type || (primaryLocStr.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP');
       const primaryLocObj = Array.isArray(p.locations) ? (p.locations.find(l => l.is_primary) || p.locations[0]) : null;
 
