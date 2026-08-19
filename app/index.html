@@ -14621,7 +14621,7 @@
       const r = document.getElementById('apR')?.value || 1;
       const l = document.getElementById('apL')?.value || 1;
       const b = document.getElementById('apB')?.value || 1;
-      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'WR' : '';
+      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'W' : '';
       const loc = `${prefix}R${r}L${l}B${b}`;
       const prev = document.getElementById('apLocPreview');
       if (prev) prev.textContent = loc;
@@ -14631,7 +14631,7 @@
       const r = document.getElementById('apR')?.value || '1';
       const l = document.getElementById('apL')?.value || '1';
       const b = document.getElementById('apB')?.value || '1';
-      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'WR' : '';
+      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'W' : '';
       return prefix + 'R' + r + 'L' + l + 'B' + b;
     }
 
