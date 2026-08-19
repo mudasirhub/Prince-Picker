@@ -6097,17 +6097,12 @@
 
         <!-- 3b. Storage -->
         <div class="ap-field">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <label class="ap-label" style="margin:0">STORAGE</label>
-            <div id="apLocActionWrap" style="font-size:12px;color:var(--or);font-weight:800;cursor:pointer;background:var(--or-lt);padding:4px 10px;border-radius:8px;border:1px solid var(--or-md);" onclick="openLocActionModal()">
-              ⚙️ Change / Add Location Mode
-            </div>
-          </div>
+          <label class="ap-label">STORAGE</label>
           <div class="storage-toggle-ctrl">
             <button type="button" class="storage-toggle-btn on" id="storageShopBtn" onclick="onStorageToggleClick('SHOP')">SHOP</button>
             <button type="button" class="storage-toggle-btn" id="storageWhBtn" onclick="onStorageToggleClick('WAREHOUSE')">WAREHOUSE</button>
           </div>
-          <div id="apLocModeBadge" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:var(--or-lt);color:var(--or);">Mode: Set Location</div>
+          <div id="apLocModeBadge" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:var(--or-lt);color:var(--or);">Mode: Editing location</div>
           <div id="apExistingLocationsList" style="margin-top:8px;display:none;"></div>
         </div>
 
@@ -8439,28 +8434,7 @@
     </div>
   </div>
 
-  <!-- ══ LOCATION CONFIRMATION MODAL ══ -->
-  <div id="locConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-    <div style="background:var(--card,#fff);border-radius:20px;padding:24px;max-width:380px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,0.3);text-align:center;">
-      <div style="font-size:18px;font-weight:800;color:var(--t1,#111);margin-bottom:8px;">Change Location?</div>
-      <div style="font-size:13px;color:var(--t3,#666);margin-bottom:16px;">
-        This product is currently stored at:<br>
-        <strong id="locConfirmCurrentLoc" style="color:var(--or,#ff6b00);font-size:15px;display:block;margin-top:6px;">WAREHOUSE (WR1L1B1)</strong>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:var(--t2,#333);margin-bottom:16px;">What do you want to do?</div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn-p" style="height:48px;font-size:14px;border-radius:12px;" onclick="chooseLocMode('CHANGE')">
-          Change Existing Location
-        </button>
-        <button class="btn-s" style="height:48px;font-size:14px;border-radius:12px;border:1.5px solid var(--bd);" onclick="chooseLocMode('ADD')">
-          Add New Location
-        </button>
-        <button style="background:none;border:none;color:var(--t4,#999);font-size:12px;margin-top:4px;cursor:pointer;" onclick="cancelLocConfirmModal()">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
+
   <!-- ══ INSTALL BANNER ══ -->
   <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;
      background:var(--t1);color:#fff;padding:14px 16px;align-items:center;gap:12px;
@@ -14457,7 +14431,7 @@
       'Hero Destini', 'Hero Destini 125',
       // ── Honda Bikes ──
       'Honda CD Dream', 'Honda Dream Yuga', 'Honda Dream Neo', 'Honda Livo',
-      'Honda Shine 100', 'Honda CB Shine 125', 'Honda Shine SP', 'Honda Shine SP 125',
+'Honda Shine 100', 'Honda CB Shine 125', 'Honda Shine SP', 'Honda Shine SP 125',
       'Honda Shine 160', 'Honda Hornet 160', 'Honda Hornet 2.0', 'Honda CB Twister',
       'Honda Ignitor', 'Honda Unicorn 150', 'Honda Unicorn 160', 'Honda Stunner 125',
       'Honda CBF Stunner', 'Honda X-Blade', 'Honda Trigger', 'Honda CBF',
@@ -14500,195 +14474,15 @@
 
     let FIT_GROUPS = [];
     let AP_COMPAT_SEL = new Set();
-    let AP_IMG_DATA = null;
-    let AP_EDIT_ID = null;  // null = new product, string = editing
-
-    // ══════════════════════════════════════════════════════════
-    //  INDEXEDDB
-    // ══════════════════════════════════════════════════════════
-    let IDB = null;
-    const IDB_NAME = 'PrinceAutomobiles';
-    const IDB_VER = 1;
-
-    function initIDB() {
-      return new Promise((res, rej) => {
-        const req = indexedDB.open(IDB_NAME, IDB_VER);
-        req.onupgradeneeded = e => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains('products')) {
-            const store = db.createObjectStore('products', { keyPath: 'id' });
-            store.createIndex('barcode', 'barcode', { unique: false });
-            store.createIndex('location', 'location', { unique: false });
-            store.createIndex('brand', 'brand', { unique: false });
-            store.createIndex('category', 'category', { unique: false });
-          }
-          if (!db.objectStoreNames.contains('meta')) {
-            db.createObjectStore('meta', { keyPath: 'key' });
-          }
-          if (!db.objectStoreNames.contains('images')) {
-            db.createObjectStore('images', { keyPath: 'id' });
-          }
-        };
-        req.onsuccess = e => { IDB = e.target.result; res(IDB); };
-        req.onerror = e => { console.error('[IDB]', e); rej(e); };
-      });
-    }
-
-    function idbTx(store, mode) {
-      if (!IDB) throw new Error('Database not ready. Please wait a moment and try again.');
-      return IDB.transaction(store, mode).objectStore(store);
-    }
-
-    function idbGet(store, key) {
-      return new Promise((res, rej) => {
-        const r = idbTx(store, 'readonly').get(key);
-        r.onsuccess = () => res(r.result);
-        r.onerror = () => rej(r.error);
-      });
-    }
-
-    function idbPut(store, val) {
-      return new Promise((res, rej) => {
-        const r = idbTx(store, 'readwrite').put(val);
-        r.onsuccess = () => res(r.result);
-        r.onerror = () => rej(r.error);
-      });
-    }
-
-    function idbDelete(store, key) {
-      return new Promise((res, rej) => {
-        const r = idbTx(store, 'readwrite').delete(key);
-        r.onsuccess = () => res();
-        r.onerror = () => rej(r.error);
-      });
-    }
-
-    function idbGetAll(store) {
-      return new Promise((res, rej) => {
-        try {
-          if (!IDB) { res([]); return; }
-          const r = idbTx(store, 'readonly').getAll();
-          r.onsuccess = () => res(r.result || []);
-          r.onerror = () => res([]);
-        } catch (e) { res([]); }
-      });
-    }
-
-    async function getMeta(key, def) {
-      try { const r = await idbGet('meta', key); return r ? r.value : def; }
-      catch (e) { return def; }
-    }
-    async function setMeta(key, value) {
-      try { await idbPut('meta', { key, value }); } catch (e) { }
-    }
-
-    // ══════════════════════════════════════════
-    //  BARCODE / PRODUCT ID GENERATION
-    //  Format: PA-{VEH}-{COMP}-{TIMESTAMP}-{DEVICE}
-    //  Example: PA-HO-CL-93847291-A7
-    // ══════════════════════════════════════════
-
-    // ── Device ID: generated once, stored in localStorage ──
-    function getDeviceId() {
-      let did = localStorage.getItem('pa_device_id');
-      if (!did) {
-        // 2-char random base36 uppercase (e.g. A7, K3, ZQ)
-        did = Math.random().toString(36).slice(2, 4).toUpperCase();
-        localStorage.setItem('pa_device_id', did);
-      }
-      return did;
-    }
-
-    // ── Vehicle code map ──
-    const VEH_CODES = {
-      'honda': 'HO', 'bajaj': 'BA', 'hero': 'HR',
-      'tvs': 'TV', 'yamaha': 'YA', 'suzuki': 'SU',
-      'royal enfield': 'RE', 'ktm': 'KT', 'kawasaki': 'KW',
-      'piaggio': 'PI', 'mahindra': 'MH', 'jawa': 'JW',
-      'triumph': 'TR', 'harley-davidson': 'HD', 'ducati': 'DU',
-      'bmw': 'BM', 'generic': 'GN', 'universal': 'UN',
-    };
-
-    // ── Category/component code map ──
-    const COMP_CODES = {
-      'cable': 'CL', 'brake pad': 'BP', 'brake disc': 'BD',
-      'brake drum': 'BD', 'clutch plate': 'CP', 'chain sprocket': 'CS',
-      'air filter': 'AF', 'oil filter': 'OF', 'fuel filter': 'FF',
-      'spark plug': 'SP', 'battery': 'BT', 'headlight': 'HL',
-      'taillight': 'TL', 'indicator': 'IN', 'bulb': 'BL',
-      'horn': 'HN', 'mirror': 'MR', 'handle bar': 'HB',
-      'grip': 'GR', 'lever': 'LV', 'foot rest': 'FR',
-      'body panel': 'PN', 'mudguard': 'MG', 'seat': 'ST',
-      'fuel tank': 'FT', 'exhaust': 'EX', 'silencer': 'SL',
-      'carburetor': 'CB', 'fuel pump': 'FP', 'piston': 'PS',
-      'piston ring': 'PR', 'cylinder': 'CY', 'valve': 'VL',
-      'bearing': 'BR', 'oil seal': 'OS', 'gasket': 'GK',
-      'coolant': 'CO', 'engine oil': 'EO', 'gear oil': 'GO',
-      'brake fluid': 'BF', 'shock absorber': 'SA', 'wheel': 'WL',
-      'tyre': 'TY', 'tube': 'TB', 'spoke': 'SK',
-      'steering': 'SG', 'other': 'XX',
-    };
-
-    function getVehCode(brand) {
-      if (!brand) return 'GN';
-      const key = brand.toLowerCase().trim();
-      for (const [k, v] of Object.entries(VEH_CODES)) {
-        if (key.includes(k)) return v;
-      }
-      // Use first 2 chars of brand uppercased
-      return brand.slice(0, 2).toUpperCase();
-    }
-
-    function getCompCode(category) {
-      if (!category) return 'XX';
-      const key = category.toLowerCase().trim();
-      for (const [k, v] of Object.entries(COMP_CODES)) {
-        if (key.includes(k)) return v;
-      }
-      return category.slice(0, 2).toUpperCase();
-    }
-
-    function generateProductId(brand, category) {
-      const veh = getVehCode(brand);
-      const comp = getCompCode(category);
-      const ts = Date.now().toString().slice(-8);
-      const dev = getDeviceId();
-      return 'PA-' + veh + '-' + comp + '-' + ts + '-' + dev;
-    }
-
-    // ── Check duplicate + regenerate once ──
-    function isIdDuplicate(id, ignoreEditId = null) {
-      if (!id) return false;
-      const clean = String(id).trim();
-      const isMatch = p => {
-        if (!p) return false;
-        if (ignoreEditId && (p.id === ignoreEditId || p.barcode === ignoreEditId || p.sku === ignoreEditId)) {
-          return false;
-        }
-        return p.id === clean || p.barcode === clean || p.sku === clean;
-      };
-      return FS_PRODUCTS.some(isMatch) || STATE.products.some(isMatch);
-    }
-
-    function generateUniqueId(brand, category) {
-      let id = generateProductId(brand, category);
-      if (isIdDuplicate(id)) {
-        // Wait 1ms to get different timestamp, regenerate once
-        const ts2 = (Date.now() + 1).toString().slice(-8);
-        id = 'PA-' + getVehCode(brand) + '-' + getCompCode(category) + '-' + ts2 + '-' + getDeviceId();
-      }
-      return id;
-    }
+    let AP_PRODUCT_IMAGES = [];
+    let AP_EDIT_ID = null;
 
     // ══════════════════════════════════════════════════════════
     //  STORAGE & LOCATION HELPERS
     // ══════════════════════════════════════════════════════════
     let AP_STORAGE_TYPE = 'SHOP';
-    let AP_LOC_MODE = 'NEW'; // 'NEW', 'CHANGE', 'ADD'
-    let AP_ORIGINAL_LOC = null;
+    let AP_LOC_MODE = 'EDIT'; // 'EDIT' or 'ADD'
     let AP_TARGET_EDIT_LOC = null;
-    let AP_PROMPT_SHOWED = false;
-    let AP_PENDING_STORAGE_CHANGE = null;
 
     function setStorageType(type) {
       AP_STORAGE_TYPE = (type === 'WAREHOUSE') ? 'WAREHOUSE' : 'SHOP';
@@ -14707,11 +14501,6 @@
     }
 
     function onStorageToggleClick(type) {
-      if (AP_EDIT_ID && !AP_PROMPT_SHOWED) {
-        AP_PENDING_STORAGE_CHANGE = type;
-        openLocActionModal();
-        return;
-      }
       setStorageType(type);
     }
 
@@ -14739,26 +14528,33 @@
 
       const normP = normalizeProduct(p);
       const locs = Array.isArray(normP.locations) && normP.locations.length > 0 ? normP.locations : [{
-        storage_type: normP.primary_storage || normP.storage_type || 'SHOP',
+        storage_type: normP.primary_storage || normP.storage_type || (String(normP.primary_location || normP.location || '').startsWith('WR') ? 'WAREHOUSE' : 'SHOP'),
         location: normP.primary_location || normP.location || 'R1L1B1',
         qty: normP.stock ?? normP.qty ?? 0,
         threshold: normP.threshold ?? 5,
         is_primary: true
       }];
 
-      let html = `<div style="font-size:11px;font-weight:800;color:var(--t3);margin-bottom:6px;text-transform:uppercase;">Existing Product Locations (${locs.length}):</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+      let html = `<div style="font-size:11px;font-weight:800;color:var(--t3);margin-bottom:6px;text-transform:uppercase;">EXISTING PRODUCT LOCATIONS:</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
       locs.forEach((l) => {
         const isPrim = l.is_primary;
-        const icon = (l.storage_type === 'WAREHOUSE' || String(l.location).startsWith('W')) ? '🏢' : '🏪';
+        const isSelected = AP_LOC_MODE === 'EDIT' && (AP_TARGET_EDIT_LOC === l.location);
+        const isWh = l.storage_type === 'WAREHOUSE' || String(l.location).startsWith('WR') || String(l.location).startsWith('W');
+        const borderStyle = isSelected ? '2px solid var(--or)' : (isPrim ? '1.5px solid var(--or-md)' : '1px solid var(--bd)');
+        const bgStyle = isSelected ? 'var(--or-lt)' : (isPrim ? 'var(--or-lt)' : 'var(--bg)');
+
         html += `
-          <div onclick="selectAPLocationToEdit('${l.location}', '${l.storage_type}', ${l.qty}, ${l.threshold})" style="background:${isPrim ? 'var(--or-lt)' : 'var(--bg)'};border:1.5px solid ${isPrim ? 'var(--or)' : 'var(--bd)'};border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--t1);cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <span>${icon} ${l.location}</span>
-            <span style="color:${isPrim ? 'var(--or)' : 'var(--t3)'};font-size:11px;">(${l.qty} pcs${isPrim ? ' • Primary' : ''})</span>
+          <div onclick="selectAPLocationToEdit('${l.location}', '${l.storage_type || (isWh ? 'WAREHOUSE' : 'SHOP')}', ${l.qty}, ${l.threshold})" style="background:${bgStyle};border:${borderStyle};border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--t1);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <span>${l.location}</span>
+            <span style="color:var(--t3);font-size:11px;">· ${l.qty} pcs</span>
+            ${isPrim ? '<span style="background:var(--or);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:800;">Primary</span>' : ''}
           </div>
         `;
       });
+
+      const isAddSelected = AP_LOC_MODE === 'ADD';
       html += `
-        <button type="button" onclick="chooseLocMode('ADD')" style="background:var(--gr-lt);border:1.5px solid var(--gr);color:var(--gr);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;">
+        <button type="button" onclick="startAddNewLocation()" style="background:${isAddSelected ? 'var(--gr-lt)' : 'var(--bg)'};border:${isAddSelected ? '2px solid var(--gr)' : '1.5px solid var(--gr)'};color:var(--gr);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;">
           + Add New Location
         </button>
       </div>`;
@@ -14768,77 +14564,53 @@
     }
 
     function selectAPLocationToEdit(locStr, storageTypeStr, qtyNum, thresholdNum) {
+      AP_LOC_MODE = 'EDIT';
       AP_TARGET_EDIT_LOC = locStr;
-      chooseLocMode('CHANGE');
       setAPLoc(locStr);
       setStorageType(storageTypeStr);
       const qInp = document.getElementById('apQty');
       const tInp = document.getElementById('apThreshold');
-      if (qInp) qInp.value = qtyNum;
-      if (tInp) tInp.value = thresholdNum;
+      if (qInp) qInp.value = qtyNum !== undefined ? qtyNum : 0;
+      if (tInp) tInp.value = thresholdNum !== undefined ? thresholdNum : 5;
+
       const badge = document.getElementById('apLocModeBadge');
       if (badge) {
         badge.style.display = 'inline-block';
-        badge.textContent = `Mode: Editing Location (${locStr})`;
+        badge.textContent = `Mode: Editing location (${locStr})`;
         badge.style.background = 'var(--or-lt, #fff4e5)';
         badge.style.color = 'var(--or, #ff6b00)';
       }
-      toast(`Selected location ${locStr} to edit`, 'ok');
+      renderAPExistingLocations();
     }
 
-    function openLocActionModal() {
-      const modal = document.getElementById('locConfirmModal');
-      const curLocEl = document.getElementById('locConfirmCurrentLoc');
-      if (curLocEl && AP_ORIGINAL_LOC) {
-        curLocEl.textContent = `${AP_ORIGINAL_LOC.storage_type || 'WAREHOUSE'} (${AP_ORIGINAL_LOC.location || 'WR1L1B1'})`;
-      }
-      if (modal) modal.style.display = 'flex';
-    }
+    function startAddNewLocation() {
+      AP_LOC_MODE = 'ADD';
+      AP_TARGET_EDIT_LOC = null;
 
-    function cancelLocConfirmModal() {
-      const modal = document.getElementById('locConfirmModal');
-      if (modal) modal.style.display = 'none';
-      AP_PENDING_STORAGE_CHANGE = null;
-    }
-
-    function chooseLocMode(mode) {
-      AP_LOC_MODE = mode; // 'CHANGE' or 'ADD'
-      AP_PROMPT_SHOWED = true;
-      const modal = document.getElementById('locConfirmModal');
-      if (modal) modal.style.display = 'none';
-
-      if (AP_PENDING_STORAGE_CHANGE) {
-        setStorageType(AP_PENDING_STORAGE_CHANGE);
-        AP_PENDING_STORAGE_CHANGE = null;
-      }
+      const r = document.getElementById('apR');
+      const l = document.getElementById('apL');
+      const b = document.getElementById('apB');
+      const q = document.getElementById('apQty');
+      const t = document.getElementById('apThreshold');
+      if (r) r.value = 1;
+      if (l) l.value = 1;
+      if (b) b.value = 1;
+      if (q) q.value = 0;
+      if (t) t.value = 5;
+      setStorageType('SHOP');
+      syncAPLoc();
 
       const badge = document.getElementById('apLocModeBadge');
       if (badge) {
         badge.style.display = 'inline-block';
-        if (mode === 'ADD') {
-          AP_TARGET_EDIT_LOC = null;
-          badge.textContent = 'Mode: Add New Inventory Location';
-          badge.style.background = 'var(--gr-lt, #e6f9ed)';
-          badge.style.color = 'var(--gr, #00ab55)';
-          const qInput = document.getElementById('apQty');
-          const tInput = document.getElementById('apThreshold');
-          if (qInput) qInput.value = '';
-          if (tInput) tInput.value = '5';
-        } else {
-          if (!AP_TARGET_EDIT_LOC && AP_ORIGINAL_LOC) {
-            AP_TARGET_EDIT_LOC = AP_ORIGINAL_LOC.location;
-          }
-          badge.textContent = AP_TARGET_EDIT_LOC ? `Mode: Change Location (${AP_TARGET_EDIT_LOC})` : 'Mode: Change Existing Location';
-          badge.style.background = 'var(--or-lt, #fff4e5)';
-          badge.style.color = 'var(--or, #ff6b00)';
-        }
+        badge.textContent = 'Mode: Adding new location';
+        badge.style.background = 'var(--gr-lt, #e6f9ed)';
+        badge.style.color = 'var(--gr, #00ab55)';
       }
+      renderAPExistingLocations();
     }
 
     function adjAP(id, d) {
-      if (AP_EDIT_ID && !AP_PROMPT_SHOWED) {
-        openLocActionModal();
-      }
       const el = document.getElementById(id);
       if (!el) return;
       const min = Number(el.min) || 1, max = Number(el.max) || 100;
@@ -14850,7 +14622,7 @@
       const r = document.getElementById('apR')?.value || 1;
       const l = document.getElementById('apL')?.value || 1;
       const b = document.getElementById('apB')?.value || 1;
-      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'W' : '';
+      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'WR' : '';
       const loc = `${prefix}R${r}L${l}B${b}`;
       const prev = document.getElementById('apLocPreview');
       if (prev) prev.textContent = loc;
@@ -14860,16 +14632,16 @@
       const r = document.getElementById('apR')?.value || '1';
       const l = document.getElementById('apL')?.value || '1';
       const b = document.getElementById('apB')?.value || '1';
-      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'W' : '';
+      const prefix = (AP_STORAGE_TYPE === 'WAREHOUSE') ? 'WR' : '';
       return prefix + 'R' + r + 'L' + l + 'B' + b;
     }
 
     function setAPLoc(loc) {
       const str = String(loc || '').trim().toUpperCase();
-      const isWh = str.startsWith('W') || str.includes('WAREHOUSE');
+      const isWh = str.startsWith('WR') || str.startsWith('W') || str.includes('WAREHOUSE');
       setStorageType(isWh ? 'WAREHOUSE' : 'SHOP');
 
-      const m = str.match(/(?:W)?R(\d+)L(\d+)B(\d+)/i);
+      const m = str.match(/(?:WR|W)?R(\d+)L(\d+)B(\d+)/i);
       if (m) {
         const r = document.getElementById('apR');
         const l = document.getElementById('apL');
@@ -14948,48 +14720,39 @@
       <div class="compat-cb ${AP_COMPAT_SEL.has(v) ? 'chk' : ''}" id="cb-${v.replace(/[^a-z0-9]/gi, '_')}">
         ${AP_COMPAT_SEL.has(v) ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
       </div>
-      <span class="compat-name">${v}</span>
-    </div>`).join('');
-      renderCompatTags();
+      <span class="compat-lbl">${v}</span>
+    </div>
+  `).join('');
     }
 
     function toggleCompat(v) {
-      AP_COMPAT_SEL.has(v) ? AP_COMPAT_SEL.delete(v) : AP_COMPAT_SEL.add(v);
-      renderCompatList();
+      if (AP_COMPAT_SEL.has(v)) AP_COMPAT_SEL.delete(v);
+      else AP_COMPAT_SEL.add(v);
+      const cb = document.getElementById('cb-' + v.replace(/[^a-z0-9]/gi, '_'));
+      if (cb) {
+        cb.classList.toggle('chk', AP_COMPAT_SEL.has(v));
+        cb.innerHTML = AP_COMPAT_SEL.has(v) ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      }
+      renderSelectedCompat();
     }
 
-    function renderCompatTags() {
-      const el = document.getElementById('compatSelected');
-      if (!el) return;
-      el.innerHTML = [...AP_COMPAT_SEL].map(v =>
-        `<div class="compat-tag" onclick="toggleCompat('${v.replace(/'/g, "\\'")}')">
-      ${v} <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </div>`).join('');
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  BARCODE
-    // ══════════════════════════════════════════════════════════
-    function genBarcode() {
-      const brand = (document.getElementById('apBrand')?.value || '').trim();
-      const category = (document.getElementById('apCat')?.value || '').trim();
-      const id = generateUniqueId(brand, category);
-      const inp = document.getElementById('apBarcode');
-      if (inp) { inp.value = id; inp.classList.add('filled'); }
-      toast('Generated: ' + id);
-    }
-
-    function onBarcodeFieldScan(val) {
-      const inp = document.getElementById('apBarcode');
-      if (inp) { inp.value = val; inp.classList.add('filled'); }
-      toast('Scanned: ' + val, 'ok');
+    function renderSelectedCompat() {
+      const wrap = document.getElementById('compatSelected');
+      if (!wrap) return;
+      wrap.innerHTML = [...AP_COMPAT_SEL].map(v => `
+    <div class="chip">
+      ${v}
+      <button class="chip-rm" onclick="toggleCompat('${v.replace(/'/g, "\\'")}')">×</button>
+    </div>
+  `).join('');
     }
 
     // ══════════════════════════════════════════════════════════
-    //  SMART MULTI-IMAGE PIPELINE (MAX 4 IMAGES)
+    //  SMART PRODUCT IMAGES
     // ══════════════════════════════════════════════════════════
+    let AP_PRODUCT_IMAGES = []; // Array of image metadata objects
 
-    function triggerMultiCamera(slotIdx) {
+    function triggerCameraCapture(slotIdx) {
       if (AP_PRODUCT_IMAGES.length >= 4 && (slotIdx === undefined || !AP_PRODUCT_IMAGES[slotIdx])) {
         toast('Maximum 4 images allowed per product', 'err');
         return;
@@ -15036,7 +14799,6 @@
           console.warn('[MultiImage] PRODUCT_STORAGE pipeline warning, using FileReader fallback:', storageErr);
         }
 
-        // Fallback to Data URLs if PRODUCT_STORAGE returned empty or threw
         if (!processedMeta || processedMeta.length === 0) {
           processedMeta = await Promise.all(fileList.map(async f => {
             const dataUrl = await new Promise(resolve => {
@@ -15109,7 +14871,6 @@
 
       let html = '';
 
-      // Render all uploaded images first
       for (let i = 0; i < AP_PRODUCT_IMAGES.length; i++) {
         const imgObj = AP_PRODUCT_IMAGES[i];
         if (imgObj) {
@@ -15135,7 +14896,6 @@
         }
       }
 
-      // Render Add Photo (+) tile at the VERY LAST position if count < 4
       if (AP_PRODUCT_IMAGES.length < 4) {
         const nextIdx = AP_PRODUCT_IMAGES.length;
         html += `
@@ -15149,7 +14909,6 @@
 
       grid.innerHTML = html;
 
-      // Attach Desktop Drag & Drop handlers for each slot
       const totalCards = AP_PRODUCT_IMAGES.length + (AP_PRODUCT_IMAGES.length < 4 ? 1 : 0);
       for (let i = 0; i < totalCards; i++) {
         const slotEl = document.getElementById(`imgSlot_${i}`);
@@ -15159,7 +14918,6 @@
       }
     }
 
-    // Wire image file inputs after DOM ready
     function wireImageInputs() {
       const camIn = document.getElementById('apCamFile');
       const fileIn = document.getElementById('apImgFile');
@@ -15199,7 +14957,6 @@
     //  SAVE PRODUCT
     // ══════════════════════════════════════════════════════════
     async function saveProduct() {
-      // Safe getter helpers — never throw even if element missing
       const gv = id => (document.getElementById(id)?.value || '').trim();
       const gn = id => Number(document.getElementById(id)?.value) || 0;
 
@@ -15236,7 +14993,7 @@
         locationsList = Array.isArray(normExisting.locations) ? JSON.parse(JSON.stringify(normExisting.locations)) : [];
       }
 
-      if (!pExisting || locationsList.length === 0) {
+      if (locationsList.length === 0) {
         locationsList = [{
           storage_type: storageType,
           location: loc,
@@ -15244,32 +15001,13 @@
           threshold: threshInput,
           is_primary: true
         }];
-      } else if (AP_LOC_MODE === 'ADD') {
-        const existingIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
-        if (existingIdx >= 0) {
-          locationsList[existingIdx].qty = qtyInput;
-          locationsList[existingIdx].threshold = threshInput;
-          locationsList[existingIdx].storage_type = storageType;
-        } else {
-          locationsList.push({
-            storage_type: storageType,
-            location: loc,
-            qty: qtyInput,
-            threshold: threshInput,
-            is_primary: false
-          });
-        }
       } else {
-        // Mode: CHANGE (or default edit)
         let targetIdx = -1;
-        if (AP_TARGET_EDIT_LOC) {
+        if (AP_LOC_MODE === 'EDIT' && AP_TARGET_EDIT_LOC) {
           targetIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === String(AP_TARGET_EDIT_LOC).trim().toUpperCase());
         }
         if (targetIdx < 0) {
           targetIdx = locationsList.findIndex(l => String(l.location).trim().toUpperCase() === loc.toUpperCase());
-        }
-        if (targetIdx < 0) {
-          targetIdx = locationsList.findIndex(l => l.is_primary);
         }
 
         if (targetIdx >= 0) {
@@ -15286,7 +15024,7 @@
             location: loc,
             qty: qtyInput,
             threshold: threshInput,
-            is_primary: true
+            is_primary: false
           });
         }
       }
@@ -15294,6 +15032,8 @@
       const primaryLocObj = locationsList.find(l => l.is_primary) || locationsList[0];
       const primaryLocCode = primaryLocObj ? primaryLocObj.location : loc;
       const primaryStorageType = primaryLocObj ? primaryLocObj.storage_type : storageType;
+
+      const shopStock = locationsList.filter(l => l.storage_type === 'SHOP' || (!l.storage_type && !String(l.location).startsWith('WR'))).reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
       const totalStock = locationsList.reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
 
       const primaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
@@ -15309,7 +15049,7 @@
         location: primaryLocCode,
         loc: primaryLocCode,
         locations: locationsList,
-        qty: primaryLocObj ? primaryLocObj.qty : qtyInput,
+        qty: shopStock,
         stock: totalStock,
         threshold: primaryLocObj ? primaryLocObj.threshold : threshInput,
         mrp: gn('apMRP'),
@@ -15330,22 +15070,18 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
       try {
-        // ── Update in-memory list ──
         const existing = FS_PRODUCTS.findIndex(p => p.barcode === barcode || p.id === id);
         if (existing >= 0) FS_PRODUCTS[existing] = product;
         else FS_PRODUCTS.push(product);
 
-        // ── Merge into STATE for live use ──
         const si = STATE.products.findIndex(p => p.barcode === barcode || p.id === id);
         if (si >= 0) STATE.products[si] = { ...STATE.products[si], ...product };
         else STATE.products.push(product);
         STATE.barcodeIndex.set(barcode, product);
         STATE.warehouseMap = buildWarehouseMap(STATE.products);
 
-        // ── Write to disk / IDB / download ──
         const savedToDisk = await fsSave();
 
-        // ── Save to IndexedDB & Supabase ──
         if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
           const res = await window.SUPABASE_PRODUCTS.saveProduct(product);
           console.log('[Save] Supabase save result:', res);
@@ -15371,8 +15107,12 @@
           items: [{ barcode: barcode, product: product, status: 'picked', qty: product.qty || 0 }]
         });
         try { localStorage.setItem(LS_LOGS, JSON.stringify(STATE.logs.slice(0, 50))); } catch (ee) { }
-        AP_EDIT_ID = null;
-        clearFormFields();
+
+        AP_EDIT_ID = product.id || product.barcode;
+        AP_LOC_MODE = 'EDIT';
+        AP_TARGET_EDIT_LOC = loc;
+        renderAPExistingLocations();
+
         if (typeof renderProductsList === 'function') renderProductsList('');
 
         if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
@@ -15411,12 +15151,8 @@
       renderCompatList();
 
       AP_EDIT_ID = null;
-      AP_LOC_MODE = 'NEW';
-      AP_ORIGINAL_LOC = null;
+      AP_LOC_MODE = 'EDIT';
       AP_TARGET_EDIT_LOC = null;
-      AP_PROMPT_SHOWED = false;
-      const locActionWrap = document.getElementById('apLocActionWrap');
-      if (locActionWrap) locActionWrap.style.display = 'block';
       const badge = document.getElementById('apLocModeBadge');
       if (badge) badge.style.display = 'none';
       renderAPExistingLocations();
@@ -15461,34 +15197,35 @@
       if (!p) { toast('Product details not found', 'err'); return; }
 
       AP_EDIT_ID = p.id || p.barcode || id;
-      AP_LOC_MODE = 'CHANGE';
-      AP_PROMPT_SHOWED = false;
-      const primaryLocStr = p.primary_location || p.location || p.loc || '';
-      AP_TARGET_EDIT_LOC = primaryLocStr;
 
       const titleEl = document.getElementById('apTitle');
       if (titleEl) titleEl.textContent = 'Edit Product';
 
-      const locActionWrap = document.getElementById('apLocActionWrap');
-      if (locActionWrap) locActionWrap.style.display = 'block';
+      const normP = normalizeProduct(p);
+      const locs = Array.isArray(normP.locations) && normP.locations.length > 0 ? normP.locations : [{
+        storage_type: normP.primary_storage || normP.storage_type || 'SHOP',
+        location: normP.primary_location || normP.location || 'R1L1B1',
+        qty: normP.stock ?? normP.qty ?? 0,
+        threshold: normP.threshold ?? 5,
+        is_primary: true
+      }];
+
+      const primLocObj = locs.find(l => l.is_primary) || locs[0];
+      const initialLocStr = primLocObj ? primLocObj.location : (normP.primary_location || normP.location || 'R1L1B1');
+      const initialStorageStr = primLocObj ? (primLocObj.storage_type || 'SHOP') : (normP.primary_storage || 'SHOP');
+      const initialQty = primLocObj ? primLocObj.qty : (normP.stock ?? normP.qty ?? 0);
+      const initialThresh = primLocObj ? primLocObj.threshold : (normP.threshold ?? 5);
+
+      AP_LOC_MODE = 'EDIT';
+      AP_TARGET_EDIT_LOC = initialLocStr;
 
       const badge = document.getElementById('apLocModeBadge');
       if (badge) {
         badge.style.display = 'inline-block';
-        badge.textContent = `Mode: Editing Location (${primaryLocStr})`;
+        badge.textContent = `Mode: Editing location (${initialLocStr})`;
         badge.style.background = 'var(--or-lt, #fff4e5)';
         badge.style.color = 'var(--or, #ff6b00)';
       }
-
-      const primaryStorageStr = p.primary_storage || p.storage_type || (primaryLocStr.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP');
-      const primaryLocObj = Array.isArray(p.locations) ? (p.locations.find(l => l.is_primary) || p.locations[0]) : null;
-
-      AP_ORIGINAL_LOC = {
-        storage_type: primaryStorageStr,
-        location: primaryLocStr,
-        qty: primaryLocObj ? primaryLocObj.qty : (p.qty ?? p.stock ?? 0),
-        threshold: primaryLocObj ? primaryLocObj.threshold : (p.threshold ?? 5)
-      };
 
       const setVal = (fid, val) => {
         const el = document.getElementById(fid);
@@ -15498,13 +15235,14 @@
       setVal('apName', p.name || '');
       setVal('apBrand', p.brand || '');
       setVal('apCat', p.category || '');
-      setVal('apQty', AP_ORIGINAL_LOC.qty);
-      setVal('apThreshold', AP_ORIGINAL_LOC.threshold);
+      setVal('apQty', initialQty);
+      setVal('apThreshold', initialThresh);
       setVal('apMRP', p.mrp || '');
       setVal('apSP', p.sp || '');
       setVal('apBarcode', p.barcode || p.sku || id);
 
-      setAPLoc(primaryLocStr);
+      setAPLoc(initialLocStr);
+      setStorageType(initialStorageStr);
 
       if (p.fitment_group) {
         const intact = document.getElementById('intactToggle');
@@ -15528,6 +15266,7 @@
       renderAPExistingLocations();
       nav('s-add-product');
     }
+
 
     // ══════════════════════════════════════════════════════════
     //  PRODUCTS LIST SCREEN

@@ -34,9 +34,17 @@
     function loadSocketIO(callback) {
         if (typeof io !== 'undefined') { callback(); return; }
 
-        var bridgeSrc = BRIDGE_URL + '/socket.io/socket.io.js';
-        var cdnSrc = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
         var isLocalEnv = host === 'localhost' || host === '127.0.0.1' || /^192\.168\./.test(host);
+        var customServer = localStorage.getItem('bridge_server');
+
+        // Do not attempt to load Socket.IO or auto-connect on public web deployments unless a custom bridge server is configured
+        if (!isLocalEnv && !customServer) {
+            console.log('[PickerBridge] Public web deployment detected — skipping Socket.IO bridge load.');
+            return;
+        }
+
+        var bridgeSrc = (customServer || BRIDGE_URL) + '/socket.io/socket.io.js';
+        var cdnSrc = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
 
         var primarySrc = isLocalEnv ? bridgeSrc : cdnSrc;
         var fallbackSrc = isLocalEnv ? cdnSrc : bridgeSrc;
@@ -63,8 +71,8 @@
                     tryLoad(fallback, null);
                 } else {
                     scriptLoadFailed = true;
+                    console.log('[PickerBridge] Socket.IO bridge unreachable — operating in standalone mode.');
                     updatePickerAppStatus(false);
-                    setTimeout(function() { loadSocketIO(initBridge); }, 30000);
                 }
             };
             document.head.appendChild(s);
