@@ -15546,7 +15546,8 @@
       }
       // 2. IDB fallback
       try {
-        if (IDB) { const r = await idbGetAll('products'); if (r.length) { FS_PRODUCTS = r; return; } }
+        if (typeof idbGetAll === 'function') { const r = await idbGetAll('products'); if (r && r.length) { FS_PRODUCTS = r; return; } }
+        else if (window.PICKER_DB && typeof window.PICKER_DB.getAllProducts === 'function') { const r = await window.PICKER_DB.getAllProducts(); if (r && r.length) { FS_PRODUCTS = r; return; } }
       } catch (e) { }
       // Don't wipe FS_PRODUCTS if already populated (e.g. demo login loaded them)
       if (!FS_PRODUCTS.length) FS_PRODUCTS = [];
@@ -15558,7 +15559,10 @@
       // UI shows products from FS_PRODUCTS + IDB + STATE.products
       // File must contain ALL of them, not just FS_PRODUCTS
       let idbAll = [];
-      if (IDB) { try { idbAll = await idbGetAll('products'); } catch (e) { } }
+      try {
+        if (typeof idbGetAll === 'function') { idbAll = await idbGetAll('products'); }
+        else if (window.PICKER_DB && typeof window.PICKER_DB.getAllProducts === 'function') { idbAll = await window.PICKER_DB.getAllProducts(); }
+      } catch (e) { }
 
       // Merge: FS_PRODUCTS wins over IDB, IDB wins over STATE
       const merged = new Map();
@@ -15598,7 +15602,9 @@
           await _writeHandle(FS_PROD_HANDLE, json);
           updateFileLbl();
           // Also write all to IDB
-          if (IDB) {
+          if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+            try { await window.PICKER_DB.putProducts(FS_PRODUCTS); } catch (e) { }
+          } else if (typeof IDB !== 'undefined' && IDB) {
             try {
               const tx = IDB.transaction('products', 'readwrite');
               const s = tx.objectStore('products');
@@ -15612,7 +15618,9 @@
         }
       }
       // 2. IDB — write all merged products
-      if (IDB) {
+      if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+        try { await window.PICKER_DB.putProducts(FS_PRODUCTS); } catch (e) { }
+      } else if (typeof IDB !== 'undefined' && IDB) {
         try {
           const tx = IDB.transaction('products', 'readwrite');
           const s = tx.objectStore('products');
@@ -15626,7 +15634,11 @@
     async function fsLoadImages() {
       // Always load from IDB first (fast, always available)
       try {
-        if (IDB) {
+        if (typeof idbGetAll === 'function') {
+          const rows = await idbGetAll('images');
+          rows.forEach(r => { if (r.id && r.data) FS_IMAGES[r.id] = r.data; });
+          if (rows.length) console.log('[FS] images from IDB:', rows.length);
+        } else if (typeof IDB !== 'undefined' && IDB) {
           const rows = await idbGetAll('images');
           rows.forEach(r => { if (r.id && r.data) FS_IMAGES[r.id] = r.data; });
           if (rows.length) console.log('[FS] images from IDB:', rows.length);
@@ -15657,7 +15669,7 @@
       }
 
       // 2. IDB — always save to IDB as cache regardless
-      if (IDB) {
+      if (typeof IDB !== 'undefined' && IDB) {
         try {
           const tx = IDB.transaction('images', 'readwrite');
           const s = tx.objectStore('images');
