@@ -14474,7 +14474,6 @@
 
     let FIT_GROUPS = [];
     let AP_COMPAT_SEL = new Set();
-    let AP_PRODUCT_IMAGES = [];
     let AP_EDIT_ID = null;
 
     // ══════════════════════════════════════════════════════════
@@ -14750,7 +14749,7 @@
     // ══════════════════════════════════════════════════════════
     //  SMART PRODUCT IMAGES
     // ══════════════════════════════════════════════════════════
-    let AP_PRODUCT_IMAGES = []; // Array of image metadata objects
+    AP_PRODUCT_IMAGES = []; // Array of image metadata objects
 
     function triggerCameraCapture(slotIdx) {
       if (AP_PRODUCT_IMAGES.length >= 4 && (slotIdx === undefined || !AP_PRODUCT_IMAGES[slotIdx])) {
