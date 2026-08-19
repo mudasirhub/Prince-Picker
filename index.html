@@ -11,7 +11,10 @@
   <meta name="keywords"
     content="warehouse picking, inventory management, offline inventory, warehouse software, inventory picker, barcode scanner, spare parts management, PWA inventory, stock management, Android inventory app, Prince Picker">
   <meta name="theme-color" content="#FF6A00">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="DuckDuckBot" content="index, follow">
+  <meta name="bingbot" content="index, follow">
+  <meta name="googlebot" content="index, follow">
 
   <link rel="canonical" href="https://princepicker.mudasirkhan.in/">
   <link rel="shortcut icon" href="/picker-logo.png" type="image/png">
@@ -425,11 +428,14 @@
         Prince Picker
       </a>
       <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="/pricing.html">Pricing</a>
+        <a href="/about.html">About</a>
+        <a href="/features.html">Features</a>
+        <a href="/pos-for-spare-parts-shops.html">Spare Parts POS</a>
+        <a href="/automotive-inventory-management.html">Automotive Inventory</a>
+        <a href="/offline-pos.html">Offline POS</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/blog.html">Blog</a>
         <a href="/docs.html">Docs</a>
-        <a href="/download/">Download App</a>
-        <a href="https://github.com/mudasirhub/Prince-Picker" target="_blank" aria-label="Prince Picker GitHub Repository (opens in new tab)">GitHub</a>
       </div>
       <a href="/app/" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" aria-label="Launch Web Application">Launch App</a>
     </nav>
@@ -438,10 +444,10 @@
   <main>
     <section class="hero">
     <div class="hero-badge">
-      <span style="color:var(--success)">●</span> Enterprise Warehouse Platform V2.0
+      <span style="color:var(--success)">●</span> POS &amp; Automotive Spare Parts Inventory Platform
     </div>
-    <h1>Warehouse Picking, <span>Uninterrupted.</span></h1>
-    <p>Prince Picker is an offline-first warehouse picking and inventory management platform built for spare parts businesses, warehouses, retailers and distributors. Complete warehouse picks up to 3× faster with our industrial-grade Progressive Web App.</p>
+    <h1>POS &amp; Inventory for <span>Spare-Parts Shops.</span></h1>
+    <p>Prince Picker is an offline-first POS and inventory management platform designed specifically for two-wheeler and automotive spare-parts businesses, retailers, and warehouses. Handle vehicle compatibility, camera barcode scanning, multi-location stock, and customer credit effortlessly.</p>
     <div class="hero-ctas">
       <a href="/app/" class="btn btn-primary">Launch Application</a>
       <a href="/download/" class="btn btn-secondary">Download App</a>
@@ -467,8 +473,7 @@
           </svg>
         </div>
         <h3>Offline-First Architecture</h3>
-        <p>Your warehouse doesn't stop for dead zones. Prince Picker stores data locally and syncs automatically when
-          connection is restored.</p>
+        <p>Your shop or warehouse doesn't stop for dead zones. Prince Picker stores data locally in IndexedDB and syncs automatically when connection is restored.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
@@ -480,9 +485,8 @@
             <rect x="7" y="7" width="10" height="10" rx="1" />
           </svg>
         </div>
-        <h3>Instant Barcode Scanning</h3>
-        <p>Native camera integrations allow millisecond barcode recognition without expensive proprietary scanning
-          hardware.</p>
+        <h3>Instant Camera Barcode Scanning</h3>
+        <p>Native camera integrations allow millisecond barcode recognition on mobile devices and tablets without expensive hardware scanners.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
@@ -491,9 +495,8 @@
             <polyline points="12 6 12 12 16 14" />
           </svg>
         </div>
-        <h3>Real-Time Sync</h3>
-        <p>Watch stock levels adjust instantly across devices. Keep your back-office and warehouse floor perfectly
-          aligned.</p>
+        <h3>Vehicle Compatibility &amp; Fitments</h3>
+        <p>Map spare parts directly to vehicle models (Honda Activa, Hero Splendor, Bajaj Pulsar, TVS Jupiter, Royal Enfield) and fitment groups.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
@@ -501,9 +504,8 @@
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
         </div>
-        <h3>Actionable Analytics</h3>
-        <p>Monitor picker efficiency, cycle times, and order accuracy through intuitive visual dashboards built directly
-          into the app.</p>
+        <h3>Shop &amp; Warehouse Locations</h3>
+        <p>Track distinct quantities and low stock thresholds for shop shelves (`R1L1B1`) and secondary warehouse racks (`WR1L1B1`).</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
@@ -514,9 +516,8 @@
             <path d="M9 18l3-3-3-3" />
           </svg>
         </div>
-        <h3>Automated Workflows</h3>
-        <p>From batch picking to guided routes via Zones and Bins, operators are automatically routed for maximum
-          efficiency.</p>
+        <h3>POS &amp; Customer Credit Ledger</h3>
+        <p>Fast counter billing, receipt printing, customer credit ledger tracking, and partial payment balance management.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
@@ -525,9 +526,8 @@
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
         </div>
-        <h3>Enterprise Security</h3>
-        <p>Local-first means your critical inventory data never unnecessarily traverses the network. Maximum privacy,
-          zero latency.</p>
+        <h3>Stock Transfers &amp; Order Fulfillment</h3>
+        <p>Transfer inventory between warehouse storage and shop shelves, with guided pick-and-drop workflows for order fulfillment.</p>
       </div>
     </div>
   </section>
@@ -536,7 +536,7 @@
     <div class="section-header" style="text-align: left; margin-bottom: 40px; max-width: 800px;">
       <h2 style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px;">About Prince Picker</h2>
       <p style="font-size: 16px; line-height: 1.7; color: var(--mut); margin-bottom: 24px;">
-        Prince Picker is an offline-first warehouse picking and inventory management platform built for spare parts businesses, warehouses, retailers and distributors. Developed by Mudasir Khan, the system solves latency, dead connectivity zones, and slow fulfillment times on the warehouse floor by utilizing local-first web technologies.
+        Prince Picker is an offline-first POS and inventory management platform designed for two-wheeler and automotive spare-parts businesses, retailers, and warehouses. Developed by Mudasir Khan, the system resolves network dead zones, high SKU complexity, and slow counter fulfillment.
       </p>
     </div>
     
@@ -544,26 +544,22 @@
       <div>
         <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">What is Prince Picker &amp; Who is it for?</h4>
         <p style="color: var(--mut); margin-bottom: 20px;">
-          It is a progressive warehouse optimization system designed for distributors, retailers, and high-volume spare parts businesses. It allows warehouse workers to perform fast, uninterrupted inventory operations even in areas with poor or zero Wi-Fi connectivity.
+          It is a specialized POS and inventory platform for two-wheeler spare-parts shops, automotive distributors, and warehouse operators.
         </p>
         <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">What problems does it solve?</h4>
         <p style="color: var(--mut);">
-          By caching database schemas locally on the device, it eliminates delays from server round-trips and guarantees that barcode scanning, inventory lookups, and order picking continue working during network outages.
+          It eliminates network latency and billing downtime using local IndexedDB storage, while organizing high SKU counts by vehicle model compatibility and multi-location Rack/Level/Bin storage formats.
         </p>
       </div>
       <div>
-        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">What technologies does it use?</h4>
-        <p style="color: var(--mut); margin-bottom: 20px;">
-          Prince Picker is built as a Progressive Web App (PWA) using standard modern web tech (HTML, CSS, JavaScript) alongside a mobile-first user interface. It integrates native Android Compose elements for deep system integration, local databases, and camera-based barcode scanning.
-        </p>
-        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">Core Platform Capabilities</h4>
+        <h4 style="font-weight: 700; color: var(--text); margin-bottom: 8px;">Core Capabilities</h4>
         <ul style="color: var(--mut); padding-left: 20px; list-style-type: square;">
           <li>Offline-first PWA with background sync</li>
           <li>Instant camera-based Barcode scanning</li>
-          <li>Fast inventory search &amp; stock auditing</li>
-          <li>Optimized warehouse picking &amp; order management</li>
-          <li>Seamless multi-device inventory sync</li>
-          <li>Android support and mobile-first interface</li>
+          <li>Vehicle model compatibility &amp; fitment groups</li>
+          <li>Shop (`R1L1B1`) &amp; Warehouse (`WR1L1B1`) stock tracking</li>
+          <li>POS billing &amp; customer credit ledger management</li>
+          <li>Stock transfers &amp; guided pick/drop workflows</li>
         </ul>
       </div>
     </div>
@@ -574,20 +570,22 @@
     <div class="footer-content">
       <div class="footer-brand">
         <img src="/picker%20logo.png" alt="Prince Picker Logo" style="width:32px;height:32px;border-radius:8px;object-fit:cover;margin-bottom:12px;box-shadow:0 2px 8px rgba(255,106,0,0.4)">
-        <p>Prince Picker &copy; 2026<br>Offline-First Warehouse Platform</p>
+        <p>Prince Picker &copy; 2026<br>POS &amp; Automotive Spare Parts Platform</p>
       </div>
       <div class="footer-col">
-        <h4>Product</h4>
-        <a href="#features">Features</a>
-        <a href="/pricing.html">Pricing</a>
-        <a href="/download/">Download App</a>
-        <a href="/roadmap.html">Roadmap</a>
-        <a href="/changelog.html">Changelog</a>
+        <h4>Solutions</h4>
+        <a href="/about.html">About Prince Picker</a>
+        <a href="/features.html">Feature Catalog</a>
+        <a href="/pos-for-spare-parts-shops.html">Spare Parts POS</a>
+        <a href="/automotive-inventory-management.html">Automotive Inventory</a>
+        <a href="/offline-pos.html">Offline POS</a>
+        <a href="/faq.html">FAQ</a>
       </div>
       <div class="footer-col">
         <h4>Resources</h4>
         <a href="/docs.html">Documentation</a>
         <a href="/blog.html">Blog</a>
+        <a href="/download/">Download App</a>
         <a href="https://github.com/mudasirhub/Prince-Picker">GitHub</a>
       </div>
       <div class="footer-col">

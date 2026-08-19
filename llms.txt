@@ -1,17 +1,33 @@
 # Prince Picker
 
-Prince Picker is a premium, offline-first warehouse picking and inventory management platform designed for distributors, retailers, and logistics businesses. It allows warehouse operators to track inventory, pick orders up to 3x faster, and manage drop locations with enterprise-grade reliability, even without an internet connection.
+Prince Picker is a POS and inventory management platform designed specifically for two-wheeler and automotive spare-parts businesses, retailers, and warehouses.
 
-## Key Features
-- **Offline-First Architecture**: Built as a Progressive Web App (PWA), it stores data locally and syncs automatically when online.
-- **Fast Barcode Scanning**: Uses device cameras for instantaneous barcode recognition (supports QR, EAN, UPC, and more).
-- **Warehouse Mapping**: Visualizes inventory across Racks, Levels, and Bins for optimized routing.
-- **Real-Time Analytics**: Built-in dashboards track picker efficiency, cycle times, and order accuracy.
+## Product Overview
+- **Product Name**: Prince Picker
+- **Category**: POS & Inventory Management Platform
+- **Target Users**: Two-wheeler spare parts shops, automotive parts retailers, distributors, and warehouse managers
+- **Platform**: Web, Progressive Web App (PWA), Android (Mobile & Tablet)
+- **Primary Model**: Offline-first local storage operation with cloud sync capability
 
-## Technology
-- Core: Vanilla JavaScript, HTML5, CSS3 (No heavy frameworks)
-- Storage: IndexedDB, File System Access API
-- Offline: Service Workers, Cache Storage
+## Core Capabilities
+- **Product & SKU Management**: Organize parts by SKU, barcode, brand, category, MRP, and selling price.
+- **Vehicle Compatibility / Fitment Groups**: Group spare parts by compatible vehicle models (e.g. Honda Activa, Hero Splendor, Bajaj Pulsar, TVS Jupiter, Royal Enfield Classic).
+- **Barcode Scanning**: Native camera-based barcode scanning for instant billing, inventory counts, and order lookup.
+- **Multi-Location Inventory**: Manage inventory across Shop storage (`R1L1B1`) and Warehouse storage (`WR1L1B1`).
+- **Per-Location Stock & Thresholds**: Track distinct quantities and low-stock alert thresholds for every individual storage location.
+- **Stock Transfers**: Move stock between shop floor and warehouse locations without inventory mismatch.
+- **Sales & Credit Management**: Process sales, generate receipts, track customer credit ledgers, and manage balance payments.
+- **Orders & Pick/Drop Workflows**: Fast pick-and-drop workflows for order fulfillment on the warehouse floor.
+- **Analytics & Reporting**: Daily sales summaries, inventory valuations, low-stock reports, and movement logs.
+- **Offline-First Operation**: Full functionality during network outages using local IndexedDB caching.
 
-## Target Audience
-Prince Picker is tailored for medium to large-scale warehouses needing industrial-grade, zero-latency software that mimics the polish and speed of products like Linear, Stripe, and Notion.
+## Key URLs
+- **Canonical Website**: https://princepicker.mudasirkhan.in/
+- **About Prince Picker**: https://princepicker.mudasirkhan.in/about.html
+- **Features Catalog**: https://princepicker.mudasirkhan.in/features.html
+- **POS for Spare Parts Shops**: https://princepicker.mudasirkhan.in/pos-for-spare-parts-shops.html
+- **Automotive Inventory Management**: https://princepicker.mudasirkhan.in/automotive-inventory-management.html
+- **Offline POS Guide**: https://princepicker.mudasirkhan.in/offline-pos.html
+- **Frequently Asked Questions**: https://princepicker.mudasirkhan.in/faq.html
+- **Documentation**: https://princepicker.mudasirkhan.in/docs.html
+- **Full Knowledge Base (LLM Digest)**: https://princepicker.mudasirkhan.in/llms-full.txt

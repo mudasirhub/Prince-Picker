@@ -1,0 +1,89 @@
+# Prince Picker — Comprehensive System & Entity Specification
+
+## 1. Product Identity & Entity Definition
+Prince Picker is a POS (Point of Sale) and inventory management platform built specifically for two-wheeler spare-parts businesses, automotive retailers, distributors, and warehouse operators.
+
+It addresses the unique operational challenges of automotive parts retailing: high SKU counts, vehicle model compatibility (fitment groups), multi-location storage (Shop vs. Warehouse), fast camera barcode scanning, customer credit management, and uninterrupted offline-first performance during network outages.
+
+### Official Details
+- **Entity Name**: Prince Picker
+- **Developer / Creator**: Mudasir Khan
+- **Category**: POS Software / Automotive Inventory Management Software
+- **Official Domain**: https://princepicker.mudasirkhan.in/
+- **Supported Platforms**: Web Browsers (Chrome, Edge, Safari), Progressive Web App (PWA), Android Devices
+
+---
+
+## 2. Core Implemented Features
+
+### 2.1 Product & SKU Management
+- Store product name, brand, category, barcode/SKU, MRP (Maximum Retail Price), SP (Selling Price), compatibility notes, and fitment groups.
+- Attach up to 4 image slots per product with automatic client-side optimization.
+- Support search and quick filtering by name, SKU, barcode, brand, or vehicle model.
+
+### 2.2 Vehicle Compatibility & Fitment Groups
+- Link spare parts directly to specific two-wheeler models (e.g., Honda Activa 6G, Hero Splendor Plus, Bajaj Pulsar 150, TVS Jupiter, Royal Enfield Classic 350).
+- Assign fitment groups to group interchangeable parts across multiple motorcycle and scooter models.
+
+### 2.3 Native Camera Barcode Scanning
+- Instant barcode recognition using standard device cameras (smartphones, tablets, PCs).
+- Eliminates the need for expensive dedicated handheld hardware scanners.
+- Rapid product lookup during sales checkout, stock auditing, and inventory intake.
+
+### 2.4 Multi-Location Inventory & Storage Naming Standard
+- Track stock across two distinct storage classifications:
+  - **SHOP Storage**: Displayed as standard Rack/Level/Bin format (e.g., `R1L1B1`).
+  - **WAREHOUSE Storage**: Displayed with the `WR` prefix (e.g., `WR1L1B1`).
+- Every product supports multiple locations simultaneously.
+- **Primary Location**: Designates the primary default location for checkout without altering stock counts across other locations.
+- **Shop Usable Stock**: Sum of quantities stored in `SHOP` locations (`storage_type === 'SHOP'`).
+- **Total Product Stock**: Total inventory aggregated across all locations (`SHOP` + `WAREHOUSE`).
+
+### 2.5 Stock Transfers & Adjustments
+- Move stock between shop counter locations and warehouse storage.
+- Adjust location-specific stock quantities and per-location low stock alert thresholds.
+- Maintain stock balance integrity without losing track of physical rack locations.
+
+### 2.6 Point of Sale (POS) & Credit Ledger
+- Fast cart creation, barcode scan-to-cart, quantity adjustments, and receipt generation.
+- **Credit Management**: Track customer balance ledgers, record partial credit sales, and log cash/digital balance payments.
+
+### 2.7 Order Fulfillment & Warehouse Workflows
+- **Pick Workflow**: Guided picking instructions for warehouse staff displaying exact Rack, Level, and Bin coordinates.
+- **Drop Workflow**: Restocking and inventory deposit routing for incoming parts batches.
+
+### 2.8 Offline-First PWA Architecture
+- Operates 100% offline using local browser storage (IndexedDB & Cache API).
+- Zero latency on searches, inventory lookups, checkout, and scanning even during complete internet failure.
+- Auto-synchronizes with Supabase / remote database when network connection is re-established.
+
+---
+
+## 3. Frequently Asked Questions (FAQ)
+
+### Q: What is Prince Picker?
+**A**: Prince Picker is an offline-first POS and inventory management platform built specifically for two-wheeler and automotive spare-parts shops, retailers, and warehouses.
+
+### Q: Is Prince Picker generic retail POS software?
+**A**: No. Generic POS software lacks support for automotive fitment groups, vehicle model compatibility, and multi-location Rack/Level/Bin storage formats (`R1L1B1` / `WR1L1B1`). Prince Picker is built specifically for automotive parts businesses.
+
+### Q: Does Prince Picker work without an internet connection?
+**A**: Yes. Prince Picker is built as an offline-first Progressive Web App (PWA). All product catalogs, inventory lookups, sales billing, and stock adjustments run locally on the device using IndexedDB and sync when online.
+
+### Q: Can Prince Picker handle both shop counter and warehouse inventory?
+**A**: Yes. Prince Picker supports multi-location stock per product, allowing items to exist in both Shop locations (e.g., `R1L1B1`) and Warehouse locations (e.g., `WR1L1B1`) with distinct per-location quantities and thresholds.
+
+### Q: Does Prince Picker support barcode scanning?
+**A**: Yes. Prince Picker uses native camera barcode scanning on mobile devices, tablets, and webcams, eliminating the cost of dedicated handheld barcode hardware.
+
+---
+
+## 4. Official Resources & Links
+- **Website**: https://princepicker.mudasirkhan.in/
+- **About**: https://princepicker.mudasirkhan.in/about.html
+- **Features**: https://princepicker.mudasirkhan.in/features.html
+- **POS for Spare Parts**: https://princepicker.mudasirkhan.in/pos-for-spare-parts-shops.html
+- **Automotive Inventory**: https://princepicker.mudasirkhan.in/automotive-inventory-management.html
+- **Offline POS**: https://princepicker.mudasirkhan.in/offline-pos.html
+- **FAQ**: https://princepicker.mudasirkhan.in/faq.html
+- **Documentation**: https://princepicker.mudasirkhan.in/docs.html

@@ -4,28 +4,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automotive & Spare Parts Inventory Blog — Prince Picker</title>
+  <title>Offline-First POS & Inventory Architecture — Prince Picker</title>
 
   <meta name="description"
-    content="Read insights, industry guides, and practical tutorials on automotive spare-parts inventory management, POS billing, barcode scanning, and multi-location stock control.">
+    content="Learn how offline-first POS systems protect retail shops and warehouses from internet outages. Discover local-first IndexedDB storage, PWA caching, and automatic data synchronization.">
   <meta name="keywords"
-    content="automotive inventory blog, spare parts POS guide, barcode inventory tutorial, multi location stock transfer blog, Prince Picker">
+    content="offline POS system, offline first inventory, PWA point of sale, local first database, network outage retail POS, Prince Picker">
   <meta name="theme-color" content="#FF6A00">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="DuckDuckBot" content="index, follow">
   <meta name="bingbot" content="index, follow">
   <meta name="googlebot" content="index, follow">
 
-  <link rel="canonical" href="https://princepicker.mudasirkhan.in/blog.html">
+  <link rel="canonical" href="https://princepicker.mudasirkhan.in/offline-pos.html">
   <link rel="shortcut icon" href="/picker-logo.png" type="image/png">
   <link rel="icon" href="/picker-logo.png" type="image/png">
 
   <!-- OpenGraph -->
-  <meta property="og:title" content="Automotive & Spare Parts Inventory Blog — Prince Picker">
+  <meta property="og:title" content="Offline-First POS & Inventory Architecture — Prince Picker">
   <meta property="og:description"
-    content="Guides, technical comparisons, and tutorials on automotive spare-parts POS software and warehouse inventory management.">
+    content="Zero-latency local checkout and inventory operations designed for retail counters and warehouse dead zones.">
   <meta property="og:image" content="https://princepicker.mudasirkhan.in/dashboard-preview.png">
-  <meta property="og:url" content="https://princepicker.mudasirkhan.in/blog.html">
+  <meta property="og:url" content="https://princepicker.mudasirkhan.in/offline-pos.html">
   <meta property="og:type" content="website">
 
   <!-- JSON-LD -->
@@ -34,10 +34,12 @@
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Blog",
-        "name": "Prince Picker Automotive Inventory Blog",
-        "url": "https://princepicker.mudasirkhan.in/blog.html",
-        "description": "Educational articles on automotive spare-parts POS software, barcode inventory management, and multi-location stock transfers."
+        "@type": "SoftwareApplication",
+        "name": "Prince Picker Offline POS",
+        "operatingSystem": "Android, Web, iOS",
+        "applicationCategory": "BusinessApplication",
+        "url": "https://princepicker.mudasirkhan.in/offline-pos.html",
+        "description": "Offline-first Point of Sale (POS) architecture engineered for zero-latency local operations and automatic background sync."
       },
       {
         "@type": "BreadcrumbList",
@@ -51,8 +53,8 @@
           {
             "@type": "ListItem",
             "position": 2,
-            "name": "Blog",
-            "item": "https://princepicker.mudasirkhan.in/blog.html"
+            "name": "Offline POS",
+            "item": "https://princepicker.mudasirkhan.in/offline-pos.html"
           }
         ]
       }
@@ -85,16 +87,14 @@
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border-radius: 99px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
     .btn-primary { background: var(--primary); color: #fff; }
     
-    .container { max-width: 900px; margin: 0 auto; padding: 140px 24px 80px; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 140px 24px 80px; }
     h1 { font-size: 36px; font-weight: 900; letter-spacing: -1px; margin-bottom: 16px; color: var(--text); }
-    .lead { font-size: 18px; color: var(--mut); margin-bottom: 40px; }
-    .post-card { background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; transition: border 0.2s; }
-    .post-card:hover { border-color: var(--primary); }
-    .post-card h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-    .post-card h2 a { color: var(--text); text-decoration: none; }
-    .post-card h2 a:hover { color: var(--primary); }
-    .post-card p { color: var(--mut); font-size: 15px; margin-bottom: 12px; }
-    .tag { display: inline-block; background: var(--surf2); color: var(--primary); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+    .lead { font-size: 18px; color: var(--mut); margin-bottom: 40px; max-width: 820px; }
+    .card { background: var(--surf); border: 1px solid var(--border); border-radius: 14px; padding: 32px; margin-bottom: 28px; }
+    .card h2 { font-size: 22px; font-weight: 800; margin-bottom: 14px; color: var(--text); }
+    .card p { color: var(--mut); font-size: 15px; margin-bottom: 14px; }
+    .card ul { color: var(--mut); padding-left: 20px; font-size: 15px; }
+    .card li { margin-bottom: 8px; }
     footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; color: var(--mut); font-size: 14px; margin-top: 60px; }
     footer a { color: var(--mut); text-decoration: none; margin: 0 10px; }
   </style>
@@ -119,43 +119,36 @@
   </nav>
 
   <div class="container">
-    <h1>Automotive &amp; Spare Parts Inventory Blog</h1>
-    <p class="lead">Educational guides, technical tutorials, and operational best practices for spare parts retailers, distributors, and warehouse managers.</p>
+    <h1>Offline-First POS &amp; Inventory Architecture</h1>
+    <p class="lead">In retail counters and physical warehouse environments, internet dropouts, Wi-Fi dead zones, and server latency disrupt customer sales and order fulfillment. Offline-first architecture solves this by treating local storage as the primary source of truth.</p>
 
-    <div class="post-card">
-      <span class="tag">POS Software</span>
-      <h2><a href="/pos-software-two-wheeler-spare-parts-comparison.html">POS Software for Two-Wheeler Spare-Parts Shops: Requirements &amp; Comparison</a></h2>
-      <p>A comprehensive guide evaluating Point of Sale requirements for spare-parts retailers: comparing generic retail POS, automotive-focused POS, and offline-first systems.</p>
+    <div class="card">
+      <h2>Why Internet Outages Matter in Retail &amp; Warehousing</h2>
+      <p>Traditional cloud-only POS applications rely on constant server communication for every barcode scan, price lookup, cart update, and receipt generation. When the internet connection lags or disconnects:</p>
+      <ul>
+        <li>Checkout lines freeze at the sales counter, leading to lost sales.</li>
+        <li>Warehouse staff cannot locate items or update stock counts in dead Wi-Fi zones.</li>
+        <li>Store operators are forced to keep manual paper notes, creating inventory discrepancies.</li>
+      </ul>
     </div>
 
-    <div class="post-card">
-      <span class="tag">Inventory Control</span>
-      <h2><a href="/how-to-manage-automotive-spare-parts-inventory.html">How to Manage Automotive Spare-Parts Inventory</a></h2>
-      <p>Practical best practices for organizing high-SKU inventory: SKU cataloging, fitment groups, low-stock thresholds, and Rack/Level/Bin location tracking.</p>
+    <div class="card">
+      <h2>How Prince Picker Approached Offline Operation</h2>
+      <p>Prince Picker is built as an offline-first Progressive Web App (PWA) that executes all critical business functions locally on your device:</p>
+      <ul>
+        <li><strong>Local Data Persistence (IndexedDB)</strong>: Product catalogs, stock quantities, location maps, and credit ledgers are saved locally using high-performance browser IndexedDB storage.</li>
+        <li><strong>Instant Camera Barcode Recognition</strong>: Barcode scanning runs entirely on client-side JS without waiting for remote server round-trips.</li>
+        <li><strong>Automatic Background Synchronization</strong>: When connectivity is available, local modifications automatically sync with Supabase and remote databases.</li>
+      </ul>
     </div>
 
-    <div class="post-card">
-      <span class="tag">Barcode Scanning</span>
-      <h2><a href="/barcode-inventory-spare-parts.html">Barcode Inventory Management for Spare-Parts Shops</a></h2>
-      <p>Discover how camera-based barcode scanning eliminates hardware costs and speeds up inventory intake, stock counting, and POS checkout.</p>
-    </div>
-
-    <div class="post-card">
-      <span class="tag">Warehouse Operations</span>
-      <h2><a href="/how-to-manage-shop-and-warehouse-stock.html">How to Manage Shop and Warehouse Stock</a></h2>
-      <p>Learn how to manage inventory across front-of-shop counter shelves (`SHOP`) and secondary warehouse racks (`WAREHOUSE`) using primary stock designations.</p>
-    </div>
-
-    <div class="post-card">
-      <span class="tag">Stock Transfers</span>
-      <h2><a href="/multi-location-stock-transfers.html">How Multi-Location Stock Transfers Work</a></h2>
-      <p>Understand how stock transfers between warehouse storage locations and shop counter shelves maintain accurate inventory balances and prevent stockouts.</p>
-    </div>
-
-    <div class="post-card">
-      <span class="tag">Architecture</span>
-      <h2><a href="/offline-pos-vs-cloud-pos.html">Offline-First POS vs Cloud-Only POS: Architecture Comparison</a></h2>
-      <p>Compare offline-first PWA POS architecture with cloud-only POS systems: evaluating network latency, data persistence, and internet outage protection.</p>
+    <div class="card">
+      <h2>Key Technical &amp; Business Advantages</h2>
+      <ul>
+        <li><strong>Zero-Latency Interaction</strong>: Product lookups, sales billing, and location toggles respond in milliseconds.</li>
+        <li><strong>Continuous Business Continuity</strong>: Keep billing customers and managing stock during power outages, ISP failures, or remote warehouse work.</li>
+        <li><strong>Multi-Device Compatibility</strong>: Runs seamlessly across mobile phones, tablets, Android terminals, and desktop computers.</li>
+      </ul>
     </div>
   </div>
 
@@ -167,7 +160,8 @@
       <a href="/features.html">Features</a> |
       <a href="/pos-for-spare-parts-shops.html">Spare Parts POS</a> |
       <a href="/automotive-inventory-management.html">Automotive Inventory</a> |
-      <a href="/faq.html">FAQ</a>
+      <a href="/faq.html">FAQ</a> |
+      <a href="/docs.html">Docs</a>
     </p>
   </footer>
 </body>
