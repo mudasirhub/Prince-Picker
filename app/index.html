@@ -5509,8 +5509,8 @@
         </svg>
         <span class="notification-badge"></span>
       </button>
-      <div style="font-size:12px;color:var(--t3);font-weight:600" id="mapCount"></div>
     </div>
+    <div id="mapTabWrap" style="padding:10px 16px 4px 16px;"></div>
     <div class="map-bc" id="mapBreadcrumb"></div>
     <div class="sc" id="mapBody"></div>
     <div class="bn">
@@ -11149,8 +11149,18 @@
     //  WAREHOUSE MAP
     // ══════════════════════════════════════════
     // Build hierarchy ONCE: { R1: { L1: { B1: [products], B2: ... }, L2: ... }, R2: ... }
+    let mapTab = 'shop';
+
+    function switchMapTab(tab) {
+      mapTab = tab;
+      renderMap([]);
+    }
+
     function buildWarehouseMap(products) {
-      const map = {};
+      const map = {
+        shop: {},
+        warehouse: {}
+      };
       if (!Array.isArray(products)) return map;
 
       for (const p of products) {
@@ -11176,28 +11186,30 @@
           const norm = rawLoc.toUpperCase().replace(/[\s\-_]/g, '');
           const m = norm.match(/^(WR|R)(\d+)(?:L(\d+))?(?:B(\d+))?$/);
 
-          let rackKey, l, b, isWarehouse;
+          let storageKey, rNum, l, b;
           if (m) {
             const prefix = m[1];
-            const rNum = m[2];
+            rNum = m[2];
             l = m[3] || '1';
             b = m[4] || '1';
-            isWarehouse = (prefix === 'WR') || (locObj.storage_type === 'WAREHOUSE');
-            rackKey = isWarehouse ? ('WR' + rNum) : ('R' + rNum);
+            const isWh = (prefix === 'WR') || (locObj.storage_type === 'WAREHOUSE');
+            storageKey = isWh ? 'warehouse' : 'shop';
           } else {
-            isWarehouse = norm.startsWith('WR') || (locObj.storage_type === 'WAREHOUSE');
-            rackKey = isWarehouse ? 'WR-MISC' : 'R-MISC';
+            const isWh = norm.startsWith('WR') || (locObj.storage_type === 'WAREHOUSE');
+            storageKey = isWh ? 'warehouse' : 'shop';
+            rNum = 'MISC';
             l = '1';
             b = '1';
           }
 
-          if (!map[rackKey]) map[rackKey] = {};
-          if (!map[rackKey][l]) map[rackKey][l] = {};
-          if (!map[rackKey][l][b]) map[rackKey][l][b] = [];
+          const targetMap = map[storageKey];
+          if (!targetMap[rNum]) targetMap[rNum] = {};
+          if (!targetMap[rNum][l]) targetMap[rNum][l] = {};
+          if (!targetMap[rNum][l][b]) targetMap[rNum][l][b] = [];
 
-          const existing = map[rackKey][l][b].find(item => (item.id && item.id === p.id) || (item.barcode && item.barcode === p.barcode));
+          const existing = targetMap[rNum][l][b].find(item => (item.id && item.id === p.id) || (item.barcode && item.barcode === p.barcode));
           if (!existing) {
-            map[rackKey][l][b].push({
+            targetMap[rNum][l][b].push({
               ...p,
               loc: rawLoc,
               location: rawLoc,
@@ -11637,55 +11649,74 @@
       if (screen === 's-qr') renderQrProdList(document.getElementById('qrQ')?.value.trim() || '');
     }
 
-    function renderMap(path) {
-      mapPath = path;
-      const map = STATE.warehouseMap || {};
+    function renderMap(path, tab) {
+      if (tab) mapTab = tab;
+      mapPath = path || [];
+
+      const fullMap = STATE.warehouseMap || { shop: {}, warehouse: {} };
+      const map = fullMap[mapTab] || {};
+
       const body = document.getElementById('mapBody');
       const title = document.getElementById('mapTitle');
       const count = document.getElementById('mapCount');
       const bcEl = document.getElementById('mapBreadcrumb');
 
-      function getRackDisplay(rKey) {
-        if (rKey.startsWith('WR')) {
-          const num = rKey.replace('WR', '');
-          return num === '-MISC' ? 'Warehouse Misc' : `Warehouse WR${num}`;
-        } else {
-          const num = rKey.replace('R', '');
-          return num === '-MISC' ? 'Shop Misc' : `Shop R${num}`;
-        }
+      const shopMap = fullMap.shop || {};
+      const whMap = fullMap.warehouse || {};
+
+      const shopSKUCount = Object.values(shopMap).flatMap(r => Object.values(r)).flatMap(l => Object.values(l)).flat().length;
+      const whSKUCount = Object.values(whMap).flatMap(r => Object.values(r)).flatMap(l => Object.values(l)).flat().length;
+
+      const tabWrap = document.getElementById('mapTabWrap');
+      if (tabWrap) {
+        tabWrap.innerHTML = `
+          <div style="display:flex;gap:8px;">
+            <button onclick="switchMapTab('shop')" style="flex:1;padding:10px 12px;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;border:1.5px solid ${mapTab==='shop'?'var(--gr)':'var(--bd)'};background:${mapTab==='shop'?'rgba(34,197,94,0.12)':'var(--card)'};color:${mapTab==='shop'?'var(--gr)':'var(--t2)'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s ease;">
+              <span>🏪</span>
+              <span>Shop Storage</span>
+              <span style="font-size:10px;padding:2px 6px;border-radius:10px;background:${mapTab==='shop'?'var(--gr)':'var(--bd)'};color:${mapTab==='shop'?'#fff':'var(--t3)'};">${shopSKUCount}</span>
+            </button>
+            <button onclick="switchMapTab('warehouse')" style="flex:1;padding:10px 12px;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;border:1.5px solid ${mapTab==='warehouse'?'var(--or)':'var(--bd)'};background:${mapTab==='warehouse'?'rgba(236,91,19,0.12)':'var(--card)'};color:${mapTab==='warehouse'?'var(--or)':'var(--t2)'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s ease;">
+              <span>🏭</span>
+              <span>Warehouse</span>
+              <span style="font-size:10px;padding:2px 6px;border-radius:10px;background:${mapTab==='warehouse'?'var(--or)':'var(--bd)'};color:${mapTab==='warehouse'?'#fff':'var(--t3)'};">${whSKUCount}</span>
+            </button>
+          </div>`;
       }
+
+      const prefix = mapTab === 'warehouse' ? 'WR' : 'R';
+      const storageLabel = mapTab === 'warehouse' ? 'Warehouse' : 'Shop';
 
       // Breadcrumb
-      let bc = `<span class="bc-seg ${path.length === 0 ? 'active' : ''}" onclick="renderMap([])">Map</span>`;
-      if (path[0]) {
-        const dispLabel = getRackDisplay(path[0]);
-        bc += `<span class="bc-sep">›</span><span class="bc-seg ${path.length === 1 ? 'active' : ''}" onclick="renderMap(['${path[0]}'])">${dispLabel}</span>`;
+      let bc = `<span class="bc-seg ${mapPath.length === 0 ? 'active' : ''}" onclick="renderMap([])">${storageLabel}</span>`;
+      if (mapPath[0]) {
+        const rackCode = mapPath[0] === 'MISC' ? `${storageLabel} Misc` : `Rack ${prefix}${mapPath[0]}`;
+        bc += `<span class="bc-sep">›</span><span class="bc-seg ${mapPath.length === 1 ? 'active' : ''}" onclick="renderMap(['${mapPath[0]}'])">${rackCode}</span>`;
       }
-      if (path[1]) bc += `<span class="bc-sep">›</span><span class="bc-seg ${path.length === 2 ? 'active' : ''}" onclick="renderMap(['${path[0]}','${path[1]}'])">L${path[1]}</span>`;
-      if (path[2]) bc += `<span class="bc-sep">›</span><span class="bc-seg active">B${path[2]}</span>`;
+      if (mapPath[1]) bc += `<span class="bc-sep">›</span><span class="bc-seg ${mapPath.length === 2 ? 'active' : ''}" onclick="renderMap(['${mapPath[0]}','${mapPath[1]}'])">L${mapPath[1]}</span>`;
+      if (mapPath[2]) bc += `<span class="bc-sep">›</span><span class="bc-seg active">B${mapPath[2]}</span>`;
       bcEl.innerHTML = bc;
 
-      document.getElementById('mapBackBtn').style.display = path.length > 0 ? '' : 'none';
+      document.getElementById('mapBackBtn').style.display = mapPath.length > 0 ? '' : 'none';
 
       // Level 0 — Racks
-      if (path.length === 0) {
+      if (mapPath.length === 0) {
         const racks = Object.keys(map).sort((a, b) => {
-          const isWA = a.startsWith('WR');
-          const isWB = b.startsWith('WR');
-          if (isWA !== isWB) return isWA ? 1 : -1; // Shop racks first, Warehouse racks second
           const numA = parseInt(a.replace(/\D/g, ''), 10) || 0;
           const numB = parseInt(b.replace(/\D/g, ''), 10) || 0;
           return numA - numB;
         });
 
-        title.textContent = 'Inventory Map';
+        title.textContent = `${storageLabel} Map`;
         count.textContent = `${racks.length} racks`;
+
         if (racks.length === 0) {
+          const emptyIcon = mapTab === 'warehouse' ? '🏭' : '🏪';
           body.innerHTML = `
             <div class="empty-state-card" style="margin:20px 16px;text-align:center">
-              <div class="empty-state-icon">🗺️</div>
-              <div class="empty-state-title">No Map Data Available</div>
-              <div class="empty-state-sub">None of the products in your inventory have valid shelf location codes (e.g. R1L1B1 for Shop or WR1L1B1 for Warehouse). Please update your inventory locations to use the map view.</div>
+              <div class="empty-state-icon">${emptyIcon}</div>
+              <div class="empty-state-title">No ${storageLabel} Locations</div>
+              <div class="empty-state-sub">No products currently assigned to ${storageLabel.toLowerCase()} shelf locations (${mapTab === 'warehouse' ? 'e.g. WR1L1B1' : 'e.g. R1L1B1'}).</div>
               <div class="empty-state-actions" style="margin-top:12px">
                 <button class="btn-s" onclick="nav('s-orders')">Go to Orders</button>
               </div>
@@ -11696,39 +11727,34 @@
         body.innerHTML = `<div class="map-grid">${racks.map((r, i) => {
           const levCount = Object.keys(map[r]).length;
           const prodCount = Object.values(map[r]).flatMap(l => Object.values(l)).flat().length;
-          const isWh = r.startsWith('WR');
-          const dispLabel = getRackDisplay(r);
-          const icon = isWh ? '🏭' : '🏪';
-          const badgeBg = isWh ? 'rgba(236,91,19,0.12)' : 'rgba(34,197,94,0.12)';
-          const badgeColor = isWh ? 'var(--or)' : 'var(--gr)';
-          const badgeText = isWh ? 'WAREHOUSE' : 'SHOP';
+          const rackName = r === 'MISC' ? 'Misc Shelf' : `Rack ${prefix}${r}`;
+          const icon = mapTab === 'warehouse' ? '🏭' : '🏪';
 
           return `<div class="map-card" onclick="renderMap(['${r}'])" style="animation-delay:${i * 20}ms">
             <div class="mc-icon">${icon}</div>
-            <div class="mc-label" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dispLabel}</div>
-            <div style="display:inline-block;margin:3px 0;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800;background:${badgeBg};color:${badgeColor}">${badgeText}</div>
+            <div class="mc-label" style="font-size:14px">${rackName}</div>
             <div class="mc-sub">${levCount} level${levCount!==1?'s':''} · ${prodCount} SKUs</div>
           </div>`;
         }).join('')}</div>`;
         return;
       }
 
-      const [r, l, b] = path;
+      const [r, l, b] = mapPath;
 
       // Level 1 — Levels inside rack
       if (!l) {
         const levels = Object.keys(map[r] || {}).sort((a, b) => Number(a) - Number(b));
-        const dispLabel = getRackDisplay(r);
-        title.textContent = dispLabel;
+        const rackName = r === 'MISC' ? 'Misc Shelf' : `Rack ${prefix}${r}`;
+        title.textContent = `${storageLabel} ${rackName}`;
         count.textContent = `${levels.length} levels`;
 
         body.innerHTML = `<div class="map-grid">${levels.map((lv, i) => {
           const bins = Object.keys(map[r][lv]).length;
           const prods = Object.values(map[r][lv]).flat().length;
-          const fullCode = `${r}L${lv}`;
+          const levelCode = r === 'MISC' ? `L${lv}` : `${prefix}${r}L${lv}`;
           return `<div class="map-card" onclick="renderMap(['${r}','${lv}'])" style="animation-delay:${i * 20}ms">
             <div class="mc-icon">📦</div>
-            <div class="mc-label">${fullCode}</div>
+            <div class="mc-label">${levelCode}</div>
             <div class="mc-sub">${bins} bin${bins!==1?'s':''} · ${prods} SKUs</div>
           </div>`;
         }).join('')}</div>`;
@@ -11738,13 +11764,13 @@
       // Level 2 — Bins inside level
       if (!b) {
         const bins = Object.keys((map[r]?.[l]) || {}).sort((a, b) => Number(a) - Number(b));
-        const fullCode = `${r}L${l}`;
-        title.textContent = fullCode;
+        const levelCode = r === 'MISC' ? `L${l}` : `${prefix}${r}L${l}`;
+        title.textContent = levelCode;
         count.textContent = `${bins.length} bins`;
         body.innerHTML = `<div class="map-grid">${bins.map((bn, i) => {
           const prods = map[r][l][bn] || [];
           const totStock = prods.reduce((s, p) => s + (p.qty != null ? Number(p.qty) : getEffectiveInventory(p.barcode || p.sku, p.loc)), 0);
-          const fullBinCode = `${r}L${l}B${bn}`;
+          const fullBinCode = r === 'MISC' ? `L${l}B${bn}` : `${prefix}${r}L${l}B${bn}`;
           return `<div class="map-card" onclick="renderMap(['${r}','${l}','${bn}'])" style="animation-delay:${i * 20}ms">
             <div class="mc-icon">🔲</div>
             <div class="mc-label" style="font-size:13px">${fullBinCode}</div>
@@ -11756,7 +11782,7 @@
 
       // Level 3 — Products inside bin
       const prods = (map[r]?.[l]?.[b]) || [];
-      const fullBinCode = `${r}L${l}B${b}`;
+      const fullBinCode = r === 'MISC' ? `L${l}B${b}` : `${prefix}${r}L${l}B${b}`;
       title.textContent = fullBinCode;
       count.textContent = `${prods.length} products`;
       if (!prods.length) { body.innerHTML = hintCard('🔲', 'Bin is empty', 'No products at this location'); return; }
@@ -11765,7 +11791,7 @@
         var imgSrc = FS_IMAGES[p.id] || FS_IMAGES[p.barcode];
         var effStock = p.qty != null ? Number(p.qty) : getEffectiveInventory(p.barcode || p.sku, p.loc);
         var qty = effStock;
-        var isWh = (p.loc || '').toUpperCase().startsWith('WR') || r.startsWith('WR');
+        var isWh = mapTab === 'warehouse';
         var locText = p.loc || fullBinCode;
         var row = document.createElement('div');
         row.className = 'map-prod-row';
