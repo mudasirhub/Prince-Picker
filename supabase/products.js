@@ -243,10 +243,55 @@
     return false;
   }
 
+  async function deleteProduct(identifier) {
+    const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
+    const targetStr = String(identifier || '');
+    if (!targetStr) return { success: false, error: 'No identifier provided' };
+
+    if (!client) {
+      console.warn('[Products] Supabase client offline. Queuing deletion for background sync.');
+      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+        await window.PICKER_DB.addSyncQueue('delete_product', { id: targetStr });
+      }
+      return { success: true, queued: true, synced: false };
+    }
+
+    try {
+      const { data, error } = await client
+        .from('products')
+        .delete()
+        .or(`id.eq.${targetStr},barcode.eq.${targetStr},sku.eq.${targetStr}`);
+
+      if (error) {
+        console.error('[Products] Error deleting product from Supabase:', error);
+        if (isNetworkError(error)) {
+          if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+            await window.PICKER_DB.addSyncQueue('delete_product', { id: targetStr });
+          }
+          return { success: true, queued: true, synced: false, error };
+        }
+        return { success: false, error };
+      }
+
+      console.log('[Products] Deleted product from Supabase:', targetStr);
+      return { success: true, synced: true, data };
+    } catch (e) {
+      console.error('[Products] Exception deleting product:', e);
+      if (isNetworkError(e)) {
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('delete_product', { id: targetStr });
+        }
+        return { success: true, queued: true, synced: false, error: e };
+      }
+      return { success: false, error: e };
+    }
+  }
+
   window.SUPABASE_PRODUCTS = {
     downloadAllProducts,
     syncProductsIncremental,
     saveProduct,
+    deleteProduct,
     isNetworkError
   };
 })(typeof window !== 'undefined' ? window : this);

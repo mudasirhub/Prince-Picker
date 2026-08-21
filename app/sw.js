@@ -16,21 +16,22 @@ const STATIC_ASSETS = [
   './supabase/image_cache.js',
   './supabase/image_uploader.js',
   './supabase/storage.js',
-  '../picker%20logo.png',
-  '../picker-logo.png',
   './picker-logo.png',
-  '../apple-touch-icon.png',
-  '../android-chrome-192.png',
-  '../android-chrome-512.png',
-  '../favicon.svg',
-  '../favicon.ico'
+  './picker%20logo.png',
+  './apple-touch-icon.png',
+  './android-chrome-192.png',
+  './android-chrome-512.png'
 ];
 
 /* ── INSTALL ── */
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(cache => {
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url => cache.add(url).catch(err => console.warn('[SW] Failed to cache:', url, err)))
+        );
+      })
       .then(() => self.skipWaiting())
       .catch(err => {
         console.warn('[SW] Caching static assets warning:', err);

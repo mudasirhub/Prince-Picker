@@ -294,6 +294,39 @@
     }
   }
 
+  async function deleteProduct(identifier) {
+    if (!identifier) return false;
+    const targetStr = String(identifier);
+    try {
+      const db = await openDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction('products', 'readwrite');
+        const store = tx.objectStore('products');
+        
+        // 1. Direct delete by primary key 'sku'
+        store.delete(targetStr);
+
+        // 2. Also search by barcode index and delete matching records
+        try {
+          const barcodeIdx = store.index('barcode');
+          const getReq = barcodeIdx.getAll(targetStr);
+          getReq.onsuccess = () => {
+            const matches = getReq.result || [];
+            matches.forEach(item => {
+              if (item && item.sku) store.delete(item.sku);
+            });
+          };
+        } catch (eIdx) {}
+
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      console.error('[PICKER_DB] deleteProduct exception:', e);
+      return false;
+    }
+  }
+
   window.PICKER_DB = {
     openDB,
     getMeta,
@@ -301,6 +334,7 @@
     getAllProducts,
     getProductById,
     putProducts,
+    deleteProduct,
     getAllInventory,
     putInventory,
     updateInventoryItem,

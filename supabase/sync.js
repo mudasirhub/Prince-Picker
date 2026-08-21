@@ -85,6 +85,22 @@
               console.warn('[SYNC] Removing queue item due to non-retryable DB error (e.g. RLS/schema):', error);
               await window.PICKER_DB.removeSyncQueue(item.id);
             }
+        } else if (item.type === 'delete_product') {
+          console.log('[SYNC] Processing queued product deletion:', item.payload);
+          const targetStr = String(item.payload?.id || item.payload?.sku || item.payload?.barcode || item.payload || '');
+          if (targetStr) {
+            const { error } = await client
+              .from('products')
+              .delete()
+              .or(`id.eq.${targetStr},barcode.eq.${targetStr},sku.eq.${targetStr}`);
+            if (!error) {
+              await window.PICKER_DB.removeSyncQueue(item.id);
+              console.log('[SYNC] Delete product queue item complete:', item.id);
+            } else {
+              console.error('[SYNC] Error executing queued product delete:', error);
+            }
+          } else {
+            await window.PICKER_DB.removeSyncQueue(item.id);
           }
         } else if (item.type === 'process_movement') {
           console.log('[SYNC] Processing queued inventory movement:', item.payload);

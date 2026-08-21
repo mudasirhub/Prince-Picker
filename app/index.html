@@ -5125,28 +5125,48 @@
     window.hideInstallBanner = function () {
       var b = document.getElementById('installBanner');
       if (b) b.style.display = 'none';
+      try { localStorage.setItem('install_banner_dismissed', 'true'); } catch (e) {}
+    };
+    window.showInstallHelpModal = function () {
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      var msg = isIOS
+        ? "To install Prince Picker on iOS:\n1. Tap the Share button (⎋) in Safari\n2. Scroll down and tap 'Add to Home Screen'\n3. Open Prince Picker from your home screen."
+        : "To install Prince Picker:\n1. Open your browser menu (⋮ or top-right menu)\n2. Tap 'Add to Home screen' or 'Install App'\n3. Launch from your home screen for full offline warehouse use.";
+      alert(msg);
     };
     window.showInstallApp = function () {
       if (window._installPrompt) {
         window._installPrompt.prompt();
-        window._installPrompt.userChoice.then(function () {
+        window._installPrompt.userChoice.then(function (choice) {
+          if (choice && choice.outcome === 'accepted') {
+            console.log('[PWA] User accepted install prompt');
+          }
           window._installPrompt = null;
           window.hideInstallBanner();
         });
+      } else {
+        window.showInstallHelpModal();
       }
     };
     try {
       window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         window._installPrompt = e;
-        setTimeout(function () {
-          if (!window.matchMedia('(display-mode: standalone)').matches) {
-            var b = document.getElementById('installBanner');
-            if (b) b.style.display = 'flex';
-          }
-        }, 4000);
+        if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
+          var b = document.getElementById('installBanner');
+          if (b) b.style.display = 'flex';
+        }
       });
     } catch (e) { }
+
+    window.addEventListener('load', function () {
+      if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
+        var b = document.getElementById('installBanner');
+        if (b && !localStorage.getItem('install_banner_dismissed')) {
+          b.style.display = 'flex';
+        }
+      }
+    });
   </script>
 </head>
 
@@ -8442,7 +8462,7 @@
      box-shadow:0 -4px 20px rgba(0,0,0,.3)">
     <div
       style="width:42px;height:42px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
-      <img src="../picker%20logo.png" onerror="this.onerror=null;this.src='../picker-logo.png';" alt="Prince Logo"
+      <img src="./picker%20logo.png" onerror="this.onerror=null;this.src='./picker-logo.png';" alt="Prince Logo"
         style="width:100%;height:100%;object-fit:cover;border-radius:10px">
     </div>
     <div style="flex:1">
@@ -8858,6 +8878,7 @@
         if (savedPicker && savedPicker.name) {
           setSplash('Welcome back...', 80);
           STATE.pickerName = savedPicker.name;
+          STATE.pickerRole = localStorage.getItem('pa_role') || 'picker';
           if (document.getElementById('ordersPickerLbl')) document.getElementById('ordersPickerLbl').textContent = savedPicker.name;
           if (document.getElementById('sessPickerLbl')) document.getElementById('sessPickerLbl').textContent = savedPicker.name;
 
@@ -9213,7 +9234,7 @@
 
         if (window.PICKER_DB) await window.PICKER_DB.setMeta('lastSync', new Date().toISOString());
 
-        doLoginWithName(authResult.picker.name);
+        doLoginWithName(authResult.picker.name, authResult.picker?.role);
       } catch (err) {
         console.error('[doLogin] Login error:', err);
         setBadge('err', 'Invalid PIN');
@@ -9361,9 +9382,11 @@
       doLoginWithName(name);
     }
 
-    function doLoginWithName(name) {
+    function doLoginWithName(name, role) {
       STATE.pickerName = name;
+      STATE.pickerRole = role || localStorage.getItem('pa_role') || 'picker';
       localStorage.setItem(LS_PICKER, name);
+      localStorage.setItem('pa_role', STATE.pickerRole);
       document.getElementById('ordersPickerLbl').textContent = name;
       document.getElementById('sessPickerLbl').textContent = name;
       // Re-register picker name with bridge server so POS sees the real name
@@ -10720,19 +10743,48 @@
       }
     }
 
-    function pdmDelete() {
+    async function pdmDelete() {
       const p = PRODUCT_GALLERY.product;
       if (!p) return;
       if (confirm(`Delete product "${p.name}"? This action cannot be undone.`)) {
         closeProdDetail();
-        const idx = STATE.products.findIndex(x => x.id === p.id || x.barcode === p.barcode);
+        const idToDelete = p.id || p.sku || p.barcode;
+
+        // 1. Remove from in-memory STATE
+        const idx = STATE.products.findIndex(x => (p.id && x.id === p.id) || (p.barcode && x.barcode === p.barcode) || (p.sku && x.sku === p.sku));
         if (idx >= 0) STATE.products.splice(idx, 1);
         if (p.barcode) STATE.barcodeIndex.delete(p.barcode);
         if (p.sku) STATE.barcodeIndex.delete(p.sku);
+        if (p.id) STATE.barcodeIndex.delete(p.id);
+
+        // 2. Delete from local storage (IndexedDB)
         if (window.PICKER_DB && typeof window.PICKER_DB.deleteProduct === 'function') {
-          window.PICKER_DB.deleteProduct(p.id || p.barcode);
+          if (p.sku) await window.PICKER_DB.deleteProduct(p.sku);
+          if (p.barcode && p.barcode !== p.sku) await window.PICKER_DB.deleteProduct(p.barcode);
+          if (p.id && p.id !== p.sku && p.id !== p.barcode) await window.PICKER_DB.deleteProduct(p.id);
         }
-        toast(`Deleted ${p.name}`, 'ok');
+
+        // 3. Check if user is admin
+        const currentRole = (STATE.pickerRole || localStorage.getItem('pa_role') || '').toLowerCase();
+        const currentName = (STATE.pickerName || localStorage.getItem('pa_picker') || '').toLowerCase();
+        const isAdmin = currentRole === 'admin' || currentName === 'admin';
+
+        if (isAdmin) {
+          if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.deleteProduct === 'function') {
+            toast(`Deleting ${p.name} from Supabase...`, 'info');
+            const res = await window.SUPABASE_PRODUCTS.deleteProduct(idToDelete);
+            if (res && (res.success || res.synced || res.queued)) {
+              toast(`Deleted ${p.name} from local storage and Supabase`, 'ok');
+            } else {
+              toast(`Deleted ${p.name} from local storage`, 'warn');
+            }
+          } else {
+            toast(`Deleted ${p.name} from local storage`, 'ok');
+          }
+        } else {
+          toast(`Deleted ${p.name} from local storage`, 'ok');
+        }
+
         renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
       }
     }
