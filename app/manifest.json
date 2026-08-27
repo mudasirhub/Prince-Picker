@@ -1,9 +1,10 @@
 {
+  "id": "/app/",
   "name": "Prince Picker",
   "short_name": "Prince Picker",
   "description": "Offline-first warehouse picking and inventory management software.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/app/index.html",
+  "scope": "/app/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#050505",
@@ -16,38 +17,44 @@
     {
       "name": "My Orders",
       "short_name": "Orders",
-      "url": "./index.html?screen=orders",
+      "url": "/app/index.html?screen=orders",
       "description": "View assigned picking orders"
     },
     {
       "name": "Scan Item",
       "short_name": "Scan",
-      "url": "./index.html?screen=scan",
+      "url": "/app/index.html?screen=scan",
       "description": "Scan barcode for picking or ad-hoc"
     }
   ],
   "icons": [
     {
-      "src": "./picker-logo.png",
-      "sizes": "512x512",
+      "src": "./android-chrome-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "./picker%20logo.png",
-      "sizes": "512x512",
+      "src": "./android-chrome-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     },
     {
       "src": "./android-chrome-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "./android-chrome-192.png",
-      "sizes": "192x192",
+      "src": "./android-chrome-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./picker-logo.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
@@ -59,3 +66,4 @@
     }
   ]
 }
+
