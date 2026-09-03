@@ -1,5 +1,5 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v12';
+const CACHE_NAME = 'pa-picker-v13';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -61,6 +61,22 @@ self.addEventListener('fetch', e => {
 
   // Skip cross-origin requests (CDNs, fonts, etc.)
   if (url.origin !== location.origin) return;
+
+  // Navigation / HTML requests: Network-first with cache fallback
+  if (request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/app/' || url.pathname === '/app') {
+    e.respondWith(
+      fetch(request)
+        .then(res => {
+          if (res && res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(request).then(cached => cached || caches.match('./index.html')))
+    );
+    return;
+  }
 
   // API / JSON requests: Network-first with cache fallback
   const isData = url.pathname.endsWith('.json') || url.pathname.includes('/api/');

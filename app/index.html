@@ -18847,20 +18847,6 @@
 
   </script>
 
-  <!-- ══ SERVICE WORKER REGISTRATION ══ -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js')
-          .then(function (reg) {
-            console.log('[SW] Registered — scope:', reg.scope);
-          })
-          .catch(function (err) {
-            console.warn('[SW] Registration failed:', err);
-          });
-      });
-    }
-  </script>
   <script src="qrcode.min.js"></script>
   <script src="printer_service.js"></script>
   <script src="picker-bridge.js"></script>

@@ -85,6 +85,7 @@
               console.warn('[SYNC] Removing queue item due to non-retryable DB error (e.g. RLS/schema):', error);
               await window.PICKER_DB.removeSyncQueue(item.id);
             }
+          }
         } else if (item.type === 'delete_product') {
           console.log('[SYNC] Processing queued product deletion:', item.payload);
           const targetStr = String(item.payload?.id || item.payload?.sku || item.payload?.barcode || item.payload || '');
