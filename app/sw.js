@@ -1,5 +1,5 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v13';
+const CACHE_NAME = 'pa-picker-v14';
 const STATIC_ASSETS = [
   './',
   './index.html',

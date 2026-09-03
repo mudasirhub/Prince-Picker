@@ -5118,11 +5118,8 @@
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       window._installPrompt = e;
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { window.updateInstallUI(); });
-      } else {
-        window.updateInstallUI();
-      }
+      console.log('[PWA] beforeinstallprompt event captured');
+      window.updateInstallUI();
     });
 
     window.addEventListener('appinstalled', function () {
@@ -5162,16 +5159,7 @@
           window.closePwaInstallModal();
         });
       } else {
-        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIOS) {
-          window.showInstallHelpModal();
-        } else {
-          if (typeof toast === 'function') {
-            toast('To install, tap browser menu (⋮) and select "Install App"', 'info');
-          } else {
-            window.showInstallHelpModal();
-          }
-        }
+        window.showInstallHelpModal();
       }
     };
 
@@ -5182,7 +5170,9 @@
 
     window.dismissPwaPrompt = function () {
       window.closePwaInstallModal();
-      try { localStorage.setItem('pwa_prompt_dismissed', 'true'); } catch (e) {}
+      try {
+        sessionStorage.setItem('pwa_prompt_dismissed_session', 'true');
+      } catch (e) {}
     };
 
     window.updateInstallUI = function () {
@@ -5192,21 +5182,34 @@
         return;
       }
 
-      // First-time PWA prompt: Show to user if not already installed and not dismissed
-      if (!localStorage.getItem('pwa_prompt_dismissed') && !localStorage.getItem('pwa_installed')) {
+      // Display PWA install prompt modal if not running standalone and not dismissed in this session
+      try {
+        if (!sessionStorage.getItem('pwa_prompt_dismissed_session')) {
+          var m = document.getElementById('pwaInstallPromptModal');
+          if (m) {
+            m.style.display = 'flex';
+            console.log('[PWA] Showing PWA Install Prompt Modal');
+          }
+        }
+      } catch (e) {
         var m = document.getElementById('pwaInstallPromptModal');
         if (m) m.style.display = 'flex';
       }
     };
 
-    document.addEventListener('DOMContentLoaded', function () {
-      // Allow app to render first, then show PWA install prompt if first visit
-      setTimeout(function () {
-        window.updateInstallUI();
-      }, 1200);
-    });
+    // Run updateInstallUI on all initialization lifecycle events
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(window.updateInstallUI, 300);
+    } else {
+      document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(window.updateInstallUI, 300);
+        setTimeout(window.updateInstallUI, 1200);
+      });
+    }
 
     window.addEventListener('load', function () {
+      setTimeout(window.updateInstallUI, 500);
+
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' })
           .then(function (reg) {
@@ -8507,7 +8510,7 @@
 
 
   <!-- ══ PWA FIRST-TIME INSTALL PROMPT MODAL ══ -->
-  <div id="pwaInstallPromptModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+  <div id="pwaInstallPromptModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:999999;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
     <div style="background:var(--bg2);border:1px solid var(--bd2);border-radius:20px;max-width:380px;width:100%;padding:24px 20px;box-shadow:0 24px 60px rgba(0,0,0,0.6);color:var(--t1);text-align:center;position:relative;">
       <button onclick="window.dismissPwaPrompt()" style="position:absolute;top:14px;right:14px;background:var(--bg);border:1px solid var(--bd);color:var(--t2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
       <div style="width:64px;height:64px;margin:0 auto 12px;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(236,91,19,0.3);">
