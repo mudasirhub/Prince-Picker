@@ -7348,25 +7348,10 @@
 
         <!-- 2. Product Images Section -->
         <div class="pdm-images-container">
-          <div class="pdm-image-grid">
-            <div class="pdm-primary-img-tile" id="pdmPrimaryTile" onclick="openPdmFullscreenIndex(0)">
-              <img id="pdmPrimaryImg" src="" alt="Product Image" onerror="onPdmGalleryImageError(this.src)" />
-            </div>
-            <div class="pdm-add-photo-tile" onclick="pdmTriggerAddPhoto()">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-              <span>Add Photo</span>
-              <input type="file" id="pdmAddPhotoInput" accept="image/*" style="display:none" onchange="pdmHandlePhotoUpload(event)" />
-            </div>
+          <div class="pdm-image-grid" id="pdmCarouselTrack">
+            <!-- Dynamically rendered: all available images first, then Add Photo tile -->
           </div>
-          <div class="pdm-dots-container" id="pdmCarouselDots">
-            <div class="pdm-carousel-dot active"></div>
-            <div class="pdm-carousel-dot"></div>
-            <div class="pdm-carousel-dot"></div>
-            <div class="pdm-carousel-dot"></div>
-          </div>
+          <div class="pdm-dots-container" id="pdmCarouselDots"></div>
         </div>
 
         <!-- 3. Price + Quantity Cards (Three Equal Compact Cards) -->
@@ -10454,21 +10439,8 @@
         }
       }
 
-      // Render Primary Image Tile
-      const primImgEl = document.getElementById('pdmPrimaryImg');
-      const primTileEl = document.getElementById('pdmPrimaryTile');
-      if (primImgEl && primTileEl) {
-        if (validImages.length > 0) {
-          primImgEl.src = validImages[0];
-          primImgEl.style.display = 'block';
-        } else {
-          primImgEl.style.display = 'none';
-          primTileEl.innerHTML = `<div style="font-size:48px;display:flex;align-items:center;justify-content:center;height:100%">${emoji(p.name || '')}</div>`;
-        }
-      }
-
-      // Update Carousel Dots
-      renderPdmDots(validImages.length);
+      // Render product image tiles (all available images first, followed by Add Photo tile)
+      renderPdmCarousel();
 
       // 2. Header Product Identity: Product Name & Brand · Location
       const nameEl = document.getElementById('pdmName');
@@ -10883,46 +10855,70 @@
     }
 
     function renderPdmCarousel() {
-      const track = document.getElementById('pdmCarouselTrack');
+      const track = document.getElementById('pdmCarouselTrack') || document.querySelector('.pdm-image-grid');
       const dotsEl = document.getElementById('pdmCarouselDots');
       if (!track) return;
 
-      const images = PRODUCT_GALLERY.images;
+      const images = PRODUCT_GALLERY.images || [];
       const N = images.length;
       PRODUCT_GALLERY.currentIndex = 0;
 
-      if (N > 0) {
-        track.innerHTML = images.map((src, i) => `
-          <div class="pdm-carousel-slide" onclick="openPdmFullscreenIndex(${i})">
-            <img src="${src}" alt="Product Image ${i + 1}" onerror="onPdmGalleryImageError(this.src)">
-          </div>
-        `).join('');
+      let html = '';
 
-        if (dotsEl) {
+      // 1. Render all available product images FIRST
+      if (N > 0) {
+        images.forEach((src, i) => {
+          const isPrimary = i === 0;
+          html += `
+            <div class="pdm-primary-img-tile" onclick="openPdmFullscreenIndex(${i})" style="flex: ${isPrimary ? '1.5' : '1'}; min-width: ${isPrimary ? '160px' : '120px'}; height: 100%; position: relative; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid #E5E7EB; flex-shrink: 0; cursor: pointer;">
+              <img src="${src}" alt="Product Image ${i + 1}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity='0.3'">
+              ${isPrimary ? '<span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;backdrop-filter:blur(4px);">Primary</span>' : ''}
+            </div>
+          `;
+        });
+      } else {
+        const p = PRODUCT_GALLERY.product || {};
+        html += `
+          <div class="pdm-primary-img-tile" style="flex: 1.5; min-width: 160px; height: 100%; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; flex-shrink: 0;">
+            <div style="font-size:48px;">${emoji(p.name || '')}</div>
+          </div>
+        `;
+      }
+
+      // 2. Render Add Photo Tile AFTER all available images
+      html += `
+        <div class="pdm-add-photo-tile" onclick="pdmTriggerAddPhoto()" style="flex: 1; min-width: 120px; height: 100%; flex-shrink: 0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>Add Photo</span>
+          <input type="file" id="pdmAddPhotoInput" accept="image/*" style="display:none" onchange="pdmHandlePhotoUpload(event)" />
+        </div>
+      `;
+
+      track.innerHTML = html;
+
+      if (dotsEl) {
+        if (N > 1) {
           dotsEl.style.display = 'flex';
           dotsEl.innerHTML = images.map((_, i) => `
             <div class="pdm-carousel-dot ${i === 0 ? 'active' : ''}" onclick="scrollPdmCarouselToIndex(${i})"></div>
           `).join('');
+        } else {
+          dotsEl.style.display = 'none';
         }
-      } else {
-        const p = PRODUCT_GALLERY.product || {};
-        track.innerHTML = `
-          <div class="pdm-carousel-slide" style="cursor:default">
-            <div style="font-size:56px">${emoji(p.name || '')}</div>
-          </div>
-        `;
-        if (dotsEl) dotsEl.style.display = 'none';
       }
 
       // Scroll listener to update pagination dots dynamically
       track.onscroll = debounce(function () {
-        const slide = track.querySelector('.pdm-carousel-slide');
+        const slide = track.querySelector('.pdm-primary-img-tile');
         if (!slide) return;
         const slideW = slide.offsetWidth + 12;
         const index = Math.round(track.scrollLeft / slideW);
-        PRODUCT_GALLERY.currentIndex = Math.max(0, Math.min(index, N - 1));
+        PRODUCT_GALLERY.currentIndex = Math.max(0, Math.min(index, Math.max(0, N - 1)));
 
-        if (dotsEl && N > 0) {
+        if (dotsEl && N > 1) {
           const dots = dotsEl.querySelectorAll('.pdm-carousel-dot');
           dots.forEach((dot, idx) => {
             dot.classList.toggle('active', idx === PRODUCT_GALLERY.currentIndex);
@@ -10932,9 +10928,9 @@
     }
 
     function scrollPdmCarouselToIndex(idx) {
-      const track = document.getElementById('pdmCarouselTrack');
+      const track = document.getElementById('pdmCarouselTrack') || document.querySelector('.pdm-image-grid');
       if (!track) return;
-      const slide = track.querySelector('.pdm-carousel-slide');
+      const slide = track.querySelector('.pdm-primary-img-tile');
       if (!slide) return;
       const slideW = slide.offsetWidth + 12;
       track.scrollTo({ left: idx * slideW, behavior: 'smooth' });
