@@ -24,30 +24,69 @@
 
   // Common automotive typos and synonyms dictionary
   const TYPO_SYNONYMS = {
+    'vizor': 'visor',
+    'viser': 'visor',
+    'vizar': 'visor',
+    'pulzar': 'pulsar',
+    'pulser': 'pulsar',
+    'pluzer': 'pulsar',
+    'plzr': 'pulsar',
     'barke': 'brake',
     'brak': 'brake',
+    'break': 'brake',
     'clutsh': 'clutch',
     'cluch': 'clutch',
     'disck': 'disc',
     'disk': 'disc',
+    'dik': 'disc',
     'accelator': 'accelerator',
     'accel': 'accelerator',
+    'exelerator': 'accelerator',
     'carborator': 'carburetor',
     'carburator': 'carburetor',
     'shocker': 'shock',
+    'shok': 'shock',
     'filt': 'filter',
+    'filtar': 'filter',
+    'filtre': 'filter',
     'plug': 'spark plug',
     'spocket': 'sprocket',
+    'spoket': 'sprocket',
     'gaskit': 'gasket',
     'cylender': 'cylinder',
     'bering': 'bearing',
     'leverr': 'lever',
     'indecator': 'indicator',
     'actva': 'activa',
-    'pulser': 'pulsar',
+    'aktiva': 'activa',
     'splender': 'splendor',
+    'splendour': 'splendor',
     'apche': 'apache',
-    'unicon': 'unicorn'
+    'apachi': 'apache',
+    'unicon': 'unicorn',
+    'shine': 'shine',
+    'dio': 'dio',
+    'jupiter': 'jupiter',
+    'access': 'access',
+    'platina': 'platina',
+    'passion': 'passion',
+    'glamour': 'glamour',
+    'cbz': 'cbz',
+    'karizma': 'karizma',
+    'duke': 'duke',
+    'rc': 'rc',
+    'classic': 'classic',
+    'bullet': 'bullet',
+    'meteor': 'meteor',
+    'frent': 'front',
+    'rear': 'rear',
+    'hedlight': 'headlight',
+    'headlite': 'headlight',
+    'silenser': 'silencer',
+    'batry': 'battery',
+    'betry': 'battery',
+    'miror': 'mirror',
+    'motar': 'motor'
   };
 
   function normalizeSKU(str) {
@@ -75,31 +114,53 @@
       .replace(/'/g, '&#39;');
   }
 
-  function levenshteinDistance(a, b) {
+  function damerauLevenshtein(a, b) {
     if (a === b) return 0;
-    if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
-    if (Math.abs(a.length - b.length) > 2) return 99;
+    const lenA = a.length, lenB = b.length;
+    if (lenA === 0) return lenB;
+    if (lenB === 0) return lenA;
+    if (Math.abs(lenA - lenB) > 2) return 99;
 
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    const d = [];
+    for (let i = 0; i <= lenA; i++) d[i] = [i];
+    for (let j = 0; j <= lenB; j++) d[0][j] = j;
 
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
+    for (let i = 1; i <= lenA; i++) {
+      for (let j = 1; j <= lenB; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        d[i][j] = Math.min(
+          d[i - 1][j] + 1,       // deletion
+          d[i][j - 1] + 1,       // insertion
+          d[i - 1][j - 1] + cost // substitution
+        );
+        // Transposition (e.g. barke -> brake)
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+          d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
         }
       }
     }
-    return matrix[b.length][a.length];
+    return d[lenA][lenB];
   }
+
+  function phoneticKey(str) {
+    if (!str) return '';
+    return String(str)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .replace(/ph/g, 'f')
+      .replace(/z/g, 's')
+      .replace(/ck/g, 'k')
+      .replace(/c(?=[eiy])/g, 's')
+      .replace(/c/g, 'k')
+      .replace(/w/g, 'v')
+      .replace(/qu/g, 'k')
+      .replace(/x/g, 'ks')
+      .replace(/([aeiou])\1+/g, '$1')
+      .replace(/([^aeiou])\1+/g, '$1')
+      .replace(/[aeiou]/g, 'a');
+  }
+
+  const levenshteinDistance = damerauLevenshtein;
 
   class LRUCache {
     constructor(maxSize = 50) {
@@ -136,6 +197,8 @@
       this.rawSkuMap = new Map(); // exact raw SKU -> Set of indices
       this.skuPrefixMap = new Map(); // prefix (2..6) -> Set of indices
       this.tokenIndex = new Map(); // token -> Set of indices
+      this.phoneticTokenMap = new Map(); // phoneticKey -> Map<token, Set<indices>>
+      this.vocabTokens = new Set(); // set of unique tokens
       this.primaryVehicleIndex = new Map(); // vehicle token -> Set of indices
       this.compatibilityEntries = []; // array of { prodIdx, make, model, name, vehicleFullName, tokens }
       this.locationMap = new Map(); // location token / code -> Set of indices
@@ -151,6 +214,8 @@
       this.rawSkuMap.clear();
       this.skuPrefixMap.clear();
       this.tokenIndex.clear();
+      this.phoneticTokenMap.clear();
+      this.vocabTokens.clear();
       this.primaryVehicleIndex.clear();
       this.compatibilityEntries = [];
       this.locationMap.clear();
@@ -297,6 +362,19 @@
         this.tokenIndex.set(token, new Set());
       }
       this.tokenIndex.get(token).add(idx);
+      this.vocabTokens.add(token);
+
+      const pk = phoneticKey(token);
+      if (pk && pk.length >= 2) {
+        if (!this.phoneticTokenMap.has(pk)) {
+          this.phoneticTokenMap.set(pk, new Map());
+        }
+        const tokenMap = this.phoneticTokenMap.get(pk);
+        if (!tokenMap.has(token)) {
+          tokenMap.set(token, new Set());
+        }
+        tokenMap.get(token).add(idx);
+      }
     }
 
     _addLocationToken(token, idx) {
@@ -417,14 +495,43 @@
         }
       }
 
+      // Build candidate token sets for each query token (exact, typo synonyms, phonetic soundalike, and edit distance <= 2)
+      const tokenCandidatesMap = new Map();
+      for (const tok of queryTokens) {
+        const candidates = new Set([tok]);
+        if (TYPO_SYNONYMS[tok]) {
+          TYPO_SYNONYMS[tok].split(' ').forEach(syn => candidates.add(syn));
+        }
+        const pk = phoneticKey(tok);
+        if (pk && this.phoneticTokenMap.has(pk)) {
+          const map = this.phoneticTokenMap.get(pk);
+          for (const canon of map.keys()) {
+            candidates.add(canon);
+          }
+        }
+        // Damerau-Levenshtein against vocabulary
+        if (tok.length >= 4) {
+          for (const vTok of this.vocabTokens) {
+            if (Math.abs(vTok.length - tok.length) <= 2) {
+              const dist = damerauLevenshtein(tok, vTok);
+              if ((tok.length >= 4 && dist <= 1) || (tok.length >= 6 && dist <= 2)) {
+                candidates.add(vTok);
+              }
+            }
+          }
+        }
+        tokenCandidatesMap.set(tok, candidates);
+      }
+
       // ── 5. COMPATIBILITY MATCHING (Rank: 80 - 85) ──
       for (let cIdx = 0; cIdx < this.compatibilityEntries.length; cIdx++) {
         const entry = this.compatibilityEntries[cIdx];
         const fullVehLower = entry.vehicleFullName.toLowerCase();
         const altNameLower = entry.name.toLowerCase();
+        const fullVehPK = phoneticKey(entry.vehicleFullName);
 
         // Exact compatibility vehicle
-        if (fullVehLower === qLower) {
+        if (fullVehLower === qLower || fullVehPK === phoneticKey(qLower)) {
           addScore(
             entry.prodIdx,
             80,
@@ -432,10 +539,17 @@
             `🔄 Fits ${entry.vehicleFullName}${entry.name ? ' — Saved name: ' + entry.name : ''}`
           );
         }
-        // Vehicle + alternate name match (e.g. "unicorn brake pad")
+        // Vehicle + alternate name match (e.g. "unicorn brake pad" or "pulzar vizor")
         else if (queryTokens.length >= 2) {
-          const matchesVehicle = queryTokens.some(t => fullVehLower.includes(t));
-          const matchesAlt = entry.name && queryTokens.some(t => altNameLower.includes(t) || (TYPO_SYNONYMS[t] && altNameLower.includes(TYPO_SYNONYMS[t])));
+          const matchesVehicle = queryTokens.some(t => {
+            const cands = tokenCandidatesMap.get(t) || [t];
+            return Array.from(cands).some(c => fullVehLower.includes(c)) || phoneticKey(fullVehLower).includes(phoneticKey(t));
+          });
+          const matchesAlt = entry.name && queryTokens.some(t => {
+            const cands = tokenCandidatesMap.get(t) || [t];
+            return Array.from(cands).some(c => altNameLower.includes(c)) || phoneticKey(altNameLower).includes(phoneticKey(t));
+          });
+
           if (matchesVehicle && matchesAlt) {
             addScore(
               entry.prodIdx,
@@ -453,14 +567,18 @@
           }
         } else if (queryTokens.length === 1) {
           const t = queryTokens[0];
-          if (fullVehLower.includes(t) && t.length >= 3) {
+          const cands = tokenCandidatesMap.get(t) || [t];
+          const hasVehMatch = Array.from(cands).some(c => fullVehLower.includes(c)) || (t.length >= 4 && phoneticKey(fullVehLower).includes(phoneticKey(t)));
+          const hasAltMatch = entry.name && (Array.from(cands).some(c => altNameLower.includes(c)) || (t.length >= 4 && phoneticKey(altNameLower).includes(phoneticKey(t))));
+
+          if (hasVehMatch) {
             addScore(
               entry.prodIdx,
               75,
               'compatibility',
               `🔄 Compatible with ${entry.vehicleFullName}`
             );
-          } else if (altNameLower.includes(t) && t.length >= 3) {
+          } else if (hasAltMatch) {
             addScore(
               entry.prodIdx,
               80,
@@ -473,63 +591,55 @@
 
       // ── 6. PRIMARY VEHICLE MATCH (Rank: 75 - 85) ──
       for (const t of queryTokens) {
-        if (this.primaryVehicleIndex.has(t)) {
-          for (const idx of this.primaryVehicleIndex.get(t)) {
-            const p = this.products[idx];
-            const pv = Array.isArray(p.vehicles) ? p.vehicles[0] : (p.vehicle || '');
-            addScore(idx, 75, 'primary_vehicle', `🏍️ ${pv || 'Primary vehicle'} match`);
+        const cands = tokenCandidatesMap.get(t) || [t];
+        for (const cand of cands) {
+          if (this.primaryVehicleIndex.has(cand)) {
+            for (const idx of this.primaryVehicleIndex.get(cand)) {
+              const p = this.products[idx];
+              const pv = Array.isArray(p.vehicles) ? p.vehicles[0] : (p.vehicle || '');
+              addScore(idx, 75, 'primary_vehicle', `🏍️ ${pv || 'Primary vehicle'} match`);
+            }
           }
         }
       }
 
-      // ── 7. TOKEN INVERTED INDEX & AUTOMOTIVE TYPO CORRECTION ──
-      const expandedTokens = queryTokens.map(tok => {
-        return TYPO_SYNONYMS[tok] ? TYPO_SYNONYMS[tok].split(' ') : [tok];
-      }).flat();
+      // ── 7. TOKEN INVERTED INDEX & EXTRA FUZZY / SOUNDALIKE MATCHING ──
+      for (const tok of queryTokens) {
+        const cands = tokenCandidatesMap.get(tok) || new Set([tok]);
 
-      for (const tok of expandedTokens) {
-        if (this.tokenIndex.has(tok)) {
-          for (const idx of this.tokenIndex.get(tok)) {
-            const p = this.products[idx];
-            if (!p) continue;
-            const pNameLower = (p.name || '').toLowerCase();
-            const isExactName = pNameLower === qLower;
-            const isBrand = (p.brand || '').toLowerCase() === tok;
-            const isCat = (p.category || '').toLowerCase() === tok;
+        for (const cand of cands) {
+          const isExact = (cand === tok);
+          if (this.tokenIndex.has(cand)) {
+            for (const idx of this.tokenIndex.get(cand)) {
+              const p = this.products[idx];
+              if (!p) continue;
+              const pNameLower = (p.name || '').toLowerCase();
+              const isExactName = pNameLower === qLower;
+              const isBrand = (p.brand || '').toLowerCase() === cand;
+              const isCat = (p.category || '').toLowerCase() === cand;
 
-            let score = 50;
-            let reason = 'token';
-            if (isExactName) {
-              score = 90;
-              reason = 'exact_name';
-            } else if (isBrand || isCat) {
-              score = 65;
-              reason = isBrand ? 'brand' : 'category';
-            } else if (pNameLower.includes(qLower)) {
-              score = 70;
-              reason = 'name_contains';
-            }
-            addScore(idx, score, reason);
-          }
-        } else if (tok.length >= 3) {
-          // Prefix matching in tokens
-          for (const [indexedToken, idxSet] of this.tokenIndex.entries()) {
-            if (indexedToken.startsWith(tok)) {
-              for (const idx of idxSet) {
-                addScore(idx, 60, 'prefix');
+              let score = isExact ? 52 : 46;
+              let reason = isExact ? 'token' : 'fuzzy_soundalike';
+              let highlight = isExact ? '' : `~${cand}`;
+
+              if (isExactName) {
+                score = 90;
+                reason = 'exact_name';
+              } else if (isBrand || isCat) {
+                score = isExact ? 65 : 60;
+                reason = isBrand ? 'brand' : 'category';
+              } else if (pNameLower.includes(qLower)) {
+                score = 70;
+                reason = 'name_contains';
               }
+              addScore(idx, score, reason, highlight);
             }
-          }
-
-          // Levenshtein typo tolerance for tokens >= 5 chars
-          if (tok.length >= 5) {
+          } else if (isExact && tok.length >= 3) {
+            // Prefix matching in tokens
             for (const [indexedToken, idxSet] of this.tokenIndex.entries()) {
-              if (Math.abs(indexedToken.length - tok.length) <= 1 && indexedToken.length >= 4) {
-                const dist = levenshteinDistance(tok, indexedToken);
-                if (dist <= 1) {
-                  for (const idx of idxSet) {
-                    addScore(idx, 40, 'typo');
-                  }
+              if (indexedToken.startsWith(tok)) {
+                for (const idx of idxSet) {
+                  addScore(idx, 60, 'prefix', `Prefix ${tok.toUpperCase()}`);
                 }
               }
             }
@@ -537,7 +647,7 @@
         }
       }
 
-      // ── 8. COMPOUND MATCHES (Location + Product OR Vehicle + Product) ──
+      // ── 8. COMPOUND MATCHES (Location + Product OR Multi-Term Cross-Field) ──
       if (detectedLocationTokens.length > 0 && nonLocationTokens.length > 0) {
         // e.g. "brake R1L1B1"
         for (const locTok of detectedLocationTokens) {
@@ -560,15 +670,27 @@
           const p = this.products[idx];
           if (!p) continue;
           const searchHaystack = `${p.name} ${p.brand || ''} ${p.category || ''} ${p.sku || ''} ${Array.isArray(p.vehicles) ? p.vehicles.join(' ') : ''}`.toLowerCase();
-          const allMatched = queryTokens.every(tok => {
-            const canonical = TYPO_SYNONYMS[tok] || tok;
-            return searchHaystack.includes(tok) || searchHaystack.includes(canonical);
-          });
-          if (allMatched) {
-            item.score = Math.max(item.score, 85);
-            if (!item.matchHighlight) {
-              item.matchHighlight = `Matched all query terms`;
+          const haystackWords = searchHaystack.split(/\s+/);
+          const haystackPKs = haystackWords.map(w => phoneticKey(w));
+
+          let matchedCount = 0;
+          for (const tok of queryTokens) {
+            const cands = tokenCandidatesMap.get(tok) || new Set([tok]);
+            const pk = phoneticKey(tok);
+            const direct = Array.from(cands).some(c => searchHaystack.includes(c));
+            const phonetic = haystackPKs.includes(pk);
+            if (direct || phonetic) {
+              matchedCount++;
             }
+          }
+
+          if (matchedCount === queryTokens.length) {
+            item.score = Math.max(item.score, 88 + (queryTokens.length * 2));
+            if (!item.matchHighlight) {
+              item.matchHighlight = `Matched all query terms (${queryTokens.join(' + ')})`;
+            }
+          } else if (matchedCount > 1) {
+            item.score = Math.max(item.score, 65 + (matchedCount * 7));
           }
         }
       }
