@@ -16,6 +16,12 @@
   "prefer_related_applications": false,
   "shortcuts": [
     {
+      "name": "Inventory",
+      "short_name": "Inventory",
+      "url": "/app/index.html?screen=inventory",
+      "description": "Browse and search warehouse inventory"
+    },
+    {
       "name": "My Orders",
       "short_name": "Orders",
       "url": "/app/index.html?screen=orders",

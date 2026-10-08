@@ -1,9 +1,10 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v14';
+const CACHE_NAME = 'pa-picker-v15';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './search_engine.js',
   './supabase/config.js',
   './supabase/client.js',
   './supabase/db.js',
@@ -17,7 +18,6 @@ const STATIC_ASSETS = [
   './supabase/image_uploader.js',
   './supabase/storage.js',
   './picker-logo.png',
-  './picker%20logo.png',
   './apple-touch-icon.png',
   './android-chrome-192.png',
   './android-chrome-512.png'
@@ -73,7 +73,7 @@ self.addEventListener('fetch', e => {
           }
           return res;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match('./index.html')))
+        .catch(() => caches.match(request).then(cached => cached || caches.match('./index.html') || caches.match('/app/index.html')))
     );
     return;
   }
