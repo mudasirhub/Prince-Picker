@@ -86,11 +86,13 @@
       padding: 16px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity .25s ease;
+      visibility: hidden;
+      transition: opacity .25s ease, visibility .25s ease;
     }
     #notifSheet.open {
       opacity: 1;
       pointer-events: auto;
+      visibility: visible;
     }
     #notifBg {
       position: absolute;
@@ -106,8 +108,8 @@
       border-radius: 24px;
       width: 100%;
       max-width: 680px;
-      max-height: 88vh;
-      height: 85vh;
+      max-height: 88dvh;
+      height: 85dvh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
@@ -538,8 +540,8 @@
     @media (max-width: 600px) {
       #notifPanel {
         width: 100% !important;
-        height: 88vh !important;
-        max-height: 88vh !important;
+        height: 88dvh !important;
+        max-height: 88dvh !important;
         border-radius: 24px 24px 0 0 !important;
         margin-top: auto !important;
         margin-bottom: 0 !important;
@@ -591,7 +593,7 @@
       right: 0;
       background: var(--card, #ffffff);
       border-radius: 24px 24px 0 0;
-      max-height: 85vh;
+      max-height: 85dvh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
@@ -946,22 +948,39 @@
 
     html,
     body {
+      width: 100%;
       height: 100%;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      height: 100dvh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--t1);
-      overflow: hidden
+      overflow: hidden;
+      overscroll-behavior: none;
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: auto;
     }
 
     /* ══ SCREEN SYSTEM ══ */
     .S {
       display: none;
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
       background: var(--bg);
       flex-direction: column;
       z-index: 1;
-      animation: fadeIn .15s ease
+      overflow: hidden;
+      overscroll-behavior-y: none;
+      contain: strict;
+      animation: fadeIn .15s ease;
     }
 
     .S.on {
@@ -4952,24 +4971,31 @@
     #moreSheet {
       position: fixed;
       inset: 0;
-      z-index: 300;
-      pointer-events: none
+      z-index: 3000;
+      pointer-events: none;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility .25s ease, opacity .25s ease;
     }
 
     #moreSheet.open {
-      pointer-events: all
+      pointer-events: auto;
+      visibility: visible;
+      opacity: 1;
     }
 
     #moreBg {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, .4);
+      background: rgba(0, 0, 0, .45);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
       opacity: 0;
-      transition: opacity .2s
+      transition: opacity .25s ease;
     }
 
     #moreSheet.open #moreBg {
-      opacity: 1
+      opacity: 1;
     }
 
     #morePanel {
@@ -4978,15 +5004,16 @@
       left: 0;
       right: 0;
       background: var(--card);
-      border-radius: 20px 20px 0 0;
+      border-radius: 28px 28px 0 0;
       padding: 12px 16px 16px;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
-      transform: translateY(100%);
-      transition: transform .25s cubic-bezier(.32, .72, 0, 1)
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      transform: translateY(105%);
+      transition: transform .28s cubic-bezier(.32, .72, 0, 1);
+      will-change: transform;
     }
 
     #moreSheet.open #morePanel {
-      transform: translateY(0)
+      transform: translateY(0);
     }
 
     .more-handle {
@@ -5669,156 +5696,995 @@
       font-size: 13px;
       font-weight: 700;
     }
+  
+    /* ════════════════════════════════════════════════════════════════
+       APPLE iOS HIG NATIVE DESIGN SYSTEM & TOUCH ERGONOMICS (< 768px)
+       ════════════════════════════════════════════════════════════════ */
+
+    /* GPU Layer Stabilization on fixed glassmorphic chrome */
+    .tb,
+    .bn,
+    .ios-glass {
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
+    /* Designated inner scroll containers with momentum touch scrolling */
+    .step-scroll,
+    .orders-list,
+    .search-results,
+    .cart-items,
+    .logs-container,
+    .pdm-sheet-container,
+    .nc-list-container,
+    .ios-scroll-content,
+    .settings-scroll,
+    #s-settings > div[style*="overflow-y"],
+    #s-dashboard > div[style*="overflow-y"],
+    #s-orders > div[style*="overflow-y"],
+    #s-products > div[style*="overflow-y"],
+    #s-cart > div[style*="overflow-y"] {
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior-y: contain !important;
+      transform: translateZ(0);
+    }
+
+    /* iOS Inset Badges */
+    .ios-badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: var(--bg2);
+      color: var(--t2);
+      letter-spacing: 0.2px;
+    }
+    .ios-badge-green {
+      font-size: 11px;
+      font-weight: 750;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(22, 163, 74, 0.12);
+      color: var(--gr, #16a34a);
+      border: 1px solid rgba(22, 163, 74, 0.25);
+    }
+    .ios-badge-orange {
+      font-size: 11px;
+      font-weight: 750;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: var(--or-lt, #fdf0e8);
+      color: var(--or, #c84a0d);
+      border: 1px solid var(--or-md, #f9dcc9);
+    }
+
+    /* iOS Bottom Sheet Architecture */
+    .ios-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: rgba(0, 0, 0, 0.5);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: opacity 0.25s ease;
+      padding: 0;
+    }
+    .ios-sheet-container {
+      background: var(--card, #ffffff);
+      width: 100%;
+      max-width: 520px;
+      border-radius: 28px 28px 0 0;
+      padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      max-height: 90dvh;
+      box-sizing: border-box;
+      animation: iosSheetUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+      transform: translateZ(0);
+    }
+    @keyframes iosSheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .ios-sheet-grabber {
+      width: 36px;
+      height: 4.5px;
+      border-radius: 3px;
+      background: var(--bd2, #d1d5db);
+      margin: 4px auto 14px auto;
+      opacity: 0.8;
+      flex-shrink: 0;
+    }
+    .ios-sheet-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .ios-app-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--or-lt, #fdf0e8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(200, 74, 13, 0.2);
+    }
+    .ios-app-icon {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ios-sheet-header-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .ios-sheet-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--t1, #111111);
+      line-height: 1.25;
+      letter-spacing: -0.3px;
+    }
+    .ios-sheet-subtitle {
+      font-size: 12px;
+      color: var(--t3, #666666);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    .ios-sheet-close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bg2, #f3f4f6);
+      border: 1px solid var(--bd, #e5e7eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--t2, #555555);
+      flex-shrink: 0;
+      transition: transform 0.1s ease;
+    }
+    .ios-sheet-close-btn:active {
+      transform: scale(0.92);
+    }
+    .ios-sheet-body {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .ios-sheet-description {
+      font-size: 14px;
+      color: var(--t2, #4b5563);
+      line-height: 1.5;
+      margin: 0 0 14px 0;
+    }
+    .ios-benefits-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .ios-benefit-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 12px;
+      background: var(--bg2, #f3f4f6);
+      color: var(--t1, #111111);
+      border: 0.5px solid var(--bd, #e5e7eb);
+    }
+    .ios-install-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--bg2, #f3f4f6);
+      border: 1px solid var(--bd, #e5e7eb);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .ios-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--t1, #1f2937);
+    }
+    .ios-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--or, #c84a0d);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ios-step-text {
+      flex: 1;
+    }
+    .ios-inline-icon {
+      display: inline-flex;
+      vertical-align: middle;
+      color: var(--or, #c84a0d);
+      margin: 0 2px;
+    }
+    .ios-install-note {
+      font-size: 11px;
+      color: var(--t3, #6b7280);
+      text-align: center;
+      line-height: 1.4;
+      padding: 0 4px;
+    }
+    .ios-sheet-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .ios-btn-primary {
+      flex: 1.5;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--or, #c84a0d), var(--or2, #ff7133));
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 750;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(200, 74, 13, 0.35);
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+    .ios-btn-primary:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+    .ios-btn-secondary {
+      flex: 1;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--bg2, #f3f4f6);
+      color: var(--t2, #374151);
+      font-size: 15px;
+      font-weight: 700;
+      border: 1px solid var(--bd, #e5e7eb);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s ease;
+    }
+    .ios-btn-secondary:active {
+      transform: scale(0.97);
+    }
+
+    /* ══════ MOBILE-ONLY iOS HIG VIEWPORT RESTRUCTURING (< 768px) ══════ */
+    @media (max-width: 767.98px) {
+      /* Prevent iOS Safari auto-zoom on input focus */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+
+      /* iOS Top Navigation Bar (Translucent glassmorphism) */
+      .tb {
+        height: calc(48px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        background: rgba(255, 255, 255, 0.82) !important;
+        -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+        backdrop-filter: saturate(180%) blur(20px) !important;
+        border-bottom: 0.5px solid var(--bd, rgba(0, 0, 0, 0.12)) !important;
+        box-shadow: none !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
+      }
+      [data-theme="dark"] .tb {
+        background: rgba(31, 31, 35, 0.82) !important;
+        border-bottom: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+      }
+      .tb-title {
+        font-size: 17px !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.3px !important;
+      }
+
+      /* Interactive buttons 44px touch targets */
+      .ib {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        border-radius: 12px !important;
+        transition: transform 0.1s ease, opacity 0.1s ease !important;
+      }
+      .ib:active {
+        transform: scale(0.95) !important;
+        opacity: 0.7 !important;
+      }
+
+      /* iOS Bottom Tab Bar (Fixed, translucent blur, safe-area inset) */
+      .bn {
+        height: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        padding-top: 0 !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        background: rgba(255, 255, 255, 0.88) !important;
+        -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+        backdrop-filter: saturate(180%) blur(20px) !important;
+        border-top: 0.5px solid var(--bd, rgba(0, 0, 0, 0.12)) !important;
+        box-shadow: none !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 900 !important;
+        display: flex !important;
+        align-items: flex-end !important;
+        overflow: visible !important;
+      }
+      [data-theme="dark"] .bn {
+        background: rgba(31, 31, 35, 0.88) !important;
+        border-top: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+      }
+      .bnt {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 0 4px calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+        gap: 3px !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.2px !important;
+        color: var(--t3) !important;
+        transition: opacity 0.12s ease !important;
+      }
+      .bnt:active {
+        opacity: 0.6 !important;
+      }
+      .bnt.on {
+        color: var(--or) !important;
+        font-weight: 750 !important;
+      }
+
+      /* iOS Inset Grouped Lists */
+      .settings-group {
+        background: var(--card) !important;
+        border-radius: 16px !important;
+        border: 0.5px solid var(--bd) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        margin-bottom: 16px !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+      .settings-group-title {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: var(--t3) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding: 12px 16px 6px 16px !important;
+        margin: 0 !important;
+      }
+      .settings-row {
+        padding: 12px 16px !important;
+        min-height: 48px !important;
+        border-bottom: 0.5px solid var(--bd) !important;
+        margin: 0 !important;
+      }
+      .settings-row:last-child {
+        border-bottom: none !important;
+      }
+      .settings-row.clickable {
+        cursor: pointer;
+        transition: background 0.12s ease;
+      }
+      .settings-row.clickable:active {
+        background: var(--bg2) !important;
+      }
+
+      /* iOS Segmented Controls */
+      .orders-strip, .cart-tab-bar, .logs-tab-bar, .nc-tabs {
+        background: var(--bg2) !important;
+        padding: 4px !important;
+        border-radius: 12px !important;
+        gap: 4px !important;
+      }
+      .ctab, .logs-tab, .chip, .nc-tab {
+        border-radius: 9px !important;
+        border: none !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        padding: 6px 12px !important;
+        background: transparent !important;
+        color: var(--t2) !important;
+        transition: background 0.15s ease, box-shadow 0.15s ease !important;
+      }
+      .ctab.on, .logs-tab.on, .chip.on, .nc-tab.on, .ctab.active, .chip.active {
+        background: var(--card) !important;
+        color: var(--t1) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+      }
+
+      /* iOS Search Fields */
+      .sf input {
+        border-radius: 12px !important;
+        background: var(--bg2) !important;
+        border: none !important;
+        height: 40px !important;
+        font-size: 16px !important;
+      }
+
+      /* ══════════════════════════════════════════════════════════
+         MOBILE CLAYMORPHISM TACTILE DESIGN SYSTEM
+         ══════════════════════════════════════════════════════════ */
+
+      /* 1. 3D Tactile Cards (Products, Inventory, & Stat Chips) */
+      .pr-card, .prod-card {
+        border-radius: 20px !important;
+        background: var(--card) !important;
+        border: 1px solid rgba(255, 255, 255, 0.75) !important;
+        box-shadow:
+          0 10px 24px -4px rgba(22, 34, 51, 0.08),
+          0 4px 8px -2px rgba(22, 34, 51, 0.04),
+          inset 2px 2px 3.5px rgba(255, 255, 255, 0.95),
+          inset -2px -2px 4.5px rgba(0, 0, 0, 0.035) !important;
+        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease !important;
+      }
+      .pr-card:active, .prod-card:active {
+        transform: scale(0.975) translateY(1.5px) !important;
+        box-shadow:
+          0 4px 10px -2px rgba(22, 34, 51, 0.06),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+          inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.05) !important;
+      }
+      [data-theme="dark"] .pr-card,
+      [data-theme="dark"] .prod-card {
+        background: #1e2027 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow:
+          0 10px 24px -4px rgba(0, 0, 0, 0.45),
+          0 4px 8px -2px rgba(0, 0, 0, 0.3),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.12),
+          inset -2px -2px 4.5px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      /* 3D Embossed Thumbnail Recess */
+      .pr-img, .prod-img {
+        border-radius: 15px !important;
+        box-shadow:
+          inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.07),
+          0 2px 5px rgba(0, 0, 0, 0.03) !important;
+      }
+      [data-theme="dark"] .pr-img,
+      [data-theme="dark"] .prod-img {
+        background: #16181d !important;
+        box-shadow:
+          inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.45),
+          0 2px 5px rgba(0, 0, 0, 0.25) !important;
+      }
+
+      /* 2. Inflated Tactile Filter Pills */
+      .fc, .fm-pill, .chip {
+        border-radius: 20px !important;
+        padding: 7px 15px !important;
+        background: var(--card) !important;
+        border: 1px solid var(--bd) !important;
+        font-weight: 700 !important;
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.04),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.9),
+          inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.03) !important;
+        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background 0.15s ease !important;
+      }
+      .fc:active, .fm-pill:active, .chip:active {
+        transform: scale(0.93) translateY(1px) !important;
+      }
+      [data-theme="dark"] .fc,
+      [data-theme="dark"] .fm-pill,
+      [data-theme="dark"] .chip {
+        background: #23262f !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.35),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.08),
+          inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.35) !important;
+      }
+      .fc.on, .fm-pill.on, .chip.on {
+        background: linear-gradient(135deg, #ff822e 0%, #ff5e00 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow:
+          0 6px 16px -2px rgba(255, 94, 0, 0.48),
+          0 2px 6px -1px rgba(255, 94, 0, 0.3),
+          inset 1.5px 1.5px 2.5px rgba(255, 255, 255, 0.6),
+          inset -1.5px -1.5px 3.5px rgba(0, 0, 0, 0.2) !important;
+        transform: translateY(-1px);
+      }
+      .fc.on:active, .fm-pill.on:active, .chip.on:active {
+        transform: scale(0.93) translateY(1px) !important;
+        box-shadow:
+          0 3px 8px rgba(255, 94, 0, 0.35),
+          inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.22) !important;
+      }
+
+      /* 3. Embossed Recessed Search Inputs */
+      .sf input, #prodQ, .search-bar input {
+        border-radius: 16px !important;
+        background: var(--bg2) !important;
+        border: 1.5px solid transparent !important;
+        box-shadow:
+          inset 2px 2px 4px rgba(0, 0, 0, 0.05),
+          inset -1px -1px 2px rgba(255, 255, 255, 0.85) !important;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease !important;
+      }
+      .sf input:focus, #prodQ:focus, .search-bar input:focus {
+        background: var(--card) !important;
+        border-color: var(--or) !important;
+        box-shadow:
+          0 6px 18px -3px rgba(255, 107, 0, 0.18),
+          0 2px 6px rgba(0, 0, 0, 0.04),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.95) !important;
+      }
+      [data-theme="dark"] .sf input,
+      [data-theme="dark"] #prodQ,
+      [data-theme="dark"] .search-bar input {
+        background: #181a20 !important;
+        box-shadow:
+          inset 2px 2px 4px rgba(0, 0, 0, 0.5),
+          inset -1px -1px 2px rgba(255, 255, 255, 0.05) !important;
+      }
+      [data-theme="dark"] .sf input:focus,
+      [data-theme="dark"] #prodQ:focus,
+      [data-theme="dark"] .search-bar input:focus {
+        background: #20232c !important;
+        border-color: var(--or) !important;
+        box-shadow:
+          0 6px 18px -3px rgba(255, 107, 0, 0.35),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.12) !important;
+      }
+
+      /* 4. Floating 3D Tactile Scan Button (Hero Orb) */
+      .bnt-disc-wrap {
+        flex: 0 0 68px !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+        position: relative !important;
+        overflow: visible !important;
+        cursor: pointer !important;
+      }
+      .bnt-disc {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #ff8433 0%, #ff5a00 100%) !important;
+        border: 2.5px solid rgba(255, 255, 255, 0.5) !important;
+        box-shadow:
+          0 10px 22px -2px rgba(255, 107, 0, 0.55),
+          0 4px 8px -2px rgba(255, 107, 0, 0.35),
+          inset 2px 2px 3.5px rgba(255, 255, 255, 0.7),
+          inset -2px -2px 4.5px rgba(0, 0, 0, 0.25) !important;
+        margin: 0 0 2px 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative !important;
+        top: -12px !important;
+        transform: none !important;
+        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease !important;
+      }
+      .bnt-disc:active {
+        transform: scale(0.92) !important;
+        box-shadow:
+          0 4px 10px rgba(255, 107, 0, 0.4),
+          inset 2px 2px 5px rgba(0, 0, 0, 0.32) !important;
+      }
+      .bnt-disc-lbl {
+        font-size: 10px !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.2px !important;
+        color: var(--or) !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-transform: uppercase !important;
+        position: relative !important;
+        bottom: 0 !important;
+      }
+
+      /* 5. Tactile Action Buttons (Primary & Secondary) */
+      .btn-p {
+        min-height: 46px !important;
+        border-radius: 16px !important;
+        background: linear-gradient(135deg, #ff822e 0%, #ff5e00 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        box-shadow:
+          0 6px 18px -3px rgba(255, 94, 0, 0.45),
+          0 2px 6px -1px rgba(255, 94, 0, 0.28),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.55),
+          inset -1.5px -1.5px 3.5px rgba(0, 0, 0, 0.2) !important;
+        font-weight: 750 !important;
+        transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease !important;
+      }
+      .btn-p:active {
+        transform: scale(0.97) translateY(1px) !important;
+        box-shadow:
+          0 2px 8px rgba(255, 94, 0, 0.35),
+          inset 2px 2px 4px rgba(0, 0, 0, 0.25) !important;
+      }
+      .btn-s {
+        min-height: 46px !important;
+        border-radius: 16px !important;
+        background: var(--card) !important;
+        border: 1px solid var(--bd) !important;
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.04),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.95),
+          inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.03) !important;
+        font-weight: 700 !important;
+        transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease !important;
+      }
+      .btn-s:active {
+        transform: scale(0.97) translateY(1px) !important;
+      }
+
+      /* 6. Dashboard Stat Tiles */
+      .db-stat-chip {
+        border-radius: 16px !important;
+        background: var(--card) !important;
+        border: 1px solid rgba(255, 255, 255, 0.75) !important;
+        box-shadow:
+          0 6px 16px -3px rgba(0, 0, 0, 0.05),
+          0 2px 5px -1px rgba(0, 0, 0, 0.03),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.95),
+          inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.03) !important;
+        transition: transform 0.15s ease !important;
+      }
+      .db-stat-chip:active {
+        transform: scale(0.96) !important;
+      }
+      [data-theme="dark"] .db-stat-chip {
+        background: #1e2027 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow:
+          0 6px 16px -3px rgba(0, 0, 0, 0.4),
+          inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.12),
+          inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.45) !important;
+      }
+
+      /* iOS Bottom Sheets for all mobile dialogs */
+      #notifPanel {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 28px 28px 0 0 !important;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #morePanel {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 28px 28px 0 0 !important;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+
   </style>
 
   <script>
-    // ── Global PWA Install & Service Worker Management ──
-    window._installPrompt = null;
+    // ── Smart PWA Install Architecture & State Manager ──
+    (function () {
+      var PWAInstallManager = {
+        deferredPrompt: null,
+        isStandalone: false,
+        isIOS: false,
+        isSafari: false,
+        installStatus: 'new',
+        _listeners: new Set(),
 
-    window.addEventListener('beforeinstallprompt', function (e) {
-      e.preventDefault();
-      window._installPrompt = e;
-      console.log('[PWA] beforeinstallprompt event captured');
-      window.updateInstallUI();
-    });
+        init: function () {
+          this.isStandalone = !!(
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+            window.navigator.standalone === true ||
+            (document.referrer && document.referrer.indexOf('android-app://') !== -1)
+          );
 
-    window.addEventListener('appinstalled', function () {
-      console.log('[PWA] App installed successfully as PWA');
-      window._installPrompt = null;
-      try { localStorage.setItem('pwa_installed', 'true'); } catch (e) {}
-      window.closePwaInstallModal();
-    });
+          var ua = window.navigator.userAgent || '';
+          this.isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+          this.isSafari = /Version\/[\d\.]+.*Safari/.test(ua);
 
-    window.showInstallHelpModal = function () {
-      var modal = document.getElementById('installHelpModal');
-      var container = document.getElementById('installInstructionsContent');
-      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-      if (container) {
-        if (isIOS) {
-          container.innerHTML = `
-            <div style="background:var(--bg2,#f3f4f6);padding:14px;border-radius:16px;margin-bottom:12px;border:1px solid var(--bd,#e5e7eb);">
-              <div style="font-size:14px;font-weight:800;color:var(--t1,#111);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span>🍎</span> Apple iOS (Safari) Steps:
-              </div>
-              <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:var(--t2,#374151);font-size:13px;line-height:1.45;">
-                <li>Tap the <strong>Share</strong> button ( <span style="font-size:16px;">⎋</span> or square with arrow ) at the bottom of Safari.</li>
-                <li>Scroll down and tap <strong>'Add to Home Screen'</strong> ( <span style="font-size:15px;">⊞</span> ).</li>
-                <li>Tap <strong>'Add'</strong> in the top-right corner.</li>
-                <li>Open <strong>Prince Picker</strong> directly from your home screen for full offline warehouse speed!</li>
-              </ol>
-            </div>
-            <div style="font-size:11px;color:var(--t3,#9ca3af);text-align:center;">
-              ⚡ Once installed, works 100% offline with zero browser bars.
-            </div>
-          `;
-        } else {
-          container.innerHTML = `
-            <div style="background:var(--bg2,#f3f4f6);padding:14px;border-radius:16px;margin-bottom:12px;border:1px solid var(--bd,#e5e7eb);">
-              <div style="font-size:14px;font-weight:800;color:var(--t1,#111);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span>🤖</span> Android & Chrome Steps:
-              </div>
-              <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:var(--t2,#374151);font-size:13px;line-height:1.45;">
-                <li>Tap the <strong>three dots</strong> menu ( <strong>⋮</strong> ) in Chrome's top right.</li>
-                <li>Tap <strong>'Install App'</strong> or <strong>'Add to Home screen'</strong>.</li>
-                <li>Confirm by tapping <strong>'Install'</strong>.</li>
-                <li>Launch <strong>Prince Picker</strong> from your home screen or app drawer!</li>
-              </ol>
-            </div>
-            <div style="font-size:11px;color:var(--t3,#9ca3af);text-align:center;">
-              ⚡ Once installed, works 100% offline with zero browser bars.
-            </div>
-          `;
-        }
-      }
-
-      if (modal) {
-        modal.style.display = 'flex';
-      }
-    };
-
-    window.closeInstallHelpModal = function () {
-      var modal = document.getElementById('installHelpModal');
-      if (modal) modal.style.display = 'none';
-    };
-
-    window.showInstallApp = function () {
-      if (window._installPrompt) {
-        window._installPrompt.prompt();
-        window._installPrompt.userChoice.then(function (choice) {
-          if (choice && choice.outcome === 'accepted') {
-            console.log('[PWA] User accepted install prompt');
-            try { localStorage.setItem('pwa_installed', 'true'); } catch (e) {}
-            window.updateInstallUI();
+          try {
+            this.installStatus = localStorage.getItem('pwa_install_status') ||
+              (localStorage.getItem('pwa_installed') ? 'installed_once' : 'new');
+          } catch (e) {
+            this.installStatus = 'new';
           }
-          window._installPrompt = null;
-          window.closePwaInstallModal();
-        });
-      } else {
-        window.showInstallHelpModal();
-      }
-    };
 
-    window.closePwaInstallModal = function () {
-      var m = document.getElementById('pwaInstallPromptModal');
-      if (m) m.style.display = 'none';
-    };
+          var self = this;
+          window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            self.deferredPrompt = e;
+            window._installPrompt = e;
+            console.log('[PWA] beforeinstallprompt captured by PWAInstallManager');
+            self._notify();
+          });
 
-    window.dismissPwaPrompt = function () {
-      window.closePwaInstallModal();
-      try {
-        sessionStorage.setItem('pwa_prompt_dismissed_session', 'true');
-      } catch (e) {}
-    };
+          window.addEventListener('appinstalled', function () {
+            console.log('[PWA] appinstalled captured by PWAInstallManager');
+            self.deferredPrompt = null;
+            window._installPrompt = null;
+            self.isStandalone = true;
+            self.installStatus = 'installed_once';
+            try {
+              localStorage.setItem('pwa_install_status', 'installed_once');
+              localStorage.setItem('pwa_installed', 'true');
+            } catch (e) {}
+            self.closePromptModal();
+            self._notify();
+          });
 
-    window.updateInstallUI = function () {
-      var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone || (document.referrer && document.referrer.includes('android-app://'));
-      var headerBtn = document.getElementById('headerInstallBtn');
-      var moreInstall = document.getElementById('more-install');
-
-      if (isStandalone) {
-        if (headerBtn) headerBtn.style.display = 'none';
-        if (moreInstall) {
-          var lbl = moreInstall.querySelector('.more-label');
-          if (lbl) {
-            lbl.textContent = 'Installed ✓';
-            lbl.style.color = 'var(--gr, #16a34a)';
+          if (window.matchMedia) {
+            var mq = window.matchMedia('(display-mode: standalone)');
+            if (mq.addEventListener) {
+              mq.addEventListener('change', function (evt) {
+                self.isStandalone = evt.matches;
+                self._notify();
+              });
+            }
           }
-          moreInstall.onclick = function() { alert('Prince Picker is running in native PWA mode!'); };
-        }
-        window.closePwaInstallModal();
-        return;
-      }
 
-      // If not standalone, ensure install button is visible
-      if (headerBtn) {
-        headerBtn.style.display = 'inline-flex';
-      }
+          this.checkFirstTimeUser();
+          this._notify();
+        },
 
-      // Display PWA install prompt bottom sheet if not running standalone and not dismissed this session
-      try {
-        if (!sessionStorage.getItem('pwa_prompt_dismissed_session') && !localStorage.getItem('pwa_installed')) {
+        subscribe: function (fn) {
+          this._listeners.add(fn);
+          var self = this;
+          return function () { self._listeners.delete(fn); };
+        },
+
+        _notify: function () {
+          this.updateUI();
+          var self = this;
+          this._listeners.forEach(function (fn) {
+            try { fn(self); } catch (e) { console.error(e); }
+          });
+        },
+
+        checkFirstTimeUser: function () {
+          if (this.isStandalone) return;
+          // First-time user enforcement: present only if no flag set
+          if (this.installStatus === 'new') {
+            var self = this;
+            setTimeout(function () {
+              self.showPromptModal();
+            }, 850);
+          }
+        },
+
+        showPromptModal: function () {
           var m = document.getElementById('pwaInstallPromptModal');
-          if (m) {
-            m.style.display = 'flex';
-            console.log('[PWA] Showing PWA Install Prompt Modal');
-          }
-        }
-      } catch (e) {
-        var m = document.getElementById('pwaInstallPromptModal');
-        if (m) m.style.display = 'flex';
-      }
-    };
+          if (!m) return;
 
-    // Run updateInstallUI on all initialization lifecycle events
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      setTimeout(window.updateInstallUI, 300);
-    } else {
-      document.addEventListener('DOMContentLoaded', function () {
-        setTimeout(window.updateInstallUI, 300);
-        setTimeout(window.updateInstallUI, 1200);
-      });
-    }
+          // Render dynamic content based on iOS vs Chrome/Android
+          var dyn = document.getElementById('pwaPromptDynamicContent');
+          var primaryBtn = document.getElementById('pwaPromptPrimaryBtn');
+          var actions = document.getElementById('pwaPromptActions');
+
+          if (dyn) {
+            if (this.isIOS) {
+              dyn.innerHTML = '<div class="ios-install-steps">' +
+                '<div class="ios-step-item"><div class="ios-step-num">1</div><div class="ios-step-text">Tap the <strong>Share</strong> button <span class="ios-inline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span> in Safari\'s bottom bar.</div></div>' +
+                '<div class="ios-step-item"><div class="ios-step-num">2</div><div class="ios-step-text">Scroll down and tap <strong>\'Add to Home Screen\'</strong> <span class="ios-inline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>.</div></div>' +
+                '<div class="ios-step-item"><div class="ios-step-num">3</div><div class="ios-step-text">Tap <strong>\'Add\'</strong> in the top-right corner to pin Prince Picker to your iPhone/iPad!</div></div>' +
+                '</div>' +
+                '<div class="ios-install-note">⚡ Full native experience: 100% offline access, zero browser address bars, instant camera barcode scanner.</div>';
+              if (primaryBtn) {
+                primaryBtn.innerHTML = '<span>Got It, Dismiss</span>';
+                primaryBtn.onclick = function () { window.usePWAInstall().dismissPrompt(); };
+              }
+            } else {
+              dyn.innerHTML = '<p class="ios-sheet-description">' +
+                'Install Prince Picker on your device for instant barcode scanning, offline search across ~20,000 SKUs, and a full native application experience without browser address bars.' +
+                '</p>' +
+                '<div class="ios-benefits-grid">' +
+                '<div class="ios-benefit-pill">⚡ 100% Offline Mode</div>' +
+                '<div class="ios-benefit-pill">📷 Instant Camera Scanner</div>' +
+                '<div class="ios-benefit-pill">🚀 Zero Browser Overhead</div>' +
+                '</div>';
+              if (primaryBtn) {
+                primaryBtn.innerHTML = '<span>📲 Install Now</span>';
+                primaryBtn.onclick = function () { window.usePWAInstall().promptInstall(); };
+              }
+            }
+          }
+
+          m.style.display = 'flex';
+        },
+
+        closePromptModal: function () {
+          var m = document.getElementById('pwaInstallPromptModal');
+          if (m) m.style.display = 'none';
+        },
+
+        dismissPrompt: function () {
+          this.closePromptModal();
+          this.installStatus = 'installed_once';
+          try {
+            localStorage.setItem('pwa_install_status', 'installed_once');
+          } catch (e) {}
+          this._notify();
+        },
+
+        promptInstall: function () {
+          var self = this;
+          if (this.isStandalone) {
+            if (window.toast) {
+              window.toast('✓ Prince Picker is already installed and running natively!');
+            } else {
+              alert('Prince Picker is running in native standalone PWA mode!');
+            }
+            return;
+          }
+
+          if (this.deferredPrompt) {
+            this.deferredPrompt.prompt();
+            this.deferredPrompt.userChoice.then(function (choice) {
+              if (choice && choice.outcome === 'accepted') {
+                console.log('[PWA] User accepted install prompt');
+                self.installStatus = 'installed_once';
+                try {
+                  localStorage.setItem('pwa_install_status', 'installed_once');
+                  localStorage.setItem('pwa_installed', 'true');
+                } catch (e) {}
+              }
+              self.deferredPrompt = null;
+              window._installPrompt = null;
+              self.closePromptModal();
+              self._notify();
+            }).catch(function (err) {
+              console.error('[PWA] Install prompt error:', err);
+            });
+          } else {
+            this.showInstructions();
+          }
+        },
+
+        showInstructions: function () {
+          this.closePromptModal();
+          var modal = document.getElementById('installHelpModal');
+          var container = document.getElementById('installInstructionsContent');
+          if (container) {
+            if (this.isIOS) {
+              container.innerHTML = '<div class="ios-install-steps">' +
+                '<div class="ios-step-item"><div class="ios-step-num">1</div><div class="ios-step-text">Tap the <strong>Share</strong> button <span class="ios-inline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span> in Safari\'s bottom toolbar.</div></div>' +
+                '<div class="ios-step-item"><div class="ios-step-num">2</div><div class="ios-step-text">Scroll down and tap <strong>\'Add to Home Screen\'</strong> <span class="ios-inline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>.</div></div>' +
+                '<div class="ios-step-item"><div class="ios-step-num">3</div><div class="ios-step-text">Tap <strong>\'Add\'</strong> in the top-right corner to pin Prince Picker to your iPhone/iPad!</div></div>' +
+                '</div>' +
+                '<div class="ios-install-note">⚡ Full native experience: 100% offline access, zero browser address bars, instant camera barcode scanner.</div>';
+            } else {
+              container.innerHTML = '<div class="ios-install-steps">' +
+                '<div class="ios-step-item"><div class="ios-step-num">1</div><div class="ios-step-text">Tap the <strong>three dots menu (⋮)</strong> or install icon in your browser toolbar.</div></div>' +
+                '<div class="ios-step-item"><div class="ios-step-num">2</div><div class="ios-step-text">Tap <strong>\'Install App\'</strong> or <strong>\'Add to Home screen\'</strong>.</div></div>' +
+                '<div class="ios-step-item"><div class="ios-step-num">3</div><div class="ios-step-text">Confirm prompt by tapping <strong>\'Install\'</strong>.</div></div>' +
+                '</div>' +
+                '<div class="ios-install-note">⚡ Full native experience: 100% offline access, instant barcode scanner, zero browser bars.</div>';
+            }
+          }
+          if (modal) modal.style.display = 'flex';
+        },
+
+        closeInstructions: function () {
+          var modal = document.getElementById('installHelpModal');
+          if (modal) modal.style.display = 'none';
+        },
+
+        updateUI: function () {
+          // 1. Settings tab row
+          var settBadge = document.getElementById('settInstallBadge');
+          var settDesc = document.getElementById('settInstallDesc');
+          var settRow = document.getElementById('settInstallRow');
+
+          if (settBadge && settDesc) {
+            if (this.isStandalone) {
+              settBadge.className = 'ios-badge-green';
+              settBadge.textContent = 'Installed ✓';
+              settDesc.textContent = 'Running natively in standalone PWA mode';
+            } else if (this.deferredPrompt) {
+              settBadge.className = 'ios-badge-orange';
+              settBadge.textContent = 'Install App';
+              settDesc.textContent = 'Tap to install directly onto device';
+            } else if (this.isIOS) {
+              settBadge.className = 'ios-badge-orange';
+              settBadge.textContent = 'Add to Home';
+              settDesc.textContent = 'Tap for Safari Home Screen instructions';
+            } else {
+              settBadge.className = 'ios-badge-pill';
+              settBadge.textContent = 'Install Guide';
+              settDesc.textContent = 'Add to device home screen for offline access';
+            }
+          }
+
+          // 2. More sheet item
+          var moreInstall = document.getElementById('more-install');
+          if (moreInstall) {
+            var lbl = moreInstall.querySelector('.more-label');
+            if (this.isStandalone) {
+              if (lbl) {
+                lbl.textContent = 'Installed ✓';
+                lbl.style.color = 'var(--gr, #16a34a)';
+              }
+              moreInstall.onclick = function () {
+                if (window.toast) window.toast('Prince Picker is running in native PWA mode!');
+                else alert('Prince Picker is running in native PWA mode!');
+              };
+            } else {
+              if (lbl) {
+                lbl.textContent = 'Install App';
+                lbl.style.color = 'var(--or, #c84a0d)';
+              }
+              moreInstall.onclick = function () {
+                if (window.closeMore) window.closeMore();
+                window.usePWAInstall().promptInstall();
+              };
+            }
+          }
+
+          // Ensure no legacy top button exists
+          var hBtn = document.getElementById('headerInstallBtn');
+          if (hBtn) hBtn.remove();
+        }
+      };
+
+      window.PWAInstallManager = PWAInstallManager;
+      window.usePWAInstall = function () { return PWAInstallManager; };
+
+      // Backward compatibility bindings
+      window.showInstallApp = function () { PWAInstallManager.promptInstall(); };
+      window.showInstallHelpModal = function () { PWAInstallManager.showInstructions(); };
+      window.closeInstallHelpModal = function () { PWAInstallManager.closeInstructions(); };
+      window.closePwaInstallModal = function () { PWAInstallManager.closePromptModal(); };
+      window.dismissPwaPrompt = function () { PWAInstallManager.dismissPrompt(); };
+      window.updateInstallUI = function () { PWAInstallManager.updateUI(); };
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(function () { PWAInstallManager.init(); }, 100);
+      } else {
+        document.addEventListener('DOMContentLoaded', function () {
+          setTimeout(function () { PWAInstallManager.init(); }, 100);
+        });
+      }
+    })();
 
     window.addEventListener('load', function () {
       setTimeout(window.updateInstallUI, 500);
@@ -6129,10 +6995,6 @@
   <div class="S" id="s-search">
     <div class="tb">
       <div class="tb-title" style="flex:1">Inventory</div>
-      <button class="pwa-header-install-btn" id="headerInstallBtn" onclick="showInstallApp()" title="Install Prince Picker to Home Screen">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Install</span>
-      </button>
       <button class="ib notification-bell" onclick="openNotificationCenter()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -6708,6 +7570,21 @@
     <div
       style="display:flex;gap:7px;padding:8px 16px 6px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none">
       <button id="fchip-all" class="fc on" onclick="setProdFilter('all',this)">All</button>
+      <button id="fchip-shop" class="fc" onclick="setProdFilter('shop',this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Shop
+      </button>
+      <button id="fchip-warehouse" class="fc" onclick="setProdFilter('warehouse',this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+        Warehouse
+      </button>
       <button id="fchip-low" class="fc" onclick="setProdFilter('low',this)">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -7023,8 +7900,8 @@
             position: relative;
             width: 100%;
             max-width: 480px;
-            height: 95vh;
-            max-height: 95vh;
+            height: 95dvh;
+            max-height: 95dvh;
             background: #ffffff;
             border-radius: 20px 20px 0 0;
             display: flex;
@@ -7739,7 +8616,7 @@
           }
           .pdm-fullscreen-image {
             max-width: 95vw;
-            max-height: 85vh;
+            max-height: 85dvh;
             object-fit: contain;
             transition: opacity 0.2s ease, transform 0.2s ease;
           }
@@ -7862,6 +8739,8 @@
             Stock Status</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <button id="fms-all" class="fm-stock-btn on" onclick="setFmStock('all',this)">All Items</button>
+            <button id="fms-shop" class="fm-stock-btn" onclick="setFmStock('shop',this)">Shop Stock</button>
+            <button id="fms-warehouse" class="fm-stock-btn" onclick="setFmStock('warehouse',this)">Warehouse Stock</button>
             <button id="fms-normal" class="fm-stock-btn" onclick="setFmStock('normal',this)">Normal Stock</button>
             <button id="fms-low" class="fm-stock-btn" onclick="setFmStock('low',this)">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -8566,41 +9445,61 @@
     </div>
   </div>
 
-  <!-- ══ PWA INSTALL PROMPT MODAL ══ -->
-  <div id="pwaInstallPromptModal" style="display:none;position:fixed;inset:0;z-index:99999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
-    <div style="background:var(--card,#fff);width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,0.25);animation:slideUp 0.25s ease;">
-      <div style="width:36px;height:4px;background:var(--bd2,#ccc);border-radius:2px;margin:0 auto 16px;"></div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-        <div style="width:50px;height:50px;border-radius:14px;background:var(--or-lt,#fdf0e8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--or,#c84a0d)" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  <!-- ══ PWA SMART FIRST-TIME INSTALL PROMPT (APPLE HIG BOTTOM SHEET) ══ -->
+  <div id="pwaInstallPromptModal" class="ios-sheet-backdrop" style="display:none;" onclick="if(event.target===this)window.usePWAInstall().dismissPrompt()">
+    <div class="ios-sheet-container">
+      <div class="ios-sheet-grabber"></div>
+      
+      <div class="ios-sheet-header">
+        <div class="ios-app-icon-wrap">
+          <img src="/app/picker-logo.png" onerror="this.onerror=null;this.src='./picker-logo.png';" alt="Prince Picker" class="ios-app-icon">
         </div>
-        <div style="flex:1;">
-          <div style="font-size:17px;font-weight:800;color:var(--t1,#111);line-height:1.2;">Install Prince Picker</div>
-          <div style="font-size:12px;color:var(--t3,#666);margin-top:3px;">Fast, offline-ready warehouse POS & inventory</div>
+        <div class="ios-sheet-header-text">
+          <div class="ios-sheet-title">Install Prince Picker</div>
+          <div class="ios-sheet-subtitle">Offline Warehouse Picking & Inventory POS</div>
         </div>
       </div>
-      <p style="font-size:13px;color:var(--t2,#444);line-height:1.45;margin-bottom:18px;">
-        Install this app on your device for instant barcode scanning, offline search of ~20,000 SKUs, and a full native mobile app experience without browser address bars.
-      </p>
-      <div style="display:flex;gap:10px;">
-        <button class="btn-s" onclick="window.dismissPwaPrompt()" style="flex:1;height:48px;border-radius:14px;font-weight:700;">Maybe Later</button>
-        <button class="btn-p" onclick="window.showInstallApp()" style="flex:1.5;height:48px;border-radius:14px;font-weight:800;box-shadow:0 4px 14px rgba(236,91,19,0.35);">📲 Install Now</button>
+
+      <div class="ios-sheet-body">
+        <div id="pwaPromptDynamicContent">
+          <!-- Populated dynamically: iOS Safari instructions or Android/Desktop 1-tap install -->
+        </div>
+      </div>
+
+      <div class="ios-sheet-actions" id="pwaPromptActions">
+        <button type="button" class="ios-btn-secondary" onclick="window.usePWAInstall().dismissPrompt()">Maybe Later</button>
+        <button type="button" class="ios-btn-primary" id="pwaPromptPrimaryBtn" onclick="window.usePWAInstall().promptInstall()">
+          <span>Install Now</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ══ INSTALL HELP MODAL (STEP-BY-STEP FOR IOS & ANDROID) ══ -->
-  <div id="installHelpModal" style="display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
-    <div style="background:var(--card,#fff);width:100%;max-width:440px;max-height:85vh;overflow-y:auto;border-radius:24px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:18px;font-weight:800;color:var(--t1,#111);">Install Prince Picker</div>
-        <button onclick="window.closeInstallHelpModal()" style="width:36px;height:36px;border-radius:50%;background:var(--bg2,#f3f4f6);border:1px solid var(--bd2,#e5e7eb);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2,#555);">
+  <!-- ══ INSTALL HELP & OFFLINE GUIDE (APPLE HIG BOTTOM SHEET) ══ -->
+  <div id="installHelpModal" class="ios-sheet-backdrop" style="display:none;" onclick="if(event.target===this)window.usePWAInstall().closeInstructions()">
+    <div class="ios-sheet-container">
+      <div class="ios-sheet-grabber"></div>
+      
+      <div class="ios-sheet-header">
+        <div class="ios-app-icon-wrap" style="width:44px;height:44px;">
+          <img src="/app/picker-logo.png" onerror="this.onerror=null;this.src='./picker-logo.png';" alt="Prince Picker" class="ios-app-icon">
+        </div>
+        <div class="ios-sheet-header-text">
+          <div class="ios-sheet-title">Installation Guide</div>
+          <div class="ios-sheet-subtitle">Add to Home Screen for Native Performance</div>
+        </div>
+        <button type="button" class="ios-sheet-close-btn" onclick="window.usePWAInstall().closeInstructions()" aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div id="installInstructionsContent" style="font-size:13px;line-height:1.5;color:var(--t2,#444);">
+
+      <div class="ios-sheet-body">
+        <div id="installInstructionsContent"></div>
       </div>
-      <button class="btn-p" onclick="window.closeInstallHelpModal()" style="height:48px;border-radius:14px;font-weight:800;">Got It</button>
+
+      <div class="ios-sheet-actions">
+        <button type="button" class="ios-btn-primary" style="width:100%" onclick="window.usePWAInstall().closeInstructions()">Got It</button>
+      </div>
     </div>
   </div>
 
@@ -8623,6 +9522,37 @@
       </button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px 20px;padding-bottom:80px;">
+<!-- ══ APPLICATION & DEVICE PWA RE-INSTALL SECTION ══ -->
+      <div class="settings-group" id="settPwaGroup">
+        <div class="settings-group-title">Application & PWA</div>
+        <div class="settings-row clickable" id="settInstallRow" onclick="window.usePWAInstall().promptInstall()" title="Install or Restore PWA">
+          <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--or,#c84a0d),var(--or2,#ff7133));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(200,74,13,0.3);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <div class="settings-label-wrap" style="margin-right:8px;">
+              <div class="settings-label" style="font-weight:750;">Install / Restore App to Device</div>
+              <div class="settings-desc" id="settInstallDesc">Add to Home Screen for fast offline warehouse use</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span id="settInstallBadge" class="ios-badge-pill">Install</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <div class="settings-row clickable" onclick="window.usePWAInstall().showInstructions()" style="margin-top:8px;border-top:1px solid var(--bd);" title="View Install Instructions">
+          <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div class="settings-label-wrap" style="margin-right:8px;">
+              <div class="settings-label">Installation & Offline Guide</div>
+              <div class="settings-desc">Step-by-step setup for iOS Safari & Android</div>
+            </div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
       <div class="settings-group">
         <div class="settings-group-title">Appearance</div>
         <div class="settings-row">
@@ -9188,44 +10118,7 @@
   </div>
 
 
-  <!-- ══ PWA FIRST-TIME INSTALL PROMPT MODAL ══ -->
-  <div id="pwaInstallPromptModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:999999;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
-    <div style="background:var(--bg2);border:1px solid var(--bd2);border-radius:20px;max-width:380px;width:100%;padding:24px 20px;box-shadow:0 24px 60px rgba(0,0,0,0.6);color:var(--t1);text-align:center;position:relative;">
-      <button onclick="window.dismissPwaPrompt()" style="position:absolute;top:14px;right:14px;background:var(--bg);border:1px solid var(--bd);color:var(--t2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
-      <div style="width:64px;height:64px;margin:0 auto 12px;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(236,91,19,0.3);">
-        <img src="/app/picker-logo.png" onerror="this.onerror=null;this.src='./picker-logo.png';" alt="Prince Picker" style="width:100%;height:100%;object-fit:cover;">
-      </div>
-      <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:var(--or-lt);color:var(--or);font-size:11px;font-weight:800;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">
-        Progressive Web App
-      </div>
-      <div style="font-size:18px;font-weight:800;margin-bottom:6px;">Install Prince Picker</div>
-      <div style="font-size:13px;line-height:1.5;color:var(--t2);margin-bottom:20px;">
-        Add to your home screen for quick offline access, instant barcode scanning, and warehouse picking without downloading any APK.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn-p" onclick="window.showInstallApp()" style="width:100%;height:44px;font-size:14px;font-weight:700;">
-          Install PWA
-        </button>
-        <button onclick="window.dismissPwaPrompt()" style="background:transparent;border:none;color:var(--t3);font-size:13px;font-weight:600;padding:8px;cursor:pointer;">
-          Not Now
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ INSTALL HELP MODAL (iOS & Browser Fallback) ══ -->
-  <div id="installHelpModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
-    <div style="background:var(--bg2);border:1px solid var(--bd2);border-radius:20px;max-width:400px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.6);color:var(--t1);position:relative">
-      <button onclick="window.closeInstallHelpModal()" style="position:absolute;top:16px;right:16px;background:var(--bg);border:1px solid var(--bd);color:var(--t2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center">×</button>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div style="width:48px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0">
-          <img src="/app/picker-logo.png" onerror="this.onerror=null;this.src='./picker-logo.png';" style="width:100%;height:100%;object-fit:cover">
-        </div>
-        <div>
-          <div style="font-size:17px;font-weight:800">Install Prince Picker</div>
-          <div style="font-size:12px;color:var(--t3)">Add to Home Screen as PWA</div>
-        </div>
-      </div>
+  
       <div style="font-size:13px;line-height:1.6;color:var(--t2);margin-bottom:20px">
         <div style="background:var(--bg);padding:12px 14px;border-radius:12px;border:1px solid var(--bd);margin-bottom:10px">
           <strong>📱 On iOS Safari:</strong>
@@ -11015,10 +11908,14 @@
     //  SEARCH / INVENTORY
     // ══════════════════════════════════════════
     function fuzzy(str, q) {
-      str = str.toLowerCase(); q = q.toLowerCase();
-      let si = 0, qi = 0;
-      while (si < str.length && qi < q.length) { if (str[si] === q[qi]) qi++; si++; }
-      return qi === q.length;
+      if (!str || !q) return false;
+      const s = str.toLowerCase(), query = q.toLowerCase();
+      if (s.includes(query)) return true;
+      if (window.PrinceSearchEngine && window.PrinceSearchEngine.damerauLevenshtein) {
+        const words = s.split(/[\s-]+/);
+        return words.some(w => window.PrinceSearchEngine.damerauLevenshtein(query, w, 1) <= 1);
+      }
+      return false;
     }
 
     function hl(str, q) {
@@ -16403,6 +17300,102 @@
     // ══════════════════════════════════════════════════════════
     //  PRODUCTS LIST SCREEN
     // ══════════════════════════════════════════════════════════
+    function getProductFacilityInfo(p) {
+      const normP = typeof normalizeProduct === 'function' ? normalizeProduct(p) : p;
+      const rawLocs = (Array.isArray(p.locations) && p.locations.length > 0)
+        ? p.locations
+        : (Array.isArray(normP.locations) && normP.locations.length > 0)
+          ? normP.locations
+          : [];
+
+      let shopLocs = [];
+      let whLocs = [];
+
+      if (rawLocs.length > 0) {
+        rawLocs.forEach(l => {
+          const locStr = String(l.location || '').trim();
+          const st = String(l.storage_type || '').toUpperCase();
+          const isWh = st === 'WAREHOUSE' || locStr.toUpperCase().startsWith('W');
+          let q = Number(l.qty ?? l.stock ?? l.quantity ?? 0);
+          if (typeof getEffectiveInventory === 'function' && (p.id || p.barcode || p.sku)) {
+            const eff = getEffectiveInventory(p.id || p.barcode || p.sku, locStr);
+            if (typeof eff === 'number' && !isNaN(eff) && (eff > 0 || (STATE.pendingTransferOverlays && STATE.pendingTransferOverlays.length > 0))) {
+              q = eff;
+            }
+          }
+          const item = {
+            location: locStr,
+            storage_type: isWh ? 'WAREHOUSE' : 'SHOP',
+            qty: q,
+            threshold: Number(l.threshold ?? p.threshold ?? 5),
+            is_primary: Boolean(l.is_primary)
+          };
+          if (isWh) whLocs.push(item);
+          else shopLocs.push(item);
+        });
+      }
+
+      // Fallback if no locations in array
+      if (shopLocs.length === 0 && whLocs.length === 0) {
+        const primLoc = String(p.primary_location || p.location || p.loc || 'R1L1B1').trim();
+        const primStorage = String(p.primary_storage || p.storage_type || '').toUpperCase();
+        const isWh = primStorage === 'WAREHOUSE' || primLoc.toUpperCase().startsWith('W');
+        const stockVal = Number(p.stock ?? p.qty ?? 0);
+
+        if (p.shop_qty != null || p.wh_qty != null) {
+          const sq = Number(p.shop_qty || 0);
+          const wq = Number(p.wh_qty || 0);
+          const shopCode = primLoc.toUpperCase().startsWith('W') ? primLoc.replace(/^W/i, '') : primLoc;
+          const whCode = primLoc.toUpperCase().startsWith('W') ? primLoc : 'W' + primLoc;
+          shopLocs.push({ location: shopCode, storage_type: 'SHOP', qty: sq, is_primary: !isWh });
+          whLocs.push({ location: whCode, storage_type: 'WAREHOUSE', qty: wq, is_primary: isWh });
+        } else if (p.qty != null && p.stock != null && Number(p.stock) !== Number(p.qty)) {
+          const sq = Number(p.qty || 0);
+          const wq = Math.max(0, Number(p.stock || 0) - sq);
+          const shopCode = primLoc.toUpperCase().startsWith('W') ? primLoc.replace(/^W/i, '') : primLoc;
+          const whCode = primLoc.toUpperCase().startsWith('W') ? primLoc : 'W' + primLoc;
+          shopLocs.push({ location: shopCode, storage_type: 'SHOP', qty: sq, is_primary: !isWh });
+          whLocs.push({ location: whCode, storage_type: 'WAREHOUSE', qty: wq, is_primary: isWh });
+        } else {
+          if (isWh) {
+            whLocs.push({ location: primLoc, storage_type: 'WAREHOUSE', qty: stockVal, is_primary: true });
+          } else {
+            shopLocs.push({ location: primLoc, storage_type: 'SHOP', qty: stockVal, is_primary: true });
+          }
+        }
+      }
+
+      const shopQty = shopLocs.reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
+      const whQty = whLocs.reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
+      const totalQty = shopQty + whQty;
+
+      const hasShop = shopLocs.length > 0;
+      const hasWh = whLocs.length > 0;
+      const hasConflict = (hasShop && hasWh && (shopQty > 0 || whQty > 0 || rawLocs.length > 1));
+
+      const primaryShop = shopLocs.find(l => l.is_primary) || shopLocs[0] || null;
+      const primaryWh = whLocs.find(l => l.is_primary) || whLocs[0] || null;
+
+      const primLocFallback = String(p.primary_location || p.location || p.loc || 'R1L1B1').trim();
+      const shopLocCode = primaryShop ? primaryShop.location : (primLocFallback.toUpperCase().startsWith('W') ? primLocFallback.replace(/^W/i, '') : primLocFallback);
+      const whLocCode = primaryWh ? primaryWh.location : (primLocFallback.toUpperCase().startsWith('W') ? primLocFallback : 'W' + primLocFallback);
+
+      return {
+        shopLocs,
+        whLocs,
+        shopQty,
+        whQty,
+        totalQty,
+        hasShop,
+        hasWh,
+        hasConflict,
+        primaryShop,
+        primaryWh,
+        shopLocCode,
+        whLocCode
+      };
+    }
+
     async function renderProductsList(q) {
       const el = document.getElementById('prodList');
       const statsEl = document.getElementById('prodStats');
@@ -16420,12 +17413,16 @@
       const combined = [...FS_PRODUCTS];
 
       // Stats
-      const lowStock = combined.filter(p => { const t = p.threshold ?? 5; const effQty = getEffectiveInventory(p.id || p.barcode, p.location || p.loc); return t > 0 && effQty <= t; });
+      const lowStock = combined.filter(p => {
+        const info = getProductFacilityInfo(p);
+        const t = p.threshold ?? 5;
+        return t > 0 && info.totalQty > 0 && info.totalQty <= t;
+      });
       if (statsEl) statsEl.innerHTML = `
     <div class="db-stat-chip"><div class="dsc-val">${combined.length}</div><div class="dsc-lbl">Total</div></div>
     <div class="db-stat-chip"><div class="dsc-val low">${lowStock.length}</div><div class="dsc-lbl">Low Stock</div></div>
     <div class="db-stat-chip"><div class="dsc-val">${new Set(combined.map(p => p.brand).filter(Boolean)).size}</div><div class="dsc-lbl">Brands</div></div>
-    <div class="db-stat-chip"><div class="dsc-val">${new Set(combined.map(p => p.location || p.loc).filter(Boolean)).size}</div><div class="dsc-lbl">Locations</div></div>`;
+    <div class="db-stat-chip"><div class="dsc-val">${new Set(combined.map(p => p.location || p.loc || p.primary_location).filter(Boolean)).size}</div><div class="dsc-lbl">Locations</div></div>`;
 
       if (!combined.length) {
         el.innerHTML = `
@@ -16448,18 +17445,66 @@
       }
 
       const ql = (q || '').toLowerCase().trim();
-      let data = ql ? combined.filter(p =>
-        (p.name || '').toLowerCase().includes(ql) ||
-        (p.brand || '').toLowerCase().includes(ql) ||
-        (p.barcode || '').includes(ql) ||
-        (p.location || p.loc || '').toLowerCase().includes(ql)
-      ) : [...combined].sort((a, b) => locSort(a.location || a.loc || '') - locSort(b.location || b.loc || ''));
+      let data;
+      if (ql) {
+        if (window.PrinceSearchEngine && window.PrinceSearchEngine.isReady()) {
+          const searchRes = window.PrinceSearchEngine.search(q, { limit: 200 });
+          data = (searchRes.items || searchRes).map(item => item.product);
+        } else {
+          data = combined.filter(p => {
+            const info = getProductFacilityInfo(p);
+            const allLocs = [
+              ...info.shopLocs.map(l => l.location),
+              ...info.whLocs.map(l => l.location),
+              info.shopLocCode,
+              info.whLocCode,
+              p.location, p.loc, p.primary_location
+            ].filter(Boolean).join(' ').toLowerCase();
+            return (p.name || '').toLowerCase().includes(ql) ||
+              (p.brand || '').toLowerCase().includes(ql) ||
+              (p.barcode || '').includes(ql) ||
+              (p.sku || '').toLowerCase().includes(ql) ||
+              allLocs.includes(ql);
+          });
+        }
+      } else {
+        data = [...combined].sort((a, b) => {
+          const infoA = getProductFacilityInfo(a);
+          const infoB = getProductFacilityInfo(b);
+          const locA = PROD_FILTER === 'warehouse' || PROD_FILTER === 'wh' ? infoA.whLocCode : infoA.shopLocCode;
+          const locB = PROD_FILTER === 'warehouse' || PROD_FILTER === 'wh' ? infoB.whLocCode : infoB.shopLocCode;
+          return locSort(locA) - locSort(locB);
+        });
+      }
 
-      // Stock filter
+      // Stock & Facility filter (Shop / Warehouse / Low / Out / Normal)
       if (PROD_FILTER === 'low') {
-        data = data.filter(p => { const effQty = getEffectiveInventory(p.id || p.barcode, p.location || p.loc); const t = p.threshold ?? 5; return t > 0 && effQty > 0 && effQty <= t; });
+        data = data.filter(p => {
+          const info = getProductFacilityInfo(p);
+          const t = p.threshold ?? 5;
+          return t > 0 && info.totalQty > 0 && info.totalQty <= t;
+        });
       } else if (PROD_FILTER === 'out') {
-        data = data.filter(p => getEffectiveInventory(p.id || p.barcode, p.location || p.loc) === 0);
+        data = data.filter(p => {
+          const info = getProductFacilityInfo(p);
+          return info.totalQty === 0;
+        });
+      } else if (PROD_FILTER === 'normal') {
+        data = data.filter(p => {
+          const info = getProductFacilityInfo(p);
+          const t = p.threshold ?? 5;
+          return info.totalQty > t;
+        });
+      } else if (PROD_FILTER === 'shop') {
+        data = data.filter(p => {
+          const info = getProductFacilityInfo(p);
+          return info.hasShop && (info.shopQty > 0 || (!info.hasWh && info.totalQty === 0) || info.hasConflict);
+        });
+      } else if (PROD_FILTER === 'warehouse' || PROD_FILTER === 'wh') {
+        data = data.filter(p => {
+          const info = getProductFacilityInfo(p);
+          return info.hasWh && (info.whQty > 0 || (!info.hasShop && info.totalQty === 0) || info.hasConflict);
+        });
       }
       // Brand / category filter
       if (FILTER_BRANDS.size > 0) data = data.filter(p => FILTER_BRANDS.has(p.brand));
@@ -16484,26 +17529,85 @@
       el.innerHTML = '';
       // Use FS_IMAGES (already loaded from file/IDB)
       data.slice(0, 80).forEach((p, i) => {
-        const primaryLoc = p.primary_location || p.location || p.loc || '—';
-        const primaryStorage = p.primary_storage || p.storage_type || (primaryLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP');
-        const qty = getEffectiveInventory(p.id || p.barcode, primaryLoc);
+        const info = getProductFacilityInfo(p);
         const thresh = p.threshold ?? 5;
-        const isLow = qty <= thresh;
-        const locDisplay = `${primaryStorage === 'WAREHOUSE' || primaryLoc.toUpperCase().startsWith('W') ? 'WAREHOUSE' : 'SHOP'} · ${primaryLoc}`;
+
+        let displayStorage = 'SHOP';
+        let displayLoc = info.shopLocCode;
+        let displayQty = info.shopQty;
+        let showTotal = false;
+
+        if (PROD_FILTER === 'shop') {
+          // If a product is conflicting stock between shop and warehouse:
+          // Show stock available in shop, show SHOP in pill (don't show warehouse), and at side show total (sum of shop + warehouse)
+          displayStorage = 'SHOP';
+          displayLoc = info.shopLocCode;
+          displayQty = info.shopQty;
+          showTotal = info.hasConflict || info.whQty > 0;
+        } else if (PROD_FILTER === 'warehouse' || PROD_FILTER === 'wh') {
+          displayStorage = 'WAREHOUSE';
+          displayLoc = info.whLocCode;
+          displayQty = info.whQty;
+          showTotal = info.hasConflict || info.shopQty > 0;
+        } else {
+          // PROD_FILTER === 'all' or others
+          if (info.hasConflict) {
+            displayQty = info.totalQty;
+            showTotal = true;
+            displayStorage = 'MULTI';
+          } else if (info.hasShop) {
+            displayStorage = 'SHOP';
+            displayLoc = info.shopLocCode;
+            displayQty = info.shopQty;
+          } else {
+            displayStorage = 'WAREHOUSE';
+            displayLoc = info.whLocCode;
+            displayQty = info.whQty;
+          }
+        }
+
+        const isLow = displayQty <= thresh && displayQty > 0;
+        const isOut = displayQty === 0;
+
+        let locHtml = '';
+        if (displayStorage === 'MULTI') {
+          locHtml = `<div class="pr-loc" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-size:12px;font-weight:800;letter-spacing:0;margin-bottom:2px;">
+            <span style="background:var(--or-lt,#fff4e5);color:var(--or,#ff6b00);padding:2px 6px;border-radius:4px;border:1px solid var(--or-md,rgba(255,107,0,0.3));">SHOP · ${info.shopLocCode}</span>
+            <span style="background:#f1f5f9;color:#475569;padding:2px 6px;border-radius:4px;border:1px solid #cbd5e1;">WH · ${info.whLocCode}</span>
+          </div>`;
+        } else {
+          locHtml = `<div class="pr-loc">${displayStorage} · ${displayLoc}</div>`;
+        }
+
+        let totalHtml = '';
+        if (showTotal) {
+          if (PROD_FILTER === 'all' && info.hasConflict) {
+            totalHtml = `<div class="pr-qty-total" style="font-size:10px;font-weight:700;color:var(--t3);margin-top:3px;white-space:nowrap;line-height:1.2;background:var(--bg2,#f8fafc);padding:2px 5px;border-radius:4px;border:1px solid var(--bd,#e2e8f0);text-align:center;">
+              Shop: <span style="font-weight:800;color:var(--or,#ff6b00);">${info.shopQty}</span> · WH: <span style="font-weight:800;color:var(--t1);">${info.whQty}</span>
+            </div>`;
+          } else {
+            totalHtml = `<div class="pr-qty-total" style="font-size:10px;font-weight:700;color:var(--t3);margin-top:3px;white-space:nowrap;line-height:1.2;background:var(--bg2,#f8fafc);padding:2px 5px;border-radius:4px;border:1px solid var(--bd,#e2e8f0);text-align:center;">
+              Total: <span style="font-weight:800;color:var(--t1);">${info.totalQty}</span>
+            </div>`;
+          }
+        }
+
         const div = document.createElement('div');
         div.className = 'pr-card';
         div.style.animationDelay = i * 15 + 'ms';
         div.innerHTML = `
       ${renderProductImgHtml(p, 'pr-img')}
       <div class="pr-info">
-        <div class="pr-loc">${locDisplay}</div>
+        ${locHtml}
         <div class="pr-name">${p.name || '—'}</div>
         <div class="pr-brand">${p.brand || ''} ${p.category ? '· ' + p.category : ''}</div>
       </div>
       <div class="pr-qty">
-        <div class="pr-qty-val ${isLow ? 'low' : ''}">${qty}</div>
+        <div class="pr-qty-val ${isLow ? 'low' : ''} ${isOut ? 'out' : ''}">${displayQty}</div>
         <div class="pr-qty-lbl">units</div>
-        ${isLow ? '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px">LOW</div>' : ''}
+        ${totalHtml}
+        ${isLow ? '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">LOW</div>' : ''}
+        ${isOut ? '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">OUT</div>' : ''}
       </div>`;
         div.onclick = (function (id) { return function () { openProdDetail(id); }; })(p.id || p.barcode);
         el.appendChild(div);
@@ -16943,6 +18047,9 @@
         STATE.barcodeIndex.set(bc, p);
       }
       STATE.warehouseMap = buildWarehouseMap(STATE.products);
+      if (window.PrinceSearchEngine) {
+        window.PrinceSearchEngine.init(STATE.products);
+      }
     }
 
 
@@ -16957,6 +18064,10 @@
       PROD_FILTER = mode;
       document.querySelectorAll('.fc').forEach(function (b) { b.classList.remove('on'); });
       if (btn) btn.classList.add('on');
+      // Sync modal stock buttons as well
+      document.querySelectorAll('.fm-stock-btn').forEach(function (b) { b.classList.remove('on'); });
+      var mb = document.getElementById('fms-' + mode);
+      if (mb) mb.classList.add('on');
       renderProductsList(document.getElementById('prodQ')?.value.trim() || '');
     }
 
@@ -17059,6 +18170,8 @@
       var chip;
       if (PROD_FILTER === 'low') chip = document.getElementById('fchip-low');
       else if (PROD_FILTER === 'out') chip = document.getElementById('fchip-out');
+      else if (PROD_FILTER === 'shop') chip = document.getElementById('fchip-shop');
+      else if (PROD_FILTER === 'warehouse') chip = document.getElementById('fchip-warehouse');
       else if (!noExtra) chip = document.getElementById('fchip-filter');
       else chip = document.getElementById('fchip-all');
       if (chip) chip.classList.add('on');
