@@ -34,8 +34,9 @@
 
   function normalizeText(str) {
     if (!str) return '';
-    return String(str)
-      .normalize('NFKD')
+    const s = String(str);
+    const norm = /[^\x00-\x7F]/.test(s) ? s.normalize('NFKD') : s;
+    return norm
       .toLowerCase()
       .replace(/[^\w\s-]/g, ' ')
       .replace(/\s+/g, ' ')
@@ -44,13 +45,11 @@
 
   function tokenize(str) {
     if (!str) return [];
-    return String(str)
-      .normalize('NFKD')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .trim()
-      .split(/\s+/)
-      .filter(t => t.length > 0);
+    const s = String(str);
+    const norm = /[^\x00-\x7F]/.test(s) ? s.normalize('NFKD') : s;
+    const clean = norm.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
+    if (!clean) return [];
+    return clean.split(/\s+/);
   }
 
   function escapeHTML(str) {
@@ -72,9 +71,50 @@
     return counts;
   }
 
+  function getCharMask(str) {
+    let mask = 0;
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      if (code >= 97 && code <= 122) {
+        mask |= (1 << (code - 97));
+      }
+    }
+    return mask;
+  }
+
+  function popcount(n) {
+    n = n - ((n >> 1) & 0x55555555);
+    n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+    return (((n + (n >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+  }
+
   // ──────────────────────────────────────────────
   // ALGORITHMIC DAMERAU-LEVENSHTEIN (with transposition & early cutoff)
   // ──────────────────────────────────────────────
+
+  const F_NAME = 1;
+  const F_BRAND = 2;
+  const F_CAT = 4;
+  const F_PRIMARY_VEH = 8;
+  const F_FITMENT_GROUP = 16;
+  const F_SKU_PART = 32;
+  const F_DESC = 64;
+  const F_COMPAT_VEH = 128;
+  const F_COMPAT_NAME = 256;
+
+  const FIELD_MAP = {
+    NAME: 1,
+    BRAND: 2,
+    CAT: 4,
+    PRIMARY_VEH: 8,
+    FITMENT_GROUP: 16,
+    SKU_PART: 32,
+    DESC: 64,
+    COMPAT_VEH: 128,
+    COMPAT_NAME: 256
+  };
+
+  const dlMatrix = new Uint8Array(32 * 32);
 
   function damerauLevenshtein(a, b, maxDist = 2) {
     if (a === b) return 0;
@@ -83,38 +123,63 @@
     if (lenA === 0) return lenB <= maxDist ? lenB : maxDist + 1;
     if (lenB === 0) return lenA <= maxDist ? lenA : maxDist + 1;
 
-    const d = [];
-    for (let i = 0; i <= lenA; i++) {
-      d[i] = new Uint8Array(lenB + 1);
-      d[i][0] = i;
+    if (lenA >= 32 || lenB >= 32) {
+      // Fallback for unusually long strings
+      const d = [];
+      for (let i = 0; i <= lenA; i++) {
+        d[i] = new Uint8Array(lenB + 1);
+        d[i][0] = i;
+      }
+      for (let j = 0; j <= lenB; j++) d[0][j] = j;
+      for (let i = 1; i <= lenA; i++) {
+        let rowMin = 99;
+        const aCode = a.charCodeAt(i - 1);
+        for (let j = 1; j <= lenB; j++) {
+          const bCode = b.charCodeAt(j - 1);
+          const cost = aCode === bCode ? 0 : 1;
+          let val = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+          if (i > 1 && j > 1 && aCode === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === bCode) {
+            const transVal = d[i - 2][j - 2] + 1;
+            if (transVal < val) val = transVal;
+          }
+          d[i][j] = val;
+          if (val < rowMin) rowMin = val;
+        }
+        if (rowMin > maxDist) return maxDist + 1;
+      }
+      return d[lenA][lenB];
     }
-    for (let j = 0; j <= lenB; j++) {
-      d[0][j] = j;
-    }
+
+    const stride = 32;
+    for (let i = 0; i <= lenA; i++) dlMatrix[i * stride] = i;
+    for (let j = 0; j <= lenB; j++) dlMatrix[j] = j;
 
     for (let i = 1; i <= lenA; i++) {
       let rowMin = 99;
       const aCode = a.charCodeAt(i - 1);
+      const rowOffset = i * stride;
+      const prevRowOffset = (i - 1) * stride;
+      const prev2RowOffset = (i - 2) * stride;
+
       for (let j = 1; j <= lenB; j++) {
         const bCode = b.charCodeAt(j - 1);
         const cost = aCode === bCode ? 0 : 1;
-        let val = Math.min(
-          d[i - 1][j] + 1,        // deletion
-          d[i][j - 1] + 1,        // insertion
-          d[i - 1][j - 1] + cost  // substitution
-        );
-        // Transposition (e.g. barke -> brake)
+        const del = dlMatrix[prevRowOffset + j] + 1;
+        const ins = dlMatrix[rowOffset + (j - 1)] + 1;
+        const sub = dlMatrix[prevRowOffset + (j - 1)] + cost;
+        let val = del < ins ? (del < sub ? del : sub) : (ins < sub ? ins : sub);
+
         if (i > 1 && j > 1 && aCode === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === bCode) {
-          const transVal = d[i - 2][j - 2] + 1;
+          const transVal = dlMatrix[prev2RowOffset + (j - 2)] + 1;
           if (transVal < val) val = transVal;
         }
-        d[i][j] = val;
+        dlMatrix[rowOffset + j] = val;
         if (val < rowMin) rowMin = val;
       }
       if (rowMin > maxDist) return maxDist + 1;
     }
 
-    return d[lenA][lenB];
+    return dlMatrix[lenA * stride + lenB];
   }
 
   // ──────────────────────────────────────────────
@@ -170,7 +235,9 @@
       this.vocabTokens = new Set();
       this.vocabByLength = new Map();      // length -> array of tokens
       this.vocabCharCounts = new Map();    // token -> char counts object
+      this.vocabPrefix2Map = new Map();    // 2-char prefix -> array of tokens
       this.vocabPrefix3Map = new Map();    // 3-char prefix -> array of tokens
+      this.vocabSubstring3Map = new Map(); // 3-char substring -> array of unique tokens
       
       // Compatibility structures
       this.compatibilityEntries = [];      // array of structured compatibility records
@@ -197,7 +264,9 @@
       this.vocabTokens.clear();
       this.vocabByLength.clear();
       this.vocabCharCounts.clear();
+      this.vocabPrefix2Map.clear();
       this.vocabPrefix3Map.clear();
+      this.vocabSubstring3Map.clear();
       this.compatibilityEntries = [];
       this.compatTokenToEntries.clear();
       this.locationMap.clear();
@@ -228,22 +297,54 @@
     _finalizeVocabulary() {
       this.vocabByLength.clear();
       this.vocabCharCounts.clear();
+      this.vocabPrefix2Map.clear();
       this.vocabPrefix3Map.clear();
+      this.vocabSubstring3Map.clear();
 
+      const seenSub = new Set();
       for (const token of this.vocabTokens) {
         const len = token.length;
-        if (!this.vocabByLength.has(len)) {
-          this.vocabByLength.set(len, []);
+        let bucket = this.vocabByLength.get(len);
+        if (!bucket) {
+          bucket = [];
+          this.vocabByLength.set(len, bucket);
         }
-        this.vocabByLength.get(len).push(token);
-        this.vocabCharCounts.set(token, getCharCounts(token));
+        const mask = getCharMask(token);
+        bucket.push({ token, mask });
+
+        if (len >= 2) {
+          const pfx2 = token.slice(0, 2);
+          let b2 = this.vocabPrefix2Map.get(pfx2);
+          if (!b2) {
+            b2 = [];
+            this.vocabPrefix2Map.set(pfx2, b2);
+          }
+          b2.push(token);
+        }
 
         if (len >= 3) {
-          const pfx = token.slice(0, 3);
-          if (!this.vocabPrefix3Map.has(pfx)) {
-            this.vocabPrefix3Map.set(pfx, []);
+          const pfx3 = token.slice(0, 3);
+          let b3 = this.vocabPrefix3Map.get(pfx3);
+          if (!b3) {
+            b3 = [];
+            this.vocabPrefix3Map.set(pfx3, b3);
           }
-          this.vocabPrefix3Map.get(pfx).push(token);
+          b3.push(token);
+
+          // Substring inverted index for tokens of length >= 3
+          seenSub.clear();
+          for (let k = 0; k <= len - 3; k++) {
+            const sub = token.slice(k, k + 3);
+            if (!seenSub.has(sub)) {
+              seenSub.add(sub);
+              let sb = this.vocabSubstring3Map.get(sub);
+              if (!sb) {
+                sb = [];
+                this.vocabSubstring3Map.set(sub, sb);
+              }
+              sb.push(token);
+            }
+          }
         }
       }
     }
@@ -252,6 +353,15 @@
       if (!p) return;
       const prodKey = String(p.id || p.barcode || p.sku || idx);
       this.productIdMap.set(prodKey, idx);
+
+      let s = p.stock ?? p.qty;
+      if (s === undefined && Array.isArray(p.locations) && p.locations.length > 0) {
+        s = 0;
+        for (let lIdx = 0; lIdx < p.locations.length; lIdx++) {
+          s += (p.locations[lIdx].qty ?? p.locations[lIdx].stock ?? 0);
+        }
+      }
+      p._totalStock = s ?? 0;
 
       // 1. Exact Barcode indexing
       if (p.barcode) {
@@ -322,6 +432,12 @@
         const catTokens = tokenize(p.category);
         for (const t of catTokens) {
           this._addToken(t, idx, 'CAT');
+        }
+      }
+      if (p.fitment_group) {
+        const fgTokens = tokenize(p.fitment_group);
+        for (const t of fgTokens) {
+          this._addToken(t, idx, 'FITMENT_GROUP');
         }
       }
 
@@ -420,30 +536,33 @@
 
     _addToken(token, idx, fieldType) {
       if (!token) return;
-      if (!this.tokenPostingMap.has(token)) {
-        this.tokenPostingMap.set(token, new Set());
+      let postingSet = this.tokenPostingMap.get(token);
+      if (!postingSet) {
+        postingSet = new Set();
+        this.tokenPostingMap.set(token, postingSet);
+        this.vocabTokens.add(token);
       }
-      this.tokenPostingMap.get(token).add(idx);
+      postingSet.add(idx);
 
-      if (!this.tokenFieldMap.has(token)) {
-        this.tokenFieldMap.set(token, new Map());
+      let prodFieldMap = this.tokenFieldMap.get(token);
+      if (!prodFieldMap) {
+        prodFieldMap = new Map();
+        this.tokenFieldMap.set(token, prodFieldMap);
       }
-      const prodFieldMap = this.tokenFieldMap.get(token);
-      if (!prodFieldMap.has(idx)) {
-        prodFieldMap.set(idx, new Set());
-      }
-      prodFieldMap.get(idx).add(fieldType);
-
-      this.vocabTokens.add(token);
+      const flag = FIELD_MAP[fieldType] || 0;
+      const cur = prodFieldMap.get(idx) || 0;
+      prodFieldMap.set(idx, cur | flag);
     }
 
     _addLocationToken(token, idx) {
       if (!token) return;
       const t = token.toLowerCase();
-      if (!this.locationMap.has(t)) {
-        this.locationMap.set(t, new Set());
+      let s = this.locationMap.get(t);
+      if (!s) {
+        s = new Set();
+        this.locationMap.set(t, s);
       }
-      this.locationMap.get(t).add(idx);
+      s.add(idx);
     }
 
     updateProduct(prod) {
@@ -489,42 +608,62 @@
         seen.add(tok);
       }
 
-      // 2. Prefix match on vocabulary (for length >= 3)
-      if (L >= 3) {
+      // 2. Prefix match on vocabulary
+      if (L === 2) {
+        const pfxBucket = this.vocabPrefix2Map.get(tok);
+        if (pfxBucket) {
+          for (let i = 0; i < pfxBucket.length; i++) {
+            const vTok = pfxBucket[i];
+            if (vTok.length > L && vTok.startsWith(tok) && !seen.has(vTok)) {
+              const sim = Math.max(0.5, L / vTok.length);
+              candidates.push({ token: vTok, dist: 0.5, type: 'prefix', similarity: sim });
+              seen.add(vTok);
+            }
+          }
+        }
+      } else if (L >= 3) {
         const pfx3 = tok.slice(0, 3);
         const pfxBucket = this.vocabPrefix3Map.get(pfx3);
         if (pfxBucket) {
           for (let i = 0; i < pfxBucket.length; i++) {
             const vTok = pfxBucket[i];
-            if (vTok.length > L && vTok.startsWith(tok)) {
-              if (!seen.has(vTok)) {
-                const sim = Math.max(0.5, L / vTok.length);
-                candidates.push({ token: vTok, dist: 0.5, type: 'prefix', similarity: sim });
-                seen.add(vTok);
-              }
+            if (vTok.length > L && vTok.startsWith(tok) && !seen.has(vTok)) {
+              const sim = Math.max(0.5, L / vTok.length);
+              candidates.push({ token: vTok, dist: 0.5, type: 'prefix', similarity: sim });
+              seen.add(vTok);
             }
           }
         }
       }
 
-      // 3. Algorithmic Typo Tolerance Rules (strictly dynamic, NO dictionaries):
-      // - 1-2 chars: exact/prefix only (no fuzzy)
-      // - 3 chars: conservative (only if no exact/prefix match, maxDist = 1, same first char, not pure digits)
-      // - 4-5 chars: maxDist = 1
-      // - 6+ chars: maxDist = 2
+      // 3. Substring match on vocabulary, including incomplete words
+      // Conservative rule: require L >= 3 for substring matching (1-2 chars conservative)
+      if (L >= 3) {
+        const sub3 = tok.slice(0, 3);
+        const subBucket = this.vocabSubstring3Map.get(sub3);
+        if (subBucket) {
+          for (let i = 0; i < subBucket.length; i++) {
+            const vTok = subBucket[i];
+            if (!seen.has(vTok) && vTok.length > L && vTok.includes(tok)) {
+              const sim = Math.max(0.4, (L / vTok.length) * 0.9);
+              candidates.push({ token: vTok, dist: 0.8, type: 'substring', similarity: sim });
+              seen.add(vTok);
+            }
+          }
+        }
+      }
+
+      // 4. Algorithmic Fuzzy Matching (Damerau-Levenshtein distance)
+      // If exact token match already found in vocabulary, skip fuzzy scanning
+      const hasExact = candidates.some(c => c.dist === 0);
       let maxDist = 0;
       let allowFuzzy = false;
       const isAllDigits = /^\d+$/.test(tok);
 
-      if (L <= 2) {
+      if (hasExact || L <= 2 || isAllDigits) {
         maxDist = 0;
         allowFuzzy = false;
-      } else if (L === 3) {
-        if (candidates.length === 0 && !isAllDigits) {
-          maxDist = 1;
-          allowFuzzy = true;
-        }
-      } else if (L >= 4 && L <= 5) {
+      } else if (L >= 3 && L <= 5) {
         maxDist = 1;
         allowFuzzy = true;
       } else if (L >= 6) {
@@ -532,8 +671,10 @@
         allowFuzzy = true;
       }
 
-      if (allowFuzzy && maxDist > 0 && !isAllDigits) {
-        const qCounts = getCharCounts(tok);
+      if (allowFuzzy && maxDist > 0) {
+        const qMask = getCharMask(tok);
+        const qBits = popcount(qMask);
+        const minBits = Math.max(1, qBits - maxDist);
         const minLen = Math.max(3, L - maxDist);
         const maxLen = L + maxDist;
 
@@ -542,29 +683,18 @@
           if (!bucket) continue;
 
           for (let i = 0; i < bucket.length; i++) {
-            const vTok = bucket[i];
+            const item = bucket[i];
+            const vTok = item.token;
             if (seen.has(vTok)) continue;
 
-            // Strict conservative rule for 3-letter tokens: must match initial char or transposition
-            if (L === 3) {
-              const initialMatch = (vTok[0] === tok[0]) || (vTok[0] === tok[1] && vTok[1] === tok[0]);
-              if (!initialMatch) continue;
-            }
-
-            // Rapid character overlap pruning (skip if characters differ by more than maxDist)
-            const vCounts = this.vocabCharCounts.get(vTok);
-            if (vCounts) {
-              let overlap = 0;
-              for (const c in qCounts) {
-                if (vCounts[c]) overlap += Math.min(qCounts[c], vCounts[c]);
-              }
-              if (overlap < Math.max(L, len) - maxDist) continue;
-            }
+            // Fast 1-instruction bitmask check: skip if unique character overlap is insufficient
+            if (popcount(qMask & item.mask) < minBits) continue;
 
             // Calculate true Damerau-Levenshtein distance with transpositions
             const dist = damerauLevenshtein(tok, vTok, maxDist);
             if (dist <= maxDist) {
-              const sim = Math.max(0.4, 1.0 - (dist / Math.max(L, len)));
+              const lenBonus = (len === L) ? 0.05 : 0;
+              const sim = Math.max(0.4, 1.0 - (dist / Math.max(L, len)) + lenBonus);
               candidates.push({ token: vTok, dist: dist, type: 'fuzzy', similarity: sim });
               seen.add(vTok);
             }
@@ -572,7 +702,7 @@
         }
       }
 
-      // Order candidates: exact first, then lower edit distance, then higher similarity
+      // Strict ranking priority for candidates: Exact > Prefix > Substring > Fuzzy
       candidates.sort((a, b) => {
         if (a.dist !== b.dist) return a.dist - b.dist;
         return b.similarity - a.similarity;
@@ -586,7 +716,7 @@
     // ──────────────────────────────────────────────
 
     search(rawQuery, options = {}) {
-      const q = (rawQuery || '').trim();
+      const q = (rawQuery || '').normalize('NFKD').replace(/\s+/g, ' ').trim();
       if (!q) {
         const emptyRes = [];
         emptyRes.items = emptyRes;
@@ -634,8 +764,9 @@
       };
 
       // ── STEP 1: EXACT BARCODE MATCH (Rank: 10,000) ──
-      if (this.exactBarcodeMap.has(q) || this.exactBarcodeMap.has(qLower)) {
-        const idx = this.exactBarcodeMap.get(q) ?? this.exactBarcodeMap.get(qLower);
+      const qCompact = qLower.replace(/\s+/g, '');
+      if (this.exactBarcodeMap.has(q) || this.exactBarcodeMap.has(qLower) || this.exactBarcodeMap.has(qCompact)) {
+        const idx = this.exactBarcodeMap.get(q) ?? this.exactBarcodeMap.get(qLower) ?? this.exactBarcodeMap.get(qCompact);
         recordScore(idx, 10000, 'exact_barcode', `Barcode: ${q}`, 'exact_barcode');
       }
 
@@ -654,9 +785,7 @@
       }
 
       // If an exact SKU or Barcode matched:
-      // Prompt Rule: "SKU searches: prioritize exact/prefix matching. Do not aggressively fuzzy-match arbitrary SKU fragments."
-      // If exact SKU/Barcode matched, return exact match immediately without adding arbitrary noise
-      if (scoreMap.size > 0 && (this.exactBarcodeMap.has(q) || this.exactBarcodeMap.has(qLower) || this.rawSkuMap.has(qLower) || (qNormSku && this.exactSkuMap.has(qNormSku)))) {
+      if (scoreMap.size > 0 && (this.exactBarcodeMap.has(q) || this.exactBarcodeMap.has(qLower) || this.exactBarcodeMap.has(qCompact) || this.rawSkuMap.has(qLower) || (qNormSku && this.exactSkuMap.has(qNormSku)))) {
         return this._formatAndCacheResults(scoreMap, limit, qLower, q);
       }
 
@@ -688,254 +817,335 @@
         }
       }
 
-      if (this.locationMap.has(qLower)) {
-        for (const idx of this.locationMap.get(qLower)) {
+      if (this.locationMap.has(qLower) || this.locationMap.has(qCompact)) {
+        const locIdxs = this.locationMap.get(qLower) || this.locationMap.get(qCompact);
+        for (const idx of locIdxs) {
           recordScore(idx, 6000, 'location', `📍 Location match: ${q.toUpperCase()}`, 'location', { code: q.toUpperCase() });
         }
       }
 
-      // ── PER-TOKEN CANDIDATE RETRIEVAL ACROSS SEARCHABLE VOCABULARY ──
-      const tokenCandidatesMap = new Map();
-      let totalCandidateCount = 0;
+      // Helper function to evaluate candidate tokens across vocabulary
+      const evaluateTokens = (tokens, isMerged = false) => {
+        if (!tokens || tokens.length === 0) return 0;
+        const tokenCandidatesMap = new Map();
+        let totalCandCount = 0;
 
-      for (const tok of queryTokens) {
-        const cands = this.getCandidatesForToken(tok);
-        tokenCandidatesMap.set(tok, cands);
-        totalCandidateCount += cands.length;
+        for (const tok of tokens) {
+          const cands = this.getCandidatesForToken(tok);
+          tokenCandidatesMap.set(tok, cands);
+          totalCandCount += cands.length;
+        }
+
+        if (totalCandCount === 0) return 0;
+
+        // Compatibility matching
+        const matchedCompatEntryIndices = new Set();
+        const candDistMap = new Map();
+        for (const qTok of tokens) {
+          const cands = tokenCandidatesMap.get(qTok) || [];
+          for (const cand of cands) {
+            if (!candDistMap.has(cand.token) || cand.dist < candDistMap.get(cand.token)) {
+              candDistMap.set(cand.token, cand.dist);
+            }
+            const entrySet = this.compatTokenToEntries.get(cand.token);
+            if (entrySet) {
+              for (const eIdx of entrySet) {
+                matchedCompatEntryIndices.add(eIdx);
+              }
+            }
+          }
+        }
+
+        for (const cIdx of matchedCompatEntryIndices) {
+          const entry = this.compatibilityEntries[cIdx];
+          const vehTokens = entry.vehicleTokens;
+          const altTokens = entry.nameTokens;
+
+          let vehMatched = false;
+          let altMatched = false;
+          let vehExact = false;
+          let altExact = false;
+
+          for (let i = 0; i < vehTokens.length; i++) {
+            const d = candDistMap.get(vehTokens[i]);
+            if (d !== undefined) {
+              vehMatched = true;
+              if (d === 0) vehExact = true;
+            }
+          }
+          for (let i = 0; i < altTokens.length; i++) {
+            const d = candDistMap.get(altTokens[i]);
+            if (d !== undefined) {
+              altMatched = true;
+              if (d === 0) altExact = true;
+            }
+          }
+
+          if (vehMatched && altMatched) {
+            const score = (vehExact && altExact) ? 7000 : 6600;
+            const altLabel = entry.name ? ` (Saved name: ${entry.name})` : '';
+            recordScore(
+              entry.prodIdx,
+              score,
+              'compatibility',
+              `🔄 Fits ${entry.vehicleFullName}${altLabel}`,
+              'compatibility'
+            );
+          } else if (altMatched && tokens.length === 1) {
+            recordScore(
+              entry.prodIdx,
+              altExact ? 6500 : 5800,
+              'compatibility',
+              `🔄 Fits ${entry.vehicleFullName} (Saved name: ${entry.name})`,
+              'compatibility'
+            );
+          } else if (vehMatched && tokens.length === 1) {
+            recordScore(
+              entry.prodIdx,
+              vehExact ? 5800 : 5200,
+              'compatibility',
+              `🔄 Compatible with ${entry.vehicleFullName}`,
+              'compatibility'
+            );
+          }
+        }
+
+        // Token inverted index matching
+        const productCoverageMap = new Map();
+
+        for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+          const qTok = tokens[tIdx];
+          const cands = tokenCandidatesMap.get(qTok) || [];
+          const tokBit = 1 << tIdx;
+
+          for (const cand of cands) {
+            const candWord = cand.token;
+            const postingSet = this.tokenPostingMap.get(candWord);
+            if (!postingSet) continue;
+
+            const fieldMap = this.tokenFieldMap.get(candWord);
+
+            for (const pIdx of postingSet) {
+              let cov = productCoverageMap.get(pIdx);
+              if (!cov) {
+                cov = {
+                  matchedMask: 0,
+                  matchedCount: 0,
+                  simSum: 0,
+                  bestField: 'DESC',
+                  bestCandType: cand.type,
+                  bestCandDist: cand.dist,
+                  bestCandToken: cand.token,
+                  hasExactWord: false,
+                  hasNameField: false,
+                  hasVehField: false
+                };
+                productCoverageMap.set(pIdx, cov);
+              } else {
+                if (cand.dist < cov.bestCandDist) {
+                  cov.bestCandDist = cand.dist;
+                  cov.bestCandType = cand.type;
+                  cov.bestCandToken = cand.token;
+                }
+              }
+
+              if ((cov.matchedMask & tokBit) === 0) {
+                cov.matchedMask |= tokBit;
+                cov.matchedCount++;
+                cov.simSum += cand.similarity;
+              }
+
+              if (cand.dist === 0) {
+                cov.hasExactWord = true;
+              }
+
+              const mask = fieldMap ? (fieldMap.get(pIdx) || 0) : 0;
+              if (mask & F_NAME) {
+                cov.bestField = 'NAME';
+                cov.hasNameField = true;
+              } else if (mask & (F_BRAND | F_CAT)) {
+                if (cov.bestField !== 'NAME') cov.bestField = 'BRAND';
+              } else if (mask & F_PRIMARY_VEH) {
+                if (cov.bestField !== 'NAME') cov.bestField = 'PRIMARY_VEH';
+                cov.hasVehField = true;
+              } else if (mask & F_FITMENT_GROUP) {
+                if (cov.bestField !== 'NAME') cov.bestField = 'FITMENT_GROUP';
+              }
+              if (mask & (F_PRIMARY_VEH | F_COMPAT_VEH)) {
+                cov.hasVehField = true;
+              }
+            }
+          }
+        }
+
+        // Score products based on token coverage
+        for (const [pIdx, cov] of productCoverageMap.entries()) {
+          const p = this.products[pIdx];
+          if (!p) continue;
+
+          const matchedCount = cov.matchedCount;
+          const totalTokens = tokens.length;
+          const avgSim = cov.simSum / matchedCount;
+
+          if (totalTokens >= 3 && matchedCount < 2) continue;
+          if (totalTokens > 1 && matchedCount === 1 && cov.bestField === 'SKU_PART' && !cov.hasExactWord) continue;
+
+          let baseScore = 0;
+          let reason = 'token';
+          let matchType = 'token';
+          let highlight = '';
+
+          const pNameLower = (p.name || '').toLowerCase();
+
+          if (totalTokens === 1) {
+            const isExactName = (cov.bestCandType === 'exact' && cov.bestField === 'NAME');
+            const isPrefixName = (cov.bestCandType === 'prefix' && cov.bestField === 'NAME') || (pNameLower.startsWith(tokens[0]) && !isExactName);
+            const isSubstringName = (cov.bestCandType === 'substring' && cov.bestField === 'NAME');
+
+            if (cov.bestCandType === 'exact' || cov.hasExactWord) {
+              if (cov.bestField === 'NAME') {
+                baseScore = 5000;
+                reason = 'exact_name_token';
+                matchType = 'exact_name';
+                highlight = p.name;
+              } else if (cov.bestField === 'BRAND' || cov.bestField === 'CAT' || cov.bestField === 'PRIMARY_VEH') {
+                baseScore = 4800;
+                reason = 'exact_brand';
+                matchType = 'exact_brand';
+                highlight = p.brand || p.category || (p.vehicles ? p.vehicles[0] : '');
+              } else {
+                baseScore = 4500;
+                reason = 'exact_token';
+                matchType = 'exact';
+              }
+            } else if (cov.bestCandType === 'prefix' || isPrefixName) {
+              if (cov.bestField === 'NAME' || isPrefixName) {
+                baseScore = 3800 + Math.round(400 * avgSim);
+                reason = 'name_prefix';
+                matchType = 'prefix';
+                highlight = `Prefix: ${q}`;
+              } else if (cov.bestField === 'BRAND' || cov.bestField === 'CAT' || cov.bestField === 'PRIMARY_VEH') {
+                baseScore = 3600 + Math.round(300 * avgSim);
+                reason = 'brand_prefix';
+                matchType = 'prefix';
+                highlight = `Prefix: ${q}`;
+              } else {
+                baseScore = 3400 + Math.round(200 * avgSim);
+                reason = 'prefix';
+                matchType = 'prefix';
+                highlight = `Prefix: ${q}`;
+              }
+            } else if (cov.bestCandType === 'substring' || isSubstringName) {
+              if (cov.bestField === 'NAME' || isSubstringName) {
+                baseScore = 2600 + Math.round(500 * avgSim);
+                reason = 'name_substring';
+                matchType = 'substring';
+                highlight = `Contains "${q}"`;
+              } else if (cov.bestField === 'BRAND' || cov.bestField === 'CAT' || cov.bestField === 'PRIMARY_VEH') {
+                baseScore = 2400 + Math.round(400 * avgSim);
+                reason = 'brand_substring';
+                matchType = 'substring';
+                highlight = `Contains "${q}"`;
+              } else {
+                baseScore = 2200 + Math.round(300 * avgSim);
+                reason = 'substring';
+                matchType = 'substring';
+                highlight = `Contains "${q}"`;
+              }
+            } else {
+              // Algorithmic Fuzzy Match (Damerau-Levenshtein distance)
+              if (cov.bestField === 'NAME') {
+                baseScore = 1400 + Math.round(700 * avgSim);
+                reason = 'fuzzy_spelling';
+                matchType = 'fuzzy';
+                highlight = `Did you mean "${cov.bestCandToken}"?`;
+              } else if (cov.bestField === 'BRAND' || cov.bestField === 'PRIMARY_VEH') {
+                baseScore = 1200 + Math.round(600 * avgSim);
+                reason = 'fuzzy_brand_vehicle';
+                matchType = 'fuzzy';
+                highlight = `Did you mean "${cov.bestCandToken}"?`;
+              } else {
+                baseScore = 1000 + Math.round(500 * avgSim);
+                reason = 'fuzzy_general';
+                matchType = 'fuzzy';
+                highlight = `Did you mean "${cov.bestCandToken}"?`;
+              }
+            }
+          } else {
+            // Multi-word queries: "vizor pulsar", "splender clutsh"
+            if (matchedCount === totalTokens) {
+              baseScore = 4000 + (cov.simSum * 400);
+              reason = cov.hasExactWord ? 'multi_term_match' : 'multi_term_fuzzy';
+              matchType = cov.hasExactWord ? 'multi_term' : 'fuzzy';
+              highlight = `Matched all query terms (${tokens.join(' + ')})`;
+
+              if (cov.hasVehField && cov.hasNameField) {
+                const pvList = Array.isArray(p.vehicles) ? p.vehicles : (p.vehicle ? [p.vehicle] : []);
+                baseScore = 7500;
+                reason = 'vehicle_product';
+                matchType = 'vehicle_product';
+                highlight = `🏍️ ${pvList[0] || ''} • ${p.name}`;
+              }
+            } else if (matchedCount > 1) {
+              baseScore = 1500 + (matchedCount * 600) + (cov.simSum * 200);
+              reason = 'partial_terms_match';
+              matchType = 'partial';
+            } else {
+              baseScore = 800 + (avgSim * 300);
+              reason = 'single_term_match';
+              matchType = 'partial';
+            }
+          }
+
+          recordScore(pIdx, baseScore, reason, highlight, matchType);
+        }
+
+        return totalCandCount;
+      };
+
+      // ── STEP 3: EVALUATE QUERY TOKENS ──
+      const initialCandCount = evaluateTokens(queryTokens, false);
+
+      // ── STEP 4: WHITESPACE NORMALIZATION & TOKEN MERGING ──
+      if (queryTokens.length > 1) {
+        // A. Full query merge (e.g. "te st" -> "test", "bp 991" -> "bp991")
+        const fullMerged = queryTokens.join('');
+        if (fullMerged.length >= 2) {
+          if (this.exactSkuMap.has(fullMerged)) {
+            for (const idx of this.exactSkuMap.get(fullMerged)) {
+              recordScore(idx, 9800, 'exact_sku', `SKU: ${this.products[idx].sku}`, 'exact_sku');
+            }
+          }
+          if (this.locationMap.has(fullMerged)) {
+            for (const idx of this.locationMap.get(fullMerged)) {
+              recordScore(idx, 6000, 'location', `📍 Location match: ${fullMerged.toUpperCase()}`, 'location', { code: fullMerged.toUpperCase() });
+            }
+          }
+          if (this.vocabTokens.has(fullMerged) || this.tokenPostingMap.has(fullMerged) || this.exactNameMap.has(fullMerged) || scoreMap.size === 0) {
+            evaluateTokens([fullMerged], true);
+          }
+        }
+
+        // B. Adjacent token pairwise merges (e.g. "pulsar vi sor" -> "pulsar visor")
+        if (queryTokens.length >= 3) {
+          for (let i = 0; i <= queryTokens.length - 2; i++) {
+            const mergedPair = queryTokens[i] + queryTokens[i + 1];
+            if (this.vocabTokens.has(mergedPair) || this.exactSkuMap.has(mergedPair)) {
+              const mergedSeq = [...queryTokens.slice(0, i), mergedPair, ...queryTokens.slice(i + 2)];
+              evaluateTokens(mergedSeq, true);
+            }
+          }
+        }
       }
 
-      // If gibberish query with 0 candidates across all tokens and no exact/prefix match:
-      // return immediately (avoiding false positives)
-      if (totalCandidateCount === 0 && scoreMap.size === 0) {
+      // If gibberish query with 0 candidates and 0 scores: return empty
+      if (scoreMap.size === 0 && initialCandCount === 0) {
         const emptyRes = [];
         emptyRes.items = emptyRes;
         emptyRes.total = 0;
         emptyRes.query = q;
         this.queryCache.set(qLower, emptyRes);
         return emptyRes;
-      }
-
-      // ── STEP 3: CROSS-VEHICLE COMPATIBILITY MATCHING (Via Inverted Index) ──
-      // Collect matching compatibility entries using indexed posting sets (NO full scan!)
-      const matchedCompatEntryIndices = new Set();
-      for (const qTok of queryTokens) {
-        const cands = tokenCandidatesMap.get(qTok) || [];
-        for (const cand of cands) {
-          const entrySet = this.compatTokenToEntries.get(cand.token);
-          if (entrySet) {
-            for (const eIdx of entrySet) {
-              matchedCompatEntryIndices.add(eIdx);
-            }
-          }
-        }
-      }
-
-      for (const cIdx of matchedCompatEntryIndices) {
-        const entry = this.compatibilityEntries[cIdx];
-        const vehTokens = entry.vehicleTokens;
-        const altTokens = entry.nameTokens;
-
-        let vehMatched = false;
-        let altMatched = false;
-        let vehExact = false;
-        let altExact = false;
-
-        for (const qTok of queryTokens) {
-          const cands = tokenCandidatesMap.get(qTok) || [];
-          for (const cand of cands) {
-            if (vehTokens.includes(cand.token)) {
-              vehMatched = true;
-              if (cand.dist === 0) vehExact = true;
-            }
-            if (altTokens.includes(cand.token)) {
-              altMatched = true;
-              if (cand.dist === 0) altExact = true;
-            }
-          }
-        }
-
-        if (vehMatched && altMatched) {
-          const score = (vehExact && altExact) ? 7000 : 6600;
-          const altLabel = entry.name ? ` (Saved name: ${entry.name})` : '';
-          recordScore(
-            entry.prodIdx,
-            score,
-            'compatibility',
-            `🔄 Fits ${entry.vehicleFullName}${altLabel}`,
-            'compatibility'
-          );
-        } else if (altMatched && queryTokens.length === 1) {
-          recordScore(
-            entry.prodIdx,
-            altExact ? 6500 : 5800,
-            'compatibility',
-            `🔄 Fits ${entry.vehicleFullName} (Saved name: ${entry.name})`,
-            'compatibility'
-          );
-        } else if (vehMatched && queryTokens.length === 1) {
-          recordScore(
-            entry.prodIdx,
-            vehExact ? 5800 : 5200,
-            'compatibility',
-            `🔄 Compatible with ${entry.vehicleFullName}`,
-            'compatibility'
-          );
-        }
-      }
-
-      // ── STEP 4: TOKEN INVERTED INDEX MATCHING (EXACT, PREFIX, FUZZY) ──
-      // Process candidate products via inverted posting lists (O(candidates), NEVER O(20,000)!)
-      const productCoverageMap = new Map();
-
-      for (let tIdx = 0; tIdx < queryTokens.length; tIdx++) {
-        const qTok = queryTokens[tIdx];
-        const cands = tokenCandidatesMap.get(qTok) || [];
-
-        for (const cand of cands) {
-          const candWord = cand.token;
-          const postingSet = this.tokenPostingMap.get(candWord);
-          if (!postingSet) continue;
-
-          for (const pIdx of postingSet) {
-            let cov = productCoverageMap.get(pIdx);
-            if (!cov) {
-              cov = {
-                queryTokensMatched: new Set(),
-                simSum: 0,
-                bestReason: 'token',
-                bestHighlight: '',
-                bestField: 'DESC',
-                hasExactWord: false
-              };
-              productCoverageMap.set(pIdx, cov);
-            }
-
-            if (!cov.queryTokensMatched.has(tIdx)) {
-              cov.queryTokensMatched.add(tIdx);
-              cov.simSum += cand.similarity;
-            }
-
-            if (cand.dist === 0) {
-              cov.hasExactWord = true;
-            }
-
-            const fieldMap = this.tokenFieldMap.get(candWord);
-            const fieldSet = fieldMap ? fieldMap.get(pIdx) : null;
-            if (fieldSet) {
-              if (fieldSet.has('NAME')) cov.bestField = 'NAME';
-              else if (fieldSet.has('BRAND') && cov.bestField !== 'NAME') cov.bestField = 'BRAND';
-              else if (fieldSet.has('PRIMARY_VEH') && cov.bestField !== 'NAME') cov.bestField = 'PRIMARY_VEH';
-            }
-
-            if (cand.dist > 0 && !cov.bestHighlight) {
-              cov.bestHighlight = `~${candWord}`;
-              cov.bestReason = 'fuzzy_spelling';
-            }
-          }
-        }
-      }
-
-      // Score products based on token coverage
-      for (const [pIdx, cov] of productCoverageMap.entries()) {
-        const p = this.products[pIdx];
-        if (!p) continue;
-
-        const matchedCount = cov.queryTokensMatched.size;
-        const totalTokens = queryTokens.length;
-        const avgSim = cov.simSum / matchedCount;
-
-        // In multi-word queries, prune out single-token weak matches if query has 3+ tokens or if SKU_PART only
-        if (totalTokens >= 3 && matchedCount < 2) continue;
-        if (totalTokens > 1 && matchedCount === 1 && cov.bestField === 'SKU_PART' && !cov.hasExactWord) continue;
-
-        let baseScore = 0;
-        let reason = cov.bestReason;
-        let matchType = 'token';
-        let highlight = cov.bestHighlight;
-
-        const pNameLower = (p.name || '').toLowerCase();
-
-        if (totalTokens === 1) {
-          const candObj = (tokenCandidatesMap.get(queryTokens[0]) || [])[0];
-          const isExact = cov.hasExactWord;
-          const isNamePrefix = pNameLower.startsWith(qLower);
-
-          if (isExact) {
-            if (cov.bestField === 'NAME') {
-              baseScore = 4800;
-              reason = 'exact_name_token';
-              matchType = 'exact_name';
-            } else if (cov.bestField === 'BRAND' || cov.bestField === 'CAT') {
-              baseScore = 3200;
-              reason = 'exact_brand';
-              matchType = 'exact_brand';
-            } else {
-              baseScore = 2800;
-              reason = 'exact_token';
-            }
-          } else if (isNamePrefix) {
-            baseScore = 4200;
-            reason = 'name_prefix';
-            matchType = 'prefix';
-            highlight = `Prefix: ${q}`;
-          } else {
-            // Algorithmic Fuzzy Match (e.g. "vizor" -> "visor", "clutsh" -> "clutch")
-            if (cov.bestField === 'NAME') {
-              baseScore = 3500 * avgSim;
-              reason = 'fuzzy_spelling';
-              matchType = 'fuzzy';
-              if (candObj) highlight = `Did you mean "${candObj.token}"?`;
-            } else if (cov.bestField === 'BRAND' || cov.bestField === 'PRIMARY_VEH') {
-              baseScore = 2400 * avgSim;
-              reason = 'fuzzy_brand_vehicle';
-              matchType = 'fuzzy';
-            } else {
-              baseScore = 1800 * avgSim;
-              reason = 'fuzzy_general';
-              matchType = 'fuzzy';
-            }
-          }
-        } else {
-          // Multi-word queries: "vizor pulsar", "splender clutsh"
-          if (matchedCount === totalTokens) {
-            baseScore = 4000 + (cov.simSum * 400);
-            reason = cov.hasExactWord ? 'multi_term_match' : 'multi_term_fuzzy';
-            matchType = cov.hasExactWord ? 'multi_term' : 'fuzzy';
-            highlight = `Matched all query terms (${queryTokens.join(' + ')})`;
-
-            // Check if matches both primary vehicle and part name
-            const pvList = Array.isArray(p.vehicles) ? p.vehicles : (p.vehicle ? [p.vehicle] : []);
-            if (pvList.length > 0) {
-              const pvTokens = tokenize(pvList.join(' '));
-              const nameTokens = tokenize(p.name);
-              const hasVeh = queryTokens.some(t => {
-                const cands = tokenCandidatesMap.get(t) || [];
-                return cands.some(c => pvTokens.includes(c.token));
-              });
-              const hasName = queryTokens.some(t => {
-                const cands = tokenCandidatesMap.get(t) || [];
-                return cands.some(c => nameTokens.includes(c.token));
-              });
-              if (hasVeh && hasName) {
-                baseScore = 7500;
-                reason = 'vehicle_product';
-                matchType = 'vehicle_product';
-                highlight = `🏍️ ${pvList[0]} • ${p.name}`;
-              }
-            }
-          } else if (matchedCount > 1) {
-            baseScore = 1500 + (matchedCount * 600) + (cov.simSum * 200);
-            reason = 'partial_terms_match';
-            matchType = 'partial';
-          } else {
-            // Only 1 out of multiple terms matched
-            baseScore = 800 + (avgSim * 300);
-            reason = 'single_term_match';
-            matchType = 'partial';
-          }
-        }
-
-        recordScore(pIdx, baseScore, reason, highlight, matchType);
       }
 
       // ── COMPOUND LOCATION QUERIES (Product + Location) ──
@@ -960,12 +1170,33 @@
     }
 
     _formatAndCacheResults(scoreMap, limit, cacheKey, originalQuery, minThreshold = 500) {
-      const results = [];
+      const candidatesList = [];
       for (const [idx, matchData] of scoreMap.entries()) {
         if (matchData.score < minThreshold) continue;
         const p = this.products[idx];
         if (!p) continue;
+        const stock = p._totalStock !== undefined ? p._totalStock : (p.stock ?? p.qty ?? 0);
+        candidatesList.push({ idx, p, matchData, score: matchData.score, stock, name: p.name || '' });
+      }
 
+      // ── STRICT RANKING HIERARCHY ──
+      // 1. Score DESC (Exact > Prefix > Substring > Fuzzy)
+      // 2. In-Stock over Out-of-Stock
+      // 3. Alphabetical Name ASC
+      candidatesList.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const hasA = a.stock > 0 ? 1 : 0;
+        const hasB = b.stock > 0 ? 1 : 0;
+        if (hasB !== hasA) return hasB - hasA;
+        if (b.stock !== a.stock) return b.stock - a.stock;
+        return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+      });
+
+      const slicedCandidates = candidatesList.slice(0, limit);
+      const results = [];
+
+      for (let i = 0; i < slicedCandidates.length; i++) {
+        const { p, matchData } = slicedCandidates[i];
         const locationContext = [];
         if (Array.isArray(p.locations) && p.locations.length > 0) {
           for (const loc of p.locations) {
@@ -995,26 +1226,12 @@
         });
       }
 
-      // ── STRICT RANKING HIERARCHY ──
-      // 1. Score DESC (Exact > Prefix > Multi-term > Fuzzy)
-      // 2. In-Stock over Out-of-Stock
-      // 3. Alphabetical Name ASC
-      results.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        const stockA = a.product.stock ?? a.product.qty ?? 0;
-        const stockB = b.product.stock ?? b.product.qty ?? 0;
-        if ((stockB > 0) !== (stockA > 0)) return (stockB > 0 ? 1 : 0) - (stockA > 0 ? 1 : 0);
-        if (stockB !== stockA) return stockB - stockA;
-        return (a.product.name || '').localeCompare(b.product.name || '');
-      });
+      results.items = results;
+      results.total = candidatesList.length;
+      results.query = originalQuery;
 
-      const sliced = results.slice(0, limit);
-      sliced.items = sliced;
-      sliced.total = results.length;
-      sliced.query = originalQuery;
-
-      this.queryCache.set(cacheKey, sliced);
-      return sliced;
+      this.queryCache.set(cacheKey, results);
+      return results;
     }
   }
 
