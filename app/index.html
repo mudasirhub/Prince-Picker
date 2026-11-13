@@ -10323,19 +10323,35 @@
       if (url.startsWith('blob:')) return '';
       if (url.startsWith('data:')) return url;
 
-      const OLD_R2_DOMAIN = 'pub-091b1d2070306c80f830d33d243cf4f0.r2.dev';
-      const R2_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+      if (window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.resolveImageUrl === 'function') {
+        return window.SUPABASE_CONFIG.resolveImageUrl(url);
+      }
+      if (typeof window.resolveImageUrl === 'function') {
+        return window.resolveImageUrl(url);
+      }
 
-      // Map any old R2 URL dynamically to the new public R2 domain
-      if (url.includes(OLD_R2_DOMAIN)) {
-        return url.replace(new RegExp(`https?://${OLD_R2_DOMAIN}`, 'gi'), R2_BASE);
+      const PROD_WORKER_BASE = 'https://prince-picker-image-worker.prince-picker.workers.dev';
+      const OLD_R2_DOMAINS = [
+        'pub-091b1d2070306c80f830d33d243cf4f0.r2.dev',
+        'pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev'
+      ];
+
+      // Map any old R2 URL dynamically to the production Worker domain
+      for (const oldDom of OLD_R2_DOMAINS) {
+        if (url.includes(oldDom)) {
+          return url.replace(new RegExp(`^https?:\\/\\/${oldDom.replace(/\\./g, '\\.')}\\/?`, 'i'), `${PROD_WORKER_BASE}/`);
+        }
+      }
+
+      if (/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/?/i.test(url)) {
+        return url.replace(/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/?/i, `${PROD_WORKER_BASE}/`);
       }
 
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
       if (url.startsWith('/') && !url.startsWith('//')) return url;
 
       const cleanKey = url.replace(/^\/+/, '');
-      return `${R2_BASE}/${cleanKey}`;
+      return `${PROD_WORKER_BASE}/${cleanKey}`;
     }
 
     function getProductImageSrc(p) {
@@ -12443,6 +12459,9 @@
         let newUrl = '';
         if (typeof uploadSingleImage === 'function') {
           const res = await uploadSingleImage(file, p.id || p.barcode);
+          newUrl = res?.url || res?.dataUrl || res;
+        } else if (window.IMAGE_UPLOADER && typeof window.IMAGE_UPLOADER.uploadSingleImage === 'function') {
+          const res = await window.IMAGE_UPLOADER.uploadSingleImage(file, p.id || p.barcode);
           newUrl = res?.url || res?.dataUrl || res;
         } else {
           newUrl = URL.createObjectURL(file);
@@ -16900,7 +16919,8 @@
       for (let i = 0; i < AP_PRODUCT_IMAGES.length; i++) {
         const imgObj = AP_PRODUCT_IMAGES[i];
         if (imgObj) {
-          const url = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
+          const rawUrl = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
+          const url = formatImageUrl(rawUrl) || rawUrl;
           const sz = imgObj.sizeBytes ? `${Math.round(imgObj.sizeBytes / 1024)}KB` : 'WebP';
           const dim = (imgObj.width && imgObj.height) ? `${imgObj.width}×${imgObj.height}` : '';
           const infoStr = [sz, 'WebP', dim].filter(Boolean).join(' · ');
@@ -17062,7 +17082,8 @@
       const shopStock = locationsList.filter(l => l.storage_type === 'SHOP' || (!l.storage_type && !String(l.location).startsWith('WR'))).reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
       const totalStock = locationsList.reduce((sum, l) => sum + (Number(l.qty) || 0), 0);
 
-      const primaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
+      const rawPrimaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
+      const primaryUrl = formatImageUrl(rawPrimaryUrl) || rawPrimaryUrl;
 
       const product = {
         id,
@@ -17285,9 +17306,15 @@
       renderCompatList();
 
       if (p.images && Array.isArray(p.images) && p.images.length > 0) {
-        AP_PRODUCT_IMAGES = [...p.images];
+        AP_PRODUCT_IMAGES = p.images.map(img => {
+          if (typeof img === 'string') return formatImageUrl(img) || img;
+          if (img && typeof img === 'object') {
+            return { ...img, url: formatImageUrl(img.url) || img.url };
+          }
+          return img;
+        });
       } else if (p.image) {
-        AP_PRODUCT_IMAGES = [{ id: 'img_primary', url: p.image, mime: 'image/webp' }];
+        AP_PRODUCT_IMAGES = [{ id: 'img_primary', url: formatImageUrl(p.image) || p.image, mime: 'image/webp' }];
       } else {
         AP_PRODUCT_IMAGES = [];
       }

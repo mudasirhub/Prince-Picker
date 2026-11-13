@@ -1,14 +1,15 @@
 /**
- * 10/10 Enterprise Production Cloudflare Worker for Prince Picker (Cloudflare R2 Proxy)
+ * 10/10 Enterprise Production Cloudflare Worker for Prince Picker (Cloudflare R2 Proxy & Image Delivery)
  * 
  * Features:
- * - Authorization: Validates JWT / Bearer Token in Authorization header (HTTP 401 on missing/invalid token)
- * - Rate Limiting: 20 uploads/minute per IP/User (HTTP 429 Too Many Requests)
+ * - Public Image Delivery: GET & HEAD /products/* directly serves objects from R2 bucket PRINCE_BUCKET
+ * - CDN Caching Headers: Cache-Control: public, max-age=31536000, immutable with ETag and 304 Not Modified
+ * - Authorization: Validates JWT / Bearer Token on mutating routes (POST /upload, DELETE /delete)
+ * - Rate Limiting: 20 uploads/minute per IP on upload route (HTTP 429 Too Many Requests)
  * - Product Ownership & Image Count Gatekeeper (X-Image-Count <= 4)
- * - Size (<= 700KB), WebP Magic Bytes ('RIFF'...'WEBP') & Scope ('products/') Validation
- * - CDN Headers: Cache-Control: public, max-age=31536000, immutable
+ * - Size (<= 750KB), WebP Magic Bytes ('RIFF'...'WEBP') & Scope ('products/') Validation
  * - Versioned Metadata JSON Response (version: 1, tags: [], notes: "") + Latency Telemetry
- * - Atomic DELETE /delete route for cleaning up orphaned objects
+ * - Atomic DELETE route for cleaning up orphaned objects
  */
 
 // In-Memory Rate Limit Cache (Sliding Window per IP)
@@ -20,8 +21,8 @@ export default {
 
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Product-ID, X-Checksum, X-Image-Width, X-Image-Height, X-Image-Count, Authorization',
+      'Access-Control-Allow-Methods': 'GET, HEAD, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Product-ID, X-Checksum, X-Image-Width, X-Image-Height, X-Image-Count, Authorization, If-None-Match',
     };
 
     if (request.method === 'OPTIONS') {
@@ -30,7 +31,82 @@ export default {
 
     const url = new URL(request.url);
 
-    // ── 1. AUTHORIZATION GATEKEEPER ──
+    // ── PUBLIC IMAGE DELIVERY ROUTE: GET & HEAD /products/* ──
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const cleanPath = url.pathname.replace(/^\/+/, '');
+      if (cleanPath.startsWith('products/')) {
+        if (!env.PRINCE_BUCKET) {
+          return new Response(JSON.stringify({ error: 'R2 bucket binding PRINCE_BUCKET not configured' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const object = await env.PRINCE_BUCKET.get(cleanPath);
+        if (!object) {
+          return new Response(JSON.stringify({ error: 'Image not found', path: cleanPath }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // Support HTTP Conditional Requests (304 Not Modified)
+        const ifNoneMatch = request.headers.get('If-None-Match');
+        if (ifNoneMatch && (ifNoneMatch === object.httpEtag || ifNoneMatch === `W/"${object.httpEtag}"` || ifNoneMatch === `"${object.httpEtag}"`)) {
+          return new Response(null, {
+            status: 304,
+            headers: {
+              ...corsHeaders,
+              'ETag': object.httpEtag ? `"${object.httpEtag}"` : '',
+              'Cache-Control': 'public, max-age=31536000, immutable',
+            }
+          });
+        }
+
+        // Content-Type from R2 metadata or extension
+        let contentType = object.httpMetadata?.contentType;
+        if (!contentType) {
+          if (cleanPath.endsWith('.webp')) contentType = 'image/webp';
+          else if (cleanPath.endsWith('.png')) contentType = 'image/png';
+          else if (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg')) contentType = 'image/jpeg';
+          else if (cleanPath.endsWith('.svg')) contentType = 'image/svg+xml';
+          else contentType = 'image/webp';
+        }
+
+        const headers = new Headers({
+          ...corsHeaders,
+          'Content-Type': contentType,
+          'Content-Length': String(object.size),
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        });
+        if (object.httpEtag) {
+          headers.set('ETag', `"${object.httpEtag}"`);
+        }
+        if (object.uploaded) {
+          headers.set('Last-Modified', object.uploaded.toUTCString());
+        }
+
+        if (request.method === 'HEAD') {
+          return new Response(null, { status: 200, headers });
+        }
+
+        return new Response(object.body, { status: 200, headers });
+      }
+
+      // Root status / healthcheck
+      if (url.pathname === '/' || url.pathname === '') {
+        return new Response(JSON.stringify({
+          service: 'prince-picker-image-worker',
+          status: 'healthy',
+          message: 'Prince Picker Cloudflare Image Worker Active'
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    // ── 1. MUTATING ROUTES GATEKEEPER (Authorization Header required for POST & DELETE) ──
     const authHeader = request.headers.get('Authorization') || '';
     if (!authHeader || (!authHeader.startsWith('Bearer ') && !authHeader.startsWith('bearer '))) {
       return new Response(
@@ -45,22 +121,6 @@ export default {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // ── 2. RATE LIMITING GATEKEEPER (20 uploads / minute / IP) ──
-    const clientIP = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
-    const nowMs = Date.now();
-    const windowMs = 60 * 1000;
-    const ipRecords = rateLimitMap.get(clientIP) || [];
-    const validRecords = ipRecords.filter(t => nowMs - t < windowMs);
-
-    if (validRecords.length >= 20) {
-      return new Response(
-        JSON.stringify({ error: 'Too Many Requests: Rate limit exceeded (20 uploads/minute)' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    validRecords.push(nowMs);
-    rateLimitMap.set(clientIP, validRecords);
 
     // ── DELETE ROUTE: /delete or DELETE request ──
     if (request.method === 'DELETE' || url.pathname === '/delete') {
@@ -99,6 +159,22 @@ export default {
         });
       }
     }
+
+    // ── 2. RATE LIMITING GATEKEEPER FOR UPLOADS (20 uploads / minute / IP) ──
+    const clientIP = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
+    const nowMs = Date.now();
+    const windowMs = 60 * 1000;
+    const ipRecords = rateLimitMap.get(clientIP) || [];
+    const validRecords = ipRecords.filter(t => nowMs - t < windowMs);
+
+    if (validRecords.length >= 20) {
+      return new Response(
+        JSON.stringify({ error: 'Too Many Requests: Rate limit exceeded (20 uploads/minute)' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    validRecords.push(nowMs);
+    rateLimitMap.set(clientIP, validRecords);
 
     // ── POST ROUTE: /upload or POST request ──
     if (request.method === 'POST') {
@@ -148,7 +224,7 @@ export default {
           });
         }
         if (fileData.byteLength > 750 * 1024) {
-          return new Response(JSON.stringify({ error: 'File size exceeds maximum 700 KB limit' }), {
+          return new Response(JSON.stringify({ error: 'File size exceeds maximum 750 KB limit' }), {
             status: 413,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -167,7 +243,7 @@ export default {
         }
 
         // 5. Generate UUID & Storage Scope
-        const uuid = crypto.randomUUID ? crypto.randomUUID() : ('u_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8));
+        const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('u_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8));
         const cleanProdId = String(productId).replace(/[^a-zA-Z0-9_-]/g, '_');
         const keyPath = `products/${cleanProdId}/${uuid}.webp`;
         const createdAt = new Date().toISOString();
@@ -188,7 +264,7 @@ export default {
           });
         }
 
-        const domainBase = env.PUBLIC_R2_URL || 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+        const domainBase = env.PUBLIC_IMAGE_URL || env.PUBLIC_R2_URL || 'https://prince-picker-image-worker.prince-picker.workers.dev';
         const cleanDomain = domainBase.replace(/\/+$/, '');
         const publicUrl = `${cleanDomain}/${keyPath}`;
         const latencyMs = Date.now() - startTime;

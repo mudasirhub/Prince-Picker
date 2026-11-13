@@ -17,12 +17,15 @@
   }
 
   const DEFAULT_WORKER_ENDPOINT = 'https://prince-picker-image-worker.prince-picker.workers.dev/upload';
-  const DEFAULT_R2_PUBLIC_URL = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+  const DEFAULT_R2_PUBLIC_URL = 'https://prince-picker-image-worker.prince-picker.workers.dev';
   const MAX_RETRIES = 3;
   const RETRY_DELAYS = [1000, 3000, 5000];
 
   function getR2PublicBaseUrl() {
-    return (window.SUPABASE_CONFIG && (window.SUPABASE_CONFIG.r2PublicUrl || window.SUPABASE_CONFIG.r2Endpoint)) || DEFAULT_R2_PUBLIC_URL;
+    if (window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.getImageBaseUrl === 'function') {
+      return window.SUPABASE_CONFIG.getImageBaseUrl();
+    }
+    return (window.SUPABASE_CONFIG && (window.SUPABASE_CONFIG.imageBaseUrl || window.SUPABASE_CONFIG.r2PublicUrl || window.SUPABASE_CONFIG.r2Endpoint)) || DEFAULT_R2_PUBLIC_URL;
   }
 
   function getAuthToken() {
@@ -89,9 +92,12 @@
             const result = await response.json();
             if (result && result.success && result.url) {
               const uploadDurationMs = Date.now() - uploadStart;
-              console.log(`[ImageUploader] Worker upload success in ${uploadDurationMs}ms:`, result.url);
+              const resolvedUrl = (window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.resolveImageUrl === 'function')
+                ? window.SUPABASE_CONFIG.resolveImageUrl(result.url)
+                : ((typeof window.resolveImageUrl === 'function') ? window.resolveImageUrl(result.url) : result.url);
+              console.log(`[ImageUploader] Worker upload success in ${uploadDurationMs}ms:`, resolvedUrl);
               return {
-                url: result.url,
+                url: resolvedUrl,
                 id: result.id || ('img_' + uuid),
                 storagePath: result.storagePath || storagePath,
                 sizeBytes: result.sizeBytes || (blob instanceof Blob ? blob.size : 0),
@@ -260,4 +266,16 @@
     getR2PublicBaseUrl,
     DEFAULT_WORKER_ENDPOINT
   };
-})(typeof window !== 'undefined' ? window : this);
+  window.uploadSingleImage = uploadSingleImage;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      uploadSingleImage,
+      uploadMultipleImagesParallel,
+      deleteR2Image,
+      generateUUID,
+      getR2PublicBaseUrl,
+      DEFAULT_WORKER_ENDPOINT
+    };
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
