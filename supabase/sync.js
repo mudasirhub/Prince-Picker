@@ -63,26 +63,21 @@
             console.error('[SYNC] Error uploading inventory queue item:', error);
           }
         } else if (item.type === 'save_product' || item.type === 'upsert_product') {
-          console.log('[SYNC] Upload queued product:', item.payload);
-          const { data, error } = await client
-            .from('products')
-            .upsert(item.payload, { onConflict: 'id' })
-            .select();
-
-          if (!error) {
-            await window.PICKER_DB.removeSyncQueue(item.id);
-            if (data && Array.isArray(data) && data.length > 0) {
-              await window.PICKER_DB.putProducts(data);
+          console.log('[SYNC] Upload queued product via saveProduct:', item.payload);
+          if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+            const res = await window.SUPABASE_PRODUCTS.saveProduct(item.payload);
+            if (res && (res.synced || res.success)) {
+              await window.PICKER_DB.removeSyncQueue(item.id);
+              console.log('[SYNC] Queue complete for product:', item.payload.id || item.payload.sku);
+            } else {
+              console.error('[SYNC] Failed to upload queued product:', res?.error);
+              if (res?.error && !window.SUPABASE_PRODUCTS.isNetworkError(res.error)) {
+                await window.PICKER_DB.removeSyncQueue(item.id);
+              }
             }
-            console.log('[SYNC] Queue complete for product:', item.payload.id || item.payload.sku);
           } else {
-            console.error('[SYNC] Error uploading queued product:', error);
-            const isNetErr = window.SUPABASE_PRODUCTS?.isNetworkError
-              ? window.SUPABASE_PRODUCTS.isNetworkError(error)
-              : String(error.message || '').toLowerCase().includes('fetch');
-
-            if (!isNetErr) {
-              console.warn('[SYNC] Removing queue item due to non-retryable DB error (e.g. RLS/schema):', error);
+            const { data, error } = await client.from('products').upsert(item.payload, { onConflict: 'id' }).select();
+            if (!error) {
               await window.PICKER_DB.removeSyncQueue(item.id);
             }
           }
@@ -127,10 +122,11 @@
             }
           }
         } else if (item.type === 'upload_image') {
-          console.log('[SYNC] Processing queued offline image upload:', item.storagePath);
-          if (item.dataUrl && item.dataUrl.startsWith('blob:')) {
+          const payload = item.payload || item;
+          console.log('[SYNC] Processing queued offline image upload:', payload.storagePath);
+          if (payload.dataUrl && payload.dataUrl.startsWith('blob:')) {
             try {
-              const chk = await fetch(item.dataUrl);
+              const chk = await fetch(payload.dataUrl);
               if (!chk.ok) throw new Error('Revoked blob URL');
             } catch (eBlob) {
               console.warn('[SYNC] Revoked blob URL in sync queue. Removing item:', item.id);
@@ -138,33 +134,54 @@
               continue;
             }
           }
+          if (!payload.dataUrl) {
+            await window.PICKER_DB.removeSyncQueue(item.id);
+            continue;
+          }
           if (window.IMAGE_UPLOADER && typeof window.IMAGE_UPLOADER.uploadSingleImage === 'function') {
-            const upRes = await window.IMAGE_UPLOADER.uploadSingleImage(item.dataUrl, item.productId, { checksum: item.checksum });
+            const upRes = await window.IMAGE_UPLOADER.uploadSingleImage(payload.dataUrl, payload.productId, { checksum: payload.checksum, skipQueue: true });
             if (upRes && upRes.uploaded) {
+              if (window.IMAGE_CACHE && typeof window.IMAGE_CACHE.cacheImage === 'function') {
+                window.IMAGE_CACHE.cacheImage(upRes.url, payload.dataUrl).catch(() => {});
+              }
               // Transaction Step 2 & 3: Update Supabase & refresh IndexedDB product cache
-              if (item.productId && window.PICKER_DB && typeof window.PICKER_DB.getProductById === 'function') {
-                const prod = await window.PICKER_DB.getProductById(item.productId);
+              if (payload.productId && window.PICKER_DB && typeof window.PICKER_DB.getProductById === 'function') {
+                const prod = await window.PICKER_DB.getProductById(payload.productId);
                 if (prod) {
                   const updatedImages = Array.isArray(prod.images) ? [...prod.images] : [];
-                  const idx = updatedImages.findIndex(img => (img && (img.storagePath === item.storagePath || img.url === item.dataUrl)));
+                  const idx = updatedImages.findIndex(img => (
+                    img && (
+                      (payload.storagePath && img.storagePath === payload.storagePath) ||
+                      img.url === payload.dataUrl ||
+                      (payload.checksum && img.checksum === payload.checksum)
+                    )
+                  ));
                   const metaObj = {
                     id: upRes.id || ('img_' + Date.now()),
                     url: upRes.url,
+                    storagePath: upRes.storagePath || payload.storagePath || '',
                     width: upRes.width || 0,
                     height: upRes.height || 0,
                     sizeBytes: upRes.sizeBytes || 0,
-                    mime: 'image/webp',
-                    checksum: item.checksum || '',
+                    mime: upRes.mime || payload.mime || 'image/webp',
+                    checksum: payload.checksum || '',
+                    uploaded: true,
+                    remote: true,
                     createdAt: upRes.createdAt || new Date().toISOString()
                   };
                   if (idx >= 0) updatedImages[idx] = metaObj;
                   else updatedImages.push(metaObj);
 
                   prod.images = updatedImages;
-                  prod.image = updatedImages[0]?.url || prod.image || '';
+                  if (idx === 0 || !prod.image || prod.image.startsWith('data:') || prod.image.startsWith('blob:')) {
+                    prod.image = updatedImages[0]?.url || upRes.url;
+                  }
 
                   if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
                     await window.SUPABASE_PRODUCTS.saveProduct(prod);
+                  }
+                  if (typeof window.syncProductToAppStores === 'function') {
+                    window.syncProductToAppStores(prod);
                   }
                 }
               }

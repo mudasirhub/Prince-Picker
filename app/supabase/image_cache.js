@@ -1,32 +1,51 @@
 /**
  * Image Caching Engine for Prince Picker (Cache API + IndexedDB)
+ * Enforces strict 200-only caching and purges stale/replaced entries across all caches.
  */
 (function(window) {
   const CACHE_NAME = 'prince-picker-images-v1';
 
+  function isCacheableUrl(key) {
+    return typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/'));
+  }
+
   async function cacheImage(key, blobOrDataUrl) {
     if (!key) return false;
     try {
-      if (window.caches) {
+      if (typeof window !== 'undefined' && window.caches && isCacheableUrl(key)) {
         const cache = await window.caches.open(CACHE_NAME);
-        let response;
-        if (blobOrDataUrl instanceof Blob) {
+        let response = null;
+        if (blobOrDataUrl instanceof Blob && blobOrDataUrl.size > 0) {
+          const mime = (blobOrDataUrl.type && blobOrDataUrl.type.startsWith('image/')) ? blobOrDataUrl.type : 'image/webp';
           response = new Response(blobOrDataUrl, {
-            headers: { 'Content-Type': blobOrDataUrl.type || 'image/webp', 'Cache-Control': 'public, max-age=31536000, immutable' }
+            status: 200,
+            headers: {
+              'Content-Type': mime,
+              'Cache-Control': 'public, max-age=31536000, immutable',
+              'Access-Control-Allow-Origin': '*',
+              'Cross-Origin-Resource-Policy': 'cross-origin'
+            }
           });
-        } else if (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:')) {
+        } else if (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:image/')) {
           const arr = blobOrDataUrl.split(',');
-          const mime = arr[0].match(/:(.*?);/)[1];
-          const bstr = atob(arr[1]);
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          const mime = (mimeMatch && mimeMatch[1]) ? mimeMatch[1] : 'image/webp';
+          const bstr = atob(arr[1] || '');
           let n = bstr.length;
           const u8arr = new Uint8Array(n);
           while (n--) u8arr[n] = bstr.charCodeAt(n);
           const blob = new Blob([u8arr], { type: mime });
           response = new Response(blob, {
-            headers: { 'Content-Type': mime, 'Cache-Control': 'public, max-age=31536000, immutable' }
+            status: 200,
+            headers: {
+              'Content-Type': mime,
+              'Cache-Control': 'public, max-age=31536000, immutable',
+              'Access-Control-Allow-Origin': '*',
+              'Cross-Origin-Resource-Policy': 'cross-origin'
+            }
           });
         }
-        if (response && (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/'))) {
+        if (response && response.ok && response.status === 200) {
           await cache.put(key, response);
         }
       }
@@ -34,9 +53,8 @@
       console.warn('[ImageCache] Cache API warning:', e);
     }
 
-    // Also store in IndexedDB if PICKER_DB or legacy IDB exists
     try {
-      if (window.PICKER_DB && typeof window.PICKER_DB.openDB === 'function') {
+      if (typeof window !== 'undefined' && window.PICKER_DB && typeof window.PICKER_DB.openDB === 'function') {
         const db = await window.PICKER_DB.openDB();
         if (db.objectStoreNames.contains('images')) {
           const tx = db.transaction('images', 'readwrite');
@@ -52,17 +70,22 @@
   async function getCachedImage(key) {
     if (!key) return null;
     try {
-      if (window.caches && (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/'))) {
+      if (typeof window !== 'undefined' && window.caches && isCacheableUrl(key)) {
         const cache = await window.caches.open(CACHE_NAME);
         const matched = await cache.match(key);
         if (matched) {
-          return key;
+          const ct = (matched.headers.get('Content-Type') || '').toLowerCase();
+          if (matched.ok && matched.status === 200 && ct.startsWith('image/')) {
+            return key;
+          }
+          // Evict corrupted or error response if present
+          await cache.delete(key);
         }
       }
     } catch (e) { }
 
     try {
-      if (window.PICKER_DB && typeof window.PICKER_DB.openDB === 'function') {
+      if (typeof window !== 'undefined' && window.PICKER_DB && typeof window.PICKER_DB.openDB === 'function') {
         const db = await window.PICKER_DB.openDB();
         if (db.objectStoreNames.contains('images')) {
           return new Promise((resolve) => {
@@ -89,14 +112,19 @@
   async function deleteCachedImage(key) {
     if (!key) return false;
     try {
-      if (window.caches && (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/'))) {
-        const cache = await window.caches.open(CACHE_NAME);
-        await cache.delete(key);
+      if (typeof window !== 'undefined' && window.caches && isCacheableUrl(key)) {
+        const cacheNames = await window.caches.keys();
+        await Promise.all(
+          cacheNames.map(name => window.caches.open(name).then(c => c.delete(key, { ignoreSearch: true })))
+        );
+      }
+      if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'PURGE_IMAGE_CACHE', url: key });
       }
     } catch (e) { }
 
     try {
-      if (window.PICKER_DB && typeof window.PICKER_DB.openDB === 'function') {
+      if (typeof window !== 'undefined' && window.PICKER_DB && typeof window.PICKER_DB.openDB === 'function') {
         const db = await window.PICKER_DB.openDB();
         if (db.objectStoreNames.contains('images')) {
           const tx = db.transaction('images', 'readwrite');

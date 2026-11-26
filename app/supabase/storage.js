@@ -66,9 +66,10 @@
 
     const optimizedResults = await Promise.all(optimizePromises);
 
-    // Step 3: Upload compressed WebP images in chunks with Concurrency Limit = 2
+    // Step 3: Upload compressed WebP/JPEG/PNG images in chunks with Concurrency Limit = 2
     const uploadPayloads = optimizedResults.map(res => ({
       blob: res.optimized?.blob || res.raw,
+      dataUrl: res.optimized?.dataUrl || '',
       checksum: res.checksum,
       width: res.optimized?.width || 0,
       height: res.optimized?.height || 0
@@ -97,11 +98,14 @@
         const metadata = {
           id: uuid,
           url: finalUrl,
+          storagePath: upRes.storagePath || '',
           width: optRes.optimized?.width || upRes.width || 0,
           height: optRes.optimized?.height || upRes.height || 0,
           sizeBytes: optRes.optimized?.sizeBytes || upRes.sizeBytes || 0,
           checksum: prep.checksum,
-          mime: 'image/webp',
+          mime: upRes.mime || optRes.optimized?.mime || 'image/webp',
+          uploaded: Boolean(upRes.uploaded),
+          remote: Boolean(upRes.remote),
           createdAt: createdAt,
           version: 1,
           tags: [],
@@ -110,7 +114,7 @@
 
         // Cache in Cache API / IndexedDB for 0-latency offline access
         if (window.IMAGE_CACHE && typeof window.IMAGE_CACHE.cacheImage === 'function') {
-          window.IMAGE_CACHE.cacheImage(finalUrl, optRes.optimized?.blob || optRes.optimized?.dataUrl);
+          window.IMAGE_CACHE.cacheImage(finalUrl, optRes.optimized?.blob || optRes.optimized?.dataUrl || optRes.raw).catch(() => {});
         }
 
         finalMetadataList.push(metadata);

@@ -115,11 +115,19 @@
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Failed to decode image file. File may be corrupted.'));
+      let objectUrl = null;
+      img.onload = () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+      img.onerror = () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to decode image file. File may be corrupted.'));
+      };
 
       if (src instanceof File || src instanceof Blob) {
-        img.src = URL.createObjectURL(src);
+        objectUrl = URL.createObjectURL(src);
+        img.src = objectUrl;
       } else if (typeof src === 'string') {
         img.src = src;
       } else {

@@ -3,7 +3,8 @@
  * Features:
  * - Authorization Bearer Token pass-through
  * - Browser -> Cloudflare Worker API -> Cloudflare R2
- * - 3 Retries with exponential backoff (1s, 3s, 5s)
+ * - Exact binary Blob & MIME preservation (image/webp, image/jpeg, image/png)
+ * - 3 Retries with exponential backoff (1s, 3s, 5s) on transient failures only
  * - Concurrency Limit = 2 (prevents mobile memory spikes)
  * - Version 1 Metadata Parsing + Latency Telemetry
  * - Atomic R2 Cleanup helper (deleteR2Image)
@@ -38,11 +39,43 @@
     return (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey) || 'anon-jwt-token-prince-picker';
   }
 
+  async function detectMimeFromBlob(blob) {
+    if (!blob || !(blob instanceof Blob)) return 'image/webp';
+    const declared = (blob.type || '').toLowerCase();
+    if (declared === 'image/webp' || declared === 'image/jpeg' || declared === 'image/png') {
+      return declared;
+    }
+    if (declared === 'image/jpg') return 'image/jpeg';
+
+    try {
+      const slice = blob.slice(0, 12);
+      const buf = await slice.arrayBuffer();
+      const b = new Uint8Array(buf);
+      if (b.length >= 12 && b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+          b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) {
+        return 'image/webp';
+      }
+      if (b.length >= 3 && b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) {
+        return 'image/jpeg';
+      }
+      if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47 &&
+          b[4] === 0x0D && b[5] === 0x0A && b[6] === 0x1A && b[7] === 0x0A) {
+        return 'image/png';
+      }
+    } catch (_) { }
+    return 'image/webp';
+  }
+
+  function extForMime(mime) {
+    if (mime === 'image/jpeg' || mime === 'image/jpg') return 'jpg';
+    if (mime === 'image/png') return 'png';
+    return 'webp';
+  }
+
   async function uploadSingleImage(blobOrDataUrl, productId, options = {}) {
     const uploadStart = Date.now();
     const uuid = generateUUID();
-    const cleanProdId = String(productId || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const storagePath = `products/${cleanProdId}/${uuid}.webp`;
+    const cleanProdId = String(productId || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_') || 'unknown';
     const checksum = options.checksum || '';
     const width = options.width || 0;
     const height = options.height || 0;
@@ -54,26 +87,36 @@
     if (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:')) {
       const arr = blobOrDataUrl.split(',');
       const mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/webp';
-      const bstr = atob(arr[1]);
+      const bstr = atob(arr[1] || '');
       let n = bstr.length;
       const u8arr = new Uint8Array(n);
       while (n--) u8arr[n] = bstr.charCodeAt(n);
       blob = new Blob([u8arr], { type: mime });
     }
 
+    const detectedMime = await detectMimeFromBlob(blob);
+    const ext = extForMime(detectedMime);
+    const storagePath = `products/${cleanProdId}/${uuid}.${ext}`;
+
+    // Re-wrap if MIME was empty or application/octet-stream so multipart preserves accurate image MIME
+    let uploadBlob = blob;
+    if (blob instanceof Blob && (!blob.type || blob.type === 'application/octet-stream' || !blob.type.startsWith('image/'))) {
+      uploadBlob = new Blob([blob], { type: detectedMime });
+    }
+
     const workerUrl = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.workerEndpoint) || DEFAULT_WORKER_ENDPOINT;
     const authToken = getAuthToken();
 
     // 1. Retry Loop with Bearer Auth Header & Backoff
-    if (isOnline && workerUrl) {
+    if (isOnline && workerUrl && uploadBlob instanceof Blob) {
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
           const formData = new FormData();
-          formData.append('file', blob, `${uuid}.webp`);
+          formData.append('file', uploadBlob, `${uuid}.${ext}`);
           formData.append('productId', cleanProdId);
           formData.append('checksum', checksum);
-          formData.append('width', width);
-          formData.append('height', height);
+          formData.append('width', String(width));
+          formData.append('height', String(height));
 
           const response = await fetch(workerUrl, {
             method: 'POST',
@@ -100,10 +143,10 @@
                 url: resolvedUrl,
                 id: result.id || ('img_' + uuid),
                 storagePath: result.storagePath || storagePath,
-                sizeBytes: result.sizeBytes || (blob instanceof Blob ? blob.size : 0),
+                sizeBytes: result.sizeBytes || uploadBlob.size || 0,
                 width: result.width || width,
                 height: result.height || height,
-                mime: 'image/webp',
+                mime: result.mime || detectedMime,
                 checksum: result.checksum || checksum,
                 createdAt: result.createdAt || new Date().toISOString(),
                 version: result.version || 1,
@@ -118,6 +161,10 @@
             }
           } else {
             console.warn(`[ImageUploader] Worker attempt ${attempt + 1} HTTP ${response.status}`);
+            // Do not waste backoff cycles on deterministic 4xx validation/auth errors (except 429)
+            if (response.status >= 400 && response.status < 500 && response.status !== 429 && response.status !== 408) {
+              break;
+            }
           }
         } catch (errWorker) {
           console.warn(`[ImageUploader] Worker attempt ${attempt + 1} exception:`, errWorker);
@@ -140,34 +187,36 @@
       });
     }
 
-    // 2. Offline / Local Fallback Queueing
-    let fallbackUrl = typeof blobOrDataUrl === 'string' ? blobOrDataUrl : '';
-    if ((!fallbackUrl || fallbackUrl.startsWith('blob:')) && blob instanceof Blob) {
-      fallbackUrl = await blobToDataUrl(blob);
+    // 2. Offline / Local Fallback Queueing (never store blob: URLs)
+    let fallbackUrl = typeof blobOrDataUrl === 'string' && !blobOrDataUrl.startsWith('blob:') ? blobOrDataUrl : '';
+    if (!fallbackUrl && uploadBlob instanceof Blob) {
+      fallbackUrl = await blobToDataUrl(uploadBlob);
     }
 
     const defaultUrl = `${getR2PublicBaseUrl()}/${storagePath}`;
 
-    try {
-      if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-        await window.PICKER_DB.addSyncQueue({
-          type: 'upload_image',
-          productId: cleanProdId,
-          storagePath: storagePath,
-          checksum: checksum,
-          dataUrl: typeof blobOrDataUrl === 'string' ? blobOrDataUrl : fallbackUrl
-        });
-      }
-    } catch (e) { }
+    if (!options.skipQueue) {
+      try {
+        if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
+          await window.PICKER_DB.addSyncQueue('upload_image', {
+            productId: cleanProdId,
+            storagePath: storagePath,
+            checksum: checksum,
+            mime: detectedMime,
+            dataUrl: fallbackUrl
+          });
+        }
+      } catch (e) { }
+    }
 
     return {
       url: fallbackUrl || defaultUrl,
       id: 'img_' + uuid,
       storagePath,
-      sizeBytes: blob instanceof Blob ? blob.size : 0,
+      sizeBytes: uploadBlob instanceof Blob ? uploadBlob.size : 0,
       width,
       height,
-      mime: 'image/webp',
+      mime: detectedMime,
       checksum,
       createdAt: new Date().toISOString(),
       version: 1,
@@ -234,14 +283,20 @@
     if (!workerUrl) return false;
 
     try {
-      let storagePath = imageUrlOrPath;
-      if (storagePath.startsWith('http://') || storagePath.startsWith('https://')) {
+      let storagePath = String(imageUrlOrPath).trim();
+      if (/^https?:\/\//i.test(storagePath)) {
         const u = new URL(storagePath);
-        storagePath = u.pathname.replace(/^\/+/, '');
+        storagePath = u.pathname;
+      }
+      storagePath = storagePath.replace(/\/+/g, '/').replace(/^\/+/, '');
+      if (storagePath.startsWith('cdn-cgi/image/')) {
+        const m = storagePath.match(/^cdn-cgi\/image\/[^/]+\/(.+)$/i);
+        if (m) storagePath = m[1].replace(/^https?:\/+[^/]+\//i, '').replace(/^\/+/, '');
       }
 
       const authToken = getAuthToken();
-      const deleteEndpoint = `${workerUrl}?path=${encodeURIComponent(storagePath)}`;
+      const deleteBase = workerUrl.replace(/\/+$/, '').replace(/\/upload$/i, '') + '/delete';
+      const deleteEndpoint = `${deleteBase}?path=${encodeURIComponent(storagePath)}`;
       const resp = await fetch(deleteEndpoint, {
         method: 'DELETE',
         headers: {

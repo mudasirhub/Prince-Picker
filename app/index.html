@@ -3528,8 +3528,10 @@
     .pick-thumb {
       width: 58px;
       height: 58px;
+      aspect-ratio: 1;
       background: #f4f4f5;
       border-radius: 10px;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -4625,6 +4627,7 @@
       width: 60px;
       height: 60px;
       min-width: 60px;
+      aspect-ratio: 1;
       border-radius: 12px;
       background: #f4f4f5;
       overflow: hidden;
@@ -4638,9 +4641,29 @@
     .pr-img img {
       width: 60px;
       height: 60px;
+      aspect-ratio: 1;
       object-fit: cover;
       display: block;
       flex-shrink: 0
+    }
+
+    .img-fallback-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--t3, #9ca3af);
+      background: var(--bg2, #f4f4f5);
+      flex-shrink: 0;
+    }
+
+    .img-fallback-placeholder svg {
+      width: 56%;
+      height: 56%;
+      max-width: 52px;
+      max-height: 52px;
+      display: block;
     }
 
     .pr-info {
@@ -6399,6 +6422,141 @@
       }
     }
 
+    /* ══════ SCROLL-AWARE GPU-ACCELERATED UPPER & LOWER BAR CHROME ══════ */
+    .tb {
+      z-index: 70 !important;
+    }
+
+    .sa-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .scroll-upper-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 55;
+      background: var(--bg);
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+      will-change: transform, opacity;
+      transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease;
+    }
+
+    .scroll-upper-bar.sa-bar-hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .scroll-upper-bar.sa-bar-hidden * {
+      pointer-events: none !important;
+    }
+
+    .sa-ptr {
+      position: absolute;
+      top: var(--sa-top-pad, 44px);
+      left: 0;
+      right: 0;
+      z-index: 54;
+    }
+
+    .sa-sc {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior-y: contain !important;
+    }
+
+    #ordersList.sa-sc {
+      padding-top: calc(var(--sa-top-pad, 44px) + 12px) !important;
+      padding-bottom: calc(var(--bot, 64px) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #searchList.sa-sc {
+      padding-top: var(--sa-top-pad, 108px) !important;
+      padding-bottom: calc(var(--bot, 64px) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #mapBody.sa-sc {
+      padding-top: var(--sa-top-pad, 92px) !important;
+      padding-bottom: calc(var(--bot, 64px) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #logsBody.sa-sc {
+      margin-top: 0 !important;
+      padding-top: calc(var(--sa-top-pad, 108px) + 10px) !important;
+      padding-bottom: calc(var(--bot, 64px) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #cartList.sa-sc {
+      padding-top: calc(var(--sa-top-pad, 46px) + 12px) !important;
+    }
+
+    #dropBody.sa-sc {
+      padding-top: var(--sa-top-pad, 48px) !important;
+      padding-bottom: calc(var(--bot, 64px) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #prodList.sa-sc {
+      padding-top: var(--sa-top-pad, 160px) !important;
+      padding-bottom: calc(var(--bot, 64px) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #qrProdList.sa-sc {
+      padding-top: var(--sa-top-pad, 100px) !important;
+    }
+
+    .sa-sc.sa-has-bn {
+      padding-bottom: calc(var(--bot, 64px) + 20px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .sa-bottom-pad-for-bn {
+      padding-bottom: calc(var(--bot, 64px) + 12px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .bn {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 900 !important;
+      transform: translateY(0) !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      will-change: transform, opacity;
+      transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease !important;
+    }
+
+    .bn.sa-bar-hidden {
+      transform: translateY(100%) !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .bn.sa-bar-hidden * {
+      pointer-events: none !important;
+    }
+
+    /* Ensure >= 44px touch target & 16px input font size (prevent mobile auto-zoom) */
+    .sf input, #homeQ, #prodQ, #qrQ, #logQ {
+      font-size: 16px !important;
+      min-height: 44px !important;
+    }
+    @media (max-width: 767.98px) {
+      .sf input {
+        height: 46px !important;
+      }
+    }
+
   </style>
 
   <script>
@@ -6530,11 +6688,13 @@
           }
 
           m.style.display = 'flex';
+          if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
         },
 
         closePromptModal: function () {
           var m = document.getElementById('pwaInstallPromptModal');
           if (m) m.style.display = 'none';
+          if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
         },
 
         dismissPrompt: function () {
@@ -6602,11 +6762,13 @@
             }
           }
           if (modal) modal.style.display = 'flex';
+          if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
         },
 
         closeInstructions: function () {
           var modal = document.getElementById('installHelpModal');
           if (modal) modal.style.display = 'none';
+          if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
         },
 
         updateUI: function () {
@@ -6872,22 +7034,26 @@
         </svg>
       </button>
     </div>
-    <div class="orders-strip">
-      <span class="orders-strip-lbl" id="orderCount">Loading...</span>
-      <div class="orders-strip-right">
-        <span class="chip c-gr" id="orderOnline" style="display:none"><span
-            style="width:6px;height:6px;background:var(--gr);border-radius:50%;display:inline-block"></span>Server</span>
-        <span class="chip c-yl" id="orderOffline" style="display:none">Offline</span>
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <div class="orders-strip">
+          <span class="orders-strip-lbl" id="orderCount">Loading...</span>
+          <div class="orders-strip-right">
+            <span class="chip c-gr" id="orderOnline" style="display:none"><span
+                style="width:6px;height:6px;background:var(--gr);border-radius:50%;display:inline-block"></span>Server</span>
+            <span class="chip c-yl" id="orderOffline" style="display:none">Offline</span>
+          </div>
+        </div>
       </div>
-    </div>
-    <div id="ptr-indicator"
-      style="height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: height 0.15s ease, opacity 0.15s ease; opacity: 0; font-size: 13px; font-weight: 700; color: var(--or)">
-      <div class="spinner"
-        style="width: 16px; height: 16px; border-color: rgba(0,0,0,.1); border-top-color: var(--or); margin-right: 8px;">
+      <div id="ptr-indicator" class="sa-ptr"
+        style="height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: height 0.15s ease, opacity 0.15s ease; opacity: 0; font-size: 13px; font-weight: 700; color: var(--or)">
+        <div class="spinner"
+          style="width: 16px; height: 16px; border-color: rgba(0,0,0,.1); border-top-color: var(--or); margin-right: 8px;">
+        </div>
+        <span>Pull to refresh...</span>
       </div>
-      <span>Pull to refresh...</span>
+      <div class="sc sa-sc sa-has-bn" style="padding:12px 16px" id="ordersList"></div>
     </div>
-    <div class="sc" style="padding:12px 16px" id="ordersList"></div>
     <div class="bn">
       <button class="bnt on" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
@@ -7007,33 +7173,37 @@
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
     </div>
-    <div class="search-area">
-      <div class="search-row">
-        <div class="sf">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            style="position:absolute;left:13px;top:50%;transform:translateY(-50%)">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input id="homeQ" placeholder="Search product, barcode, location..." autocomplete="off" spellcheck="false">
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <div class="search-area">
+          <div class="search-row">
+            <div class="sf">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                style="position:absolute;left:13px;top:50%;transform:translateY(-50%)">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input id="homeQ" placeholder="Search product, barcode, location..." autocomplete="off" spellcheck="false">
+            </div>
+            <button class="bc-btn" onclick="openScanner(onBarcodeSearch,'Scan product barcode')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+                <line x1="7" y1="8" x2="7" y2="16" />
+                <line x1="10" y1="8" x2="10" y2="16" />
+                <line x1="14" y1="8" x2="14" y2="16" />
+                <line x1="17" y1="8" x2="17" y2="16" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button class="bc-btn" onclick="openScanner(onBarcodeSearch,'Scan product barcode')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-            stroke-linecap="round">
-            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
-            <line x1="7" y1="8" x2="7" y2="16" />
-            <line x1="10" y1="8" x2="10" y2="16" />
-            <line x1="14" y1="8" x2="14" y2="16" />
-            <line x1="17" y1="8" x2="17" y2="16" />
-          </svg>
-        </button>
+        <div class="res-hdr">
+          <div class="res-lbl">Results</div>
+          <div class="res-cnt" id="searchCnt">–</div>
+        </div>
       </div>
+      <div class="sc sa-sc sa-has-bn" style="padding:0 16px 16px" id="searchList"></div>
     </div>
-    <div class="res-hdr">
-      <div class="res-lbl">Results</div>
-      <div class="res-cnt" id="searchCnt">–</div>
-    </div>
-    <div class="sc" style="padding:0 16px 16px" id="searchList"></div>
     <div class="bn">
       <button class="bnt on" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
@@ -7084,9 +7254,13 @@
       </button>
       <div style="font-size:12px;color:var(--t3);font-weight:600" id="mapCount"></div>
     </div>
-    <div id="mapTabWrap" style="padding:10px 16px 4px 16px;"></div>
-    <div class="map-bc" id="mapBreadcrumb"></div>
-    <div class="sc" id="mapBody"></div>
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <div id="mapTabWrap" style="padding:10px 16px 4px 16px;"></div>
+        <div class="map-bc" id="mapBreadcrumb"></div>
+      </div>
+      <div class="sc sa-sc sa-has-bn" id="mapBody"></div>
+    </div>
     <div class="bn">
       <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
@@ -7150,7 +7324,7 @@
           <path d="M21 3v6h-6" />
         </svg></button>
     </div>
-    <div class="sc p" id="dashboardBody"></div>
+    <div class="sc p sa-sc sa-has-bn" id="dashboardBody"></div>
     <div class="bn">
       <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
@@ -7218,24 +7392,26 @@
     </div>
 
     <!-- ─── PANEL A: Session logs ─── -->
-    <div id="logsSessionPanel" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-      <div class="log-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2.2" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--t3)">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg><input id="logQ" placeholder="Search session ID or date"></div>
-      <div class="filter-strip">
-        <button class="fc on" onclick="setLogFilter(this,'all')">All</button>
-        <button class="fc" onclick="setLogFilter(this,'pick')">Picking</button>
-        <button class="fc" onclick="setLogFilter(this,'drop')">Drop</button>
+    <div id="logsSessionPanel" class="sa-stage" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div class="scroll-upper-bar">
+        <div class="log-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--t3)">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg><input id="logQ" placeholder="Search session ID or date"></div>
+        <div class="filter-strip">
+          <button class="fc on" onclick="setLogFilter(this,'all')">All</button>
+          <button class="fc" onclick="setLogFilter(this,'pick')">Picking</button>
+          <button class="fc" onclick="setLogFilter(this,'drop')">Drop</button>
+        </div>
       </div>
-      <div class="sc" style="margin-top:10px" id="logsBody"></div>
+      <div class="sc sa-sc sa-has-bn" style="margin-top:10px" id="logsBody"></div>
     </div>
 
     <!-- ─── PANEL B: POS Sync ─── -->
     <div id="logsPostPanel" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-      <div id="logsActionList" class="sc" style="flex:1;padding-top:8px"></div>
-      <div class="logs-footer">
+      <div id="logsActionList" class="sc sa-sc" style="flex:1;padding-top:8px"></div>
+      <div class="logs-footer sa-bottom-pad-for-bn">
         <span class="lf-stats" id="logsPosStat">No items</span>
         <button class="btn-pos-send" id="possSendBtn" onclick="LogsUI.send()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -7313,13 +7489,17 @@
         </svg>
       </button>
     </div>
-    <div class="cart-tab-bar">
-      <button class="ctab on" onclick="cartTab(this,'loc')">By Location</button>
-      <button class="ctab" onclick="cartTab(this,'name')">By Name</button>
-      <button class="ctab" id="cartPendingTab" onclick="cartTab(this,'low')">Low Stock <span class="ctab-badge"
-          id="cartLowBadge">0</span></button>
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <div class="cart-tab-bar">
+          <button class="ctab on" onclick="cartTab(this,'loc')">By Location</button>
+          <button class="ctab" onclick="cartTab(this,'name')">By Name</button>
+          <button class="ctab" id="cartPendingTab" onclick="cartTab(this,'low')">Low Stock <span class="ctab-badge"
+              id="cartLowBadge">0</span></button>
+        </div>
+      </div>
+      <div class="sc sa-sc" style="padding:12px 16px" id="cartList"></div>
     </div>
-    <div class="sc" style="padding:12px 16px" id="cartList"></div>
     <div class="cart-total-bar">
       <div class="ctb-left">
         <div class="ctb-label">Total Items</div>
@@ -7332,7 +7512,7 @@
         Start Picking
       </button>
     </div>
-    <div class="slide-wrap" id="cartSlideWrap">
+    <div class="slide-wrap sa-bottom-pad-for-bn" id="cartSlideWrap">
       <div class="slide-track" id="slideTrack">
         <div class="slide-fill" id="slideFill"></div>
         <div class="slide-thumb" id="slideThumb">
@@ -7392,31 +7572,35 @@
         </svg>
       </button>
     </div>
-    <div class="mode-toggle">
-      <button class="mode-btn" onclick="switchToPickBatchScan()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Pick Mode
-      </button>
-      <button class="mode-btn on">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="8 17 12 21 16 17" />
-          <line x1="12" y1="12" x2="12" y2="21" />
-        </svg>
-        Drop Mode
-      </button>
-    </div>
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <div class="mode-toggle">
+          <button class="mode-btn" onclick="switchToPickBatchScan()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Pick Mode
+          </button>
+          <button class="mode-btn on">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="8 17 12 21 16 17" />
+              <line x1="12" y1="12" x2="12" y2="21" />
+            </svg>
+            Drop Mode
+          </button>
+        </div>
+      </div>
 
-    <!-- Drop Success Toast Overlay (Auto-dismisses) -->
-    <div id="dropSuccessToast" class="drop-success-toast" style="display:none;">
-      <div class="dst-icon">✓ Added</div>
-      <div class="dst-name" id="dstName">Brake Shoe</div>
-      <div class="dst-qty" id="dstQty">Qty 1</div>
-    </div>
+      <!-- Drop Success Toast Overlay (Auto-dismisses) -->
+      <div id="dropSuccessToast" class="drop-success-toast" style="display:none;">
+        <div class="dst-icon">✓ Added</div>
+        <div class="dst-name" id="dstName">Brake Shoe</div>
+        <div class="dst-qty" id="dstQty">Qty 1</div>
+      </div>
 
-    <!-- Main Drop Body Container -->
-    <div class="sc" id="dropBody" style="position:relative; flex:1; overflow-y:auto;"></div>
+      <!-- Main Drop Body Container -->
+      <div class="sc sa-sc sa-has-bn" id="dropBody" style="position:relative; flex:1; overflow-y:auto;"></div>
+    </div>
 
     <!-- Persistent Floating Cart Button -->
     <div id="dropFloatCart" class="drop-float-cart" style="display:none;"
@@ -7502,107 +7686,111 @@
         </svg>
       </button>
     </div>
-    <div class="db-stats" id="prodStats"></div>
-    <div class="search-area" style="padding:10px 16px">
-      <div class="search-row">
-        <div class="sf" style="position:relative;flex:1;">
-          <style>
-            .prod-search-input {
-              width: 100%;
-              height: 48px;
-              border-radius: 24px;
-              padding: 0 16px 0 42px;
-              font-family: 'Plus Jakarta Sans', sans-serif;
-              font-size: 15px;
-              font-weight: 500;
-              color: var(--t1);
-              background: var(--card);
-              border: 1.5px solid var(--bd);
-              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              outline: none;
-              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-              box-sizing: border-box;
-            }
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <div class="db-stats" id="prodStats"></div>
+        <div class="search-area" style="padding:10px 16px">
+          <div class="search-row">
+            <div class="sf" style="position:relative;flex:1;">
+              <style>
+                .prod-search-input {
+                  width: 100%;
+                  height: 48px;
+                  border-radius: 24px;
+                  padding: 0 16px 0 42px;
+                  font-family: 'Plus Jakarta Sans', sans-serif;
+                  font-size: 16px;
+                  font-weight: 500;
+                  color: var(--t1);
+                  background: var(--card);
+                  border: 1.5px solid var(--bd);
+                  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                  outline: none;
+                  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+                  box-sizing: border-box;
+                }
 
-            .prod-search-input:focus {
-              border-color: var(--or);
-              box-shadow: 0 6px 16px rgba(236, 91, 19, 0.12), 0 0 0 4px var(--or-lt);
-              background: #ffffff;
-              transform: translateY(-1px);
-            }
+                .prod-search-input:focus {
+                  border-color: var(--or);
+                  box-shadow: 0 6px 16px rgba(236, 91, 19, 0.12), 0 0 0 4px var(--or-lt);
+                  background: #ffffff;
+                  transform: translateY(-1px);
+                }
 
-            .prod-search-input::placeholder {
-              color: var(--t3);
-              font-weight: 500;
-            }
+                .prod-search-input::placeholder {
+                  color: var(--t3);
+                  font-weight: 500;
+                }
 
-            .sf-icon {
-              transition: all 0.3s ease;
-              color: var(--t3);
-            }
+                .sf-icon {
+                  transition: all 0.3s ease;
+                  color: var(--t3);
+                }
 
-            .sf:focus-within .sf-icon {
-              color: var(--or);
-              transform: translateY(-50%) scale(1.1) !important;
-            }
-          </style>
-          <svg class="sf-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2.5"
-            style="position:absolute;left:15px;top:50%;transform:translateY(-50%);z-index:2;pointer-events:none;">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input id="prodQ" class="prod-search-input" placeholder="Name, brand, barcode, location..."
-            autocomplete="off">
+                .sf:focus-within .sf-icon {
+                  color: var(--or);
+                  transform: translateY(-50%) scale(1.1) !important;
+                }
+              </style>
+              <svg class="sf-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5"
+                style="position:absolute;left:15px;top:50%;transform:translateY(-50%);z-index:2;pointer-events:none;">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input id="prodQ" class="prod-search-input" placeholder="Name, brand, barcode, location..."
+                autocomplete="off">
+            </div>
+            <button class="bc-btn" style="width:46px;height:46px"
+              onclick="openScanner(onProdListScan,'Scan to find product')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+                <line x1="7" y1="8" x2="7" y2="16" />
+                <line x1="14" y1="8" x2="14" y2="16" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button class="bc-btn" style="width:46px;height:46px"
-          onclick="openScanner(onProdListScan,'Scan to find product')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-            stroke-linecap="round">
-            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
-            <line x1="7" y1="8" x2="7" y2="16" />
-            <line x1="14" y1="8" x2="14" y2="16" />
-          </svg>
-        </button>
+        <!-- Filter chips -->
+        <div
+          style="display:flex;gap:7px;padding:8px 16px 6px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+          <button id="fchip-all" class="fc on" onclick="setProdFilter('all',this)">All</button>
+          <button id="fchip-shop" class="fc" onclick="setProdFilter('shop',this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Shop
+          </button>
+          <button id="fchip-warehouse" class="fc" onclick="setProdFilter('warehouse',this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            Warehouse
+          </button>
+          <button id="fchip-low" class="fc" onclick="setProdFilter('low',this)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            </svg>
+            Low Stock
+          </button>
+          <button id="fchip-out" class="fc" onclick="setProdFilter('out',this)">Out of Stock</button>
+          <button id="fchip-filter" class="fc" onclick="openFilterModal(null)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+              <line x1="11" y1="18" x2="13" y2="18" />
+            </svg>
+            Filter<span id="filterActiveBadge"
+              style="display:none;background:var(--or);color:#fff;border-radius:8px;padding:0 5px;font-size:9px;margin-left:3px;font-weight:800">0</span>
+          </button>
+        </div>
       </div>
+      <div class="sc sa-sc sa-has-bn" style="padding:0 16px 16px" id="prodList"></div>
     </div>
-    <!-- Filter chips -->
-    <div
-      style="display:flex;gap:7px;padding:8px 16px 6px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-      <button id="fchip-all" class="fc on" onclick="setProdFilter('all',this)">All</button>
-      <button id="fchip-shop" class="fc" onclick="setProdFilter('shop',this)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        Shop
-      </button>
-      <button id="fchip-warehouse" class="fc" onclick="setProdFilter('warehouse',this)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-          <line x1="12" y1="22.08" x2="12" y2="12"/>
-        </svg>
-        Warehouse
-      </button>
-      <button id="fchip-low" class="fc" onclick="setProdFilter('low',this)">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        </svg>
-        Low Stock
-      </button>
-      <button id="fchip-out" class="fc" onclick="setProdFilter('out',this)">Out of Stock</button>
-      <button id="fchip-filter" class="fc" onclick="openFilterModal(null)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-          <line x1="11" y1="18" x2="13" y2="18" />
-        </svg>
-        Filter<span id="filterActiveBadge"
-          style="display:none;background:var(--or);color:#fff;border-radius:8px;padding:0 5px;font-size:9px;margin-left:3px;font-weight:800">0</span>
-      </button>
-    </div>
-    <div class="sc" style="padding:0 16px 16px" id="prodList"></div>
     <input type="file" id="prodImportIn" accept=".json" style="display:none">
     <input type="file" id="imgImportIn" accept=".json" style="display:none">
     <div class="bn">
@@ -9096,40 +9284,44 @@
         </svg>
       </button>
     </div>
-    <!-- Search -->
-    <div class="search-area" style="padding:10px 16px">
-      <div class="search-row">
-        <div class="sf">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            style="position:absolute;left:13px;top:50%;transform:translateY(-50%)">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input id="qrQ" placeholder="Search products to label..." autocomplete="off"
-            oninput="renderQrProdList(this.value.trim())"
-            style="width:100%;height:46px;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:0 14px 0 41px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--t1);outline:none">
+    <div class="sa-stage">
+      <div class="scroll-upper-bar">
+        <!-- Search -->
+        <div class="search-area" style="padding:10px 16px">
+          <div class="search-row">
+            <div class="sf">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                style="position:absolute;left:13px;top:50%;transform:translateY(-50%)">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input id="qrQ" placeholder="Search products to label..." autocomplete="off"
+                oninput="renderQrProdList(this.value.trim())"
+                style="width:100%;height:46px;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:0 14px 0 41px;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;color:var(--t1);outline:none">
+            </div>
+            <button class="bc-btn" style="width:46px;height:46px" onclick="openScanner(onQrScanSearch,'Scan product')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+                <line x1="7" y1="8" x2="7" y2="16" />
+                <line x1="14" y1="8" x2="14" y2="16" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button class="bc-btn" style="width:46px;height:46px" onclick="openScanner(onQrScanSearch,'Scan product')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-            stroke-linecap="round">
-            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
-            <line x1="7" y1="8" x2="7" y2="16" />
-            <line x1="14" y1="8" x2="14" y2="16" />
-          </svg>
-        </button>
+        <!-- Selected count bar -->
+        <div
+          style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;flex-shrink:0;background:var(--bg)">
+          <div style="font-size:12px;font-weight:700;color:var(--t3)" id="qrSelCount">Select products to print</div>
+          <button onclick="clearQrSel()"
+            style="font-size:12px;font-weight:700;color:var(--or);border:none;background:none;cursor:pointer;padding:4px 8px">Clear</button>
+        </div>
       </div>
+      <!-- Product list -->
+      <div class="sc sa-sc" style="padding:0 16px 16px" id="qrProdList"></div>
     </div>
-    <!-- Selected count bar -->
-    <div
-      style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;flex-shrink:0;background:var(--bg)">
-      <div style="font-size:12px;font-weight:700;color:var(--t3)" id="qrSelCount">Select products to print</div>
-      <button onclick="clearQrSel()"
-        style="font-size:12px;font-weight:700;color:var(--or);border:none;background:none;cursor:pointer;padding:4px 8px">Clear</button>
-    </div>
-    <!-- Product list -->
-    <div class="sc" style="padding:0 16px 16px" id="qrProdList"></div>
     <!-- Print settings bar -->
-    <div style="flex-shrink:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px 8px">
+    <div class="sa-bottom-pad-for-bn" style="flex-shrink:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px 8px">
       <!-- Label type toggle -->
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <button class="sticker-btn on" id="lbl-qr" onclick="setLabelType(this,'qr')" style="flex:1;height:38px">
@@ -9521,7 +9713,7 @@
         </svg>
       </button>
     </div>
-    <div style="flex:1;overflow-y:auto;padding:16px 20px;padding-bottom:80px;">
+    <div class="sc sa-sc sa-has-bn" style="flex:1;overflow-y:auto;padding:16px 20px;padding-bottom:80px;">
 <!-- ══ APPLICATION & DEVICE PWA RE-INSTALL SECTION ══ -->
       <div class="settings-group" id="settPwaGroup">
         <div class="settings-group-title">Application & PWA</div>
@@ -9659,7 +9851,7 @@
         <span class="notification-badge"></span>
       </button>
     </div>
-    <div style="flex:1;overflow-y:auto;padding:16px;background:var(--bg);">
+    <div class="sc sa-sc sa-has-bn" style="flex:1;overflow-y:auto;padding:16px;background:var(--bg);">
       <div style="display:flex;gap:10px;margin-bottom:16px;">
         <div class="stat-card"
           style="flex:1;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--sh);">
@@ -10000,7 +10192,7 @@
         </svg>
       </button>
     </div>
-    <div class="sc" style="padding:16px 20px;padding-bottom:100px;">
+    <div class="sc sa-sc sa-has-bn" style="padding:16px 20px;padding-bottom:100px;">
       <div style="display:flex;gap:12px;margin-bottom:20px;">
         <button class="btn-p"
           style="flex:1;height:52px;font-size:15px;border-radius:14px;box-shadow: 0 4px 14px rgba(236,91,19,.25);"
@@ -10314,6 +10506,69 @@
         .replace(/'/g, '&#39;');
     }
 
+    const PRODUCT_PLACEHOLDER_SVG =
+      '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="8" y="12" width="48" height="40" rx="8" fill="none"/>' +
+      '<circle cx="23" cy="26" r="4.5"/>' +
+      '<path d="M54 42L40 28L16 52"/>' +
+      '</svg>';
+
+    const PRODUCT_PLACEHOLDER_DATA_URI =
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">' +
+        '<rect width="120" height="120" rx="16" fill="#f4f4f5"/>' +
+        '<g fill="none" stroke="#9ca3af" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(28,28)">' +
+        '<rect x="4" y="8" width="56" height="48" rx="6"/>' +
+        '<circle cx="21" cy="24" r="5"/>' +
+        '<path d="M56 44L41 29L12 56"/>' +
+        '</g></svg>'
+      );
+
+    function renderProductPlaceholderHtml(extraStyle = '') {
+      const styleAttr = extraStyle ? ` style="${extraStyle}"` : '';
+      return `<div class="img-fallback-placeholder"${styleAttr}>${PRODUCT_PLACEHOLDER_SVG}</div>`;
+    }
+
+    /**
+     * Unified, loop-safe image error fallback handler.
+     * Always clears img.onerror first to eliminate recursive network retries, preserves layout geometry,
+     * and swaps broken/offline images with a crisp inline vector placeholder.
+     */
+    function handleProductImgError(imgEl, mode = 'replace') {
+      if (!imgEl) return;
+      imgEl.onerror = null;
+
+      // Optional single-hop secondary candidate (data: URL / cached fallback) if explicitly provided
+      const secondary = imgEl.dataset ? imgEl.dataset.fallbackSrc : '';
+      if (secondary && !imgEl.dataset.fallbackTried && secondary !== imgEl.src && !secondary.startsWith('blob:')) {
+        imgEl.dataset.fallbackTried = '1';
+        imgEl.onerror = function () {
+          handleProductImgError(imgEl, mode);
+        };
+        imgEl.src = secondary;
+        return;
+      }
+
+      if (mode === 'datauri') {
+        imgEl.src = PRODUCT_PLACEHOLDER_DATA_URI;
+        return;
+      }
+
+      const parent = imgEl.parentElement;
+      if (parent && parent.classList && !parent.classList.contains('pdm-fullscreen-viewport')) {
+        imgEl.style.display = 'none';
+        if (!parent.querySelector('.img-fallback-placeholder')) {
+          const ph = document.createElement('div');
+          ph.className = 'img-fallback-placeholder';
+          ph.innerHTML = PRODUCT_PLACEHOLDER_SVG;
+          parent.appendChild(ph);
+        }
+      } else {
+        imgEl.src = PRODUCT_PLACEHOLDER_DATA_URI;
+      }
+    }
+
     function formatImageUrl(url) {
       if (!url || typeof url !== 'string') return '';
       url = url.trim();
@@ -10336,22 +10591,49 @@
         'pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev'
       ];
 
+      const normPath = p => {
+        const q = p.indexOf('?');
+        const raw = q >= 0 ? p.slice(0, q) : p;
+        const qs = q >= 0 ? p.slice(q) : '';
+        return raw.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/^\/+/, '') + qs;
+      };
+
+      const cdnCgiMatch = url.match(/^(?:https?:\/\/[^/]+)?\/+cdn-cgi\/image\/[^/]+\/(.+)$/i);
+      if (cdnCgiMatch) {
+        let target = cdnCgiMatch[1].trim();
+        if (/^https?:\/+[^/]+\//i.test(target)) {
+          target = target.replace(/^https?:\/+/i, 'https://');
+        }
+        return formatImageUrl(target);
+      }
+
       // Map any old R2 URL dynamically to the production Worker domain
       for (const oldDom of OLD_R2_DOMAINS) {
         if (url.includes(oldDom)) {
-          return url.replace(new RegExp(`^https?:\\/\\/${oldDom.replace(/\\./g, '\\.')}\\/?`, 'i'), `${PROD_WORKER_BASE}/`);
+          const escaped = oldDom.replace(/\./g, '\\.');
+          const stripped = url.replace(new RegExp(`^https?:\\/\\/${escaped}\\/*`, 'i'), '');
+          return `${PROD_WORKER_BASE}/${normPath(stripped)}`;
         }
       }
 
-      if (/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/?/i.test(url)) {
-        return url.replace(/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/?/i, `${PROD_WORKER_BASE}/`);
+      if (/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\b/i.test(url)) {
+        const stripped = url.replace(/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/*/i, '');
+        return `${PROD_WORKER_BASE}/${normPath(stripped)}`;
+      }
+
+      if (url.startsWith(PROD_WORKER_BASE)) {
+        const rest = url.slice(PROD_WORKER_BASE.length);
+        return rest ? `${PROD_WORKER_BASE}/${normPath(rest)}` : PROD_WORKER_BASE;
+      }
+
+      if (/^https?:\/\/[^/]+\/+products\//i.test(url)) {
+        return `${PROD_WORKER_BASE}/${normPath(url.replace(/^https?:\/\/[^/]+\/+/i, ''))}`;
       }
 
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
-      if (url.startsWith('/') && !url.startsWith('//')) return url;
+      if (url.startsWith('./') || (url.startsWith('/') && !/^\/+products\//i.test(url))) return url;
 
-      const cleanKey = url.replace(/^\/+/, '');
-      return `${PROD_WORKER_BASE}/${cleanKey}`;
+      return `${PROD_WORKER_BASE}/${normPath(url)}`;
     }
 
     function getProductImageSrc(p) {
@@ -10387,15 +10669,97 @@
       return '';
     }
 
-    function renderProductImgHtml(p, containerClass = 'pr-img', extraImgStyle = '') {
-      const src = getProductImageSrc(p);
-      const em = emoji(p?.name || '');
-      const cls = containerClass ? `class="${containerClass}"` : '';
-      if (src) {
-        return `<div ${cls}><img src="${src}" alt="${escapeHtml(p?.name || 'Product')}" style="${extraImgStyle}" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-size:24px\\'>${em}</span>';"></div>`;
-      }
-      return `<div ${cls}><span style="font-size:24px">${em}</span></div>`;
+    function getProductImgCandidates(p) {
+      const primary = getProductImageSrc(p);
+      if (!primary) return { primary: '', fallback: '' };
+      const idKey = p?.id || '';
+      const bcKey = p?.barcode || p?.sku || '';
+      const fsBackup = (idKey && FS_IMAGES[idKey]) || (bcKey && FS_IMAGES[bcKey]) || '';
+      const formattedBackup = (fsBackup && !fsBackup.startsWith('blob:')) ? formatImageUrl(fsBackup) : '';
+      return {
+        primary,
+        fallback: (formattedBackup && formattedBackup !== primary) ? formattedBackup : ''
+      };
     }
+
+    function renderProductImgHtml(p, containerClass = 'pr-img', extraImgStyle = '') {
+      const { primary: src, fallback } = getProductImgCandidates(p);
+      const cls = containerClass
+        ? `class="${containerClass}"`
+        : 'style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;"';
+      if (src) {
+        const corsAttr = src.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
+        const fbAttr = fallback ? ` data-fallback-src="${escapeHtml(fallback)}"` : '';
+        return `<div ${cls}><img src="${escapeHtml(src)}"${corsAttr}${fbAttr} alt="${escapeHtml(p?.name || 'Product')}" style="${extraImgStyle}" loading="lazy" decoding="async" fetchpriority="low" onerror="handleProductImgError(this)"></div>`;
+      }
+      return `<div ${cls}>${renderProductPlaceholderHtml()}</div>`;
+    }
+
+    /**
+     * Keep FS_PRODUCTS, STATE.products, STATE.barcodeIndex, CART.items, and FS_IMAGES synchronized
+     * whenever product images are added, replaced, or removed so stale URLs never persist in the UI.
+     */
+    function syncProductToAppStores(updatedProd, options = {}) {
+      if (!updatedProd || typeof updatedProd !== 'object') return;
+      const id = updatedProd.id;
+      const barcode = updatedProd.barcode;
+      const sku = updatedProd.sku;
+      const matchesProd = x => x && (
+        (id && x.id === id) ||
+        (barcode && (x.barcode === barcode || x.sku === barcode)) ||
+        (sku && (x.sku === sku || x.barcode === sku))
+      );
+
+      if (typeof FS_PRODUCTS !== 'undefined' && Array.isArray(FS_PRODUCTS)) {
+        const fi = FS_PRODUCTS.findIndex(matchesProd);
+        if (fi >= 0) FS_PRODUCTS[fi] = { ...FS_PRODUCTS[fi], ...updatedProd };
+        else FS_PRODUCTS.push(updatedProd);
+      }
+
+      if (typeof STATE !== 'undefined' && Array.isArray(STATE.products)) {
+        const si = STATE.products.findIndex(matchesProd);
+        if (si >= 0) {
+          STATE.products[si] = { ...STATE.products[si], ...updatedProd };
+          if (STATE.barcodeIndex) {
+            if (barcode) STATE.barcodeIndex.set(barcode, STATE.products[si]);
+            if (sku) STATE.barcodeIndex.set(sku, STATE.products[si]);
+          }
+          if (window.PrinceSearchEngine && typeof window.PrinceSearchEngine.indexProduct === 'function') {
+            window.PrinceSearchEngine.indexProduct(STATE.products[si]);
+          }
+        } else {
+          STATE.products.push(updatedProd);
+          if (STATE.barcodeIndex) {
+            if (barcode) STATE.barcodeIndex.set(barcode, updatedProd);
+            if (sku) STATE.barcodeIndex.set(sku, updatedProd);
+          }
+          if (window.PrinceSearchEngine && typeof window.PrinceSearchEngine.indexProduct === 'function') {
+            window.PrinceSearchEngine.indexProduct(updatedProd);
+          }
+        }
+      }
+
+      if (typeof CART !== 'undefined' && Array.isArray(CART.items)) {
+        let cartChanged = false;
+        CART.items.forEach(item => {
+          if (matchesProd(item)) {
+            item.images = Array.isArray(updatedProd.images) ? [...updatedProd.images] : [];
+            item.image = updatedProd.image || '';
+            item.updated_at = updatedProd.updated_at || item.updated_at;
+            cartChanged = true;
+          }
+        });
+        if (cartChanged && typeof renderCart === 'function' && document.getElementById('s-cart')?.classList.contains('on')) {
+          renderCart();
+        }
+      }
+
+      if (options.clearStaleFsImages && typeof FS_IMAGES === 'object' && FS_IMAGES !== null) {
+        const keys = [id, barcode, sku].filter(Boolean);
+        keys.forEach(k => { delete FS_IMAGES[k]; });
+      }
+    }
+    window.syncProductToAppStores = syncProductToAppStores;
 
     // ══════════════════════════════════════════
     //  Audio & Haptics
@@ -10541,6 +10905,9 @@
 
             window.addEventListener('touchmove', preventTouchLeak, { passive: false });
           }
+          if (window.ScrollChromeController && typeof window.ScrollChromeController.onModalStateChange === 'function') {
+            window.ScrollChromeController.onModalStateChange();
+          }
         },
         unlock: function (ownerId) {
           if (ownerId) {
@@ -10560,12 +10927,500 @@
             window.removeEventListener('touchmove', preventTouchLeak);
             window.scrollTo(0, targetScrollY);
           }
+          if (window.ScrollChromeController && typeof window.ScrollChromeController.onModalStateChange === 'function') {
+            window.ScrollChromeController.onModalStateChange();
+          }
         },
         isLocked: function () { return lockStack.length > 0; },
         getScrollY: function () { return savedScrollY; }
       };
     })();
     window.ScrollLockManager = ScrollLockManager;
+
+    // ══════════════════════════════════════════
+    //  SCROLL-AWARE CHROME CONTROLLER (GPU-ACCELERATED)
+    // ══════════════════════════════════════════
+    const ScrollChromeController = (function () {
+      const SCROLL_DELTA_THRESHOLD = 8;
+      const TOP_HIDE_OFFSET = 25;
+      const TOP_REVEAL_OFFSET = 10;
+
+      const SCREEN_CONFIGS = {
+        's-search': { searchInputId: 'homeQ' },
+        's-products': { searchInputId: 'prodQ' },
+        's-qr': { searchInputId: 'qrQ' },
+        's-logs': {
+          searchInputId: 'logQ',
+          getScrollEl: function (screenEl) {
+            const postPanel = document.getElementById('logsPostPanel');
+            if (postPanel && postPanel.style.display !== 'none') {
+              return document.getElementById('logsActionList');
+            }
+            return document.getElementById('logsBody');
+          },
+          getUpperBar: function (screenEl) {
+            const postPanel = document.getElementById('logsPostPanel');
+            if (postPanel && postPanel.style.display !== 'none') {
+              return null;
+            }
+            return screenEl.querySelector('.scroll-upper-bar');
+          }
+        },
+        's-orders': {},
+        's-cart': {},
+        's-drop': {},
+        's-map': {},
+        's-dashboard': {},
+        's-settings': {},
+        's-audit': {},
+        's-transfer': {}
+      };
+
+      let activeCleanup = null;
+      let activeScreenId = null;
+      let activeApi = null;
+
+      function isModalOrScannerOpen() {
+        if (window.ScrollLockManager && window.ScrollLockManager.isLocked()) return true;
+        const classModals = ['scanner-modal', 'moreSheet', 'notifSheet'];
+        for (let i = 0; i < classModals.length; i++) {
+          const el = document.getElementById(classModals[i]);
+          if (el && (el.classList.contains('on') || el.classList.contains('open'))) return true;
+        }
+        const displayModals = [
+          'filterModal', 'prodDetailModal', 'customQrModal', 'qrPreviewModal',
+          'manual-input-modal', 'auditStartModal', 'auditResumeModal',
+          'transferResumeModal', 'transferLogsModal', 'pwaInstallPromptModal',
+          'installHelpModal'
+        ];
+        for (let i = 0; i < displayModals.length; i++) {
+          const el = document.getElementById(displayModals[i]);
+          if (el && el.style.display && el.style.display !== 'none') return true;
+        }
+        return false;
+      }
+
+      function computeVisibility(state) {
+        const hasUpper = !!state.hasUpper;
+        const hasLower = !!state.hasLower;
+
+        // Priority 1: Modal / Bottom Sheet / Scanner Lock
+        if (state.modalLocked || state.barcodeLocked) {
+          return { hideUpper: false, hideLower: false };
+        }
+
+        // Priority 2: Search Input Focused (mobile keyboard protection)
+        if (state.isInputFocused) {
+          return { hideUpper: false, hideLower: hasLower };
+        }
+
+        // Priority 3: Non-Scrollable Screen
+        if (!state.isScrollable) {
+          return { hideUpper: false, hideLower: false };
+        }
+
+        // Priority 4: Active Search Query (unfocused, query.trim().length > 0)
+        if (state.hasActiveQuery) {
+          return {
+            hideUpper: false,
+            hideLower: hasLower && !!state.barsHiddenByScroll
+          };
+        }
+
+        // Priority 5: Default Scroll State (search empty & unfocused)
+        return {
+          hideUpper: hasUpper && !!state.barsHiddenByScroll,
+          hideLower: hasLower && !!state.barsHiddenByScroll
+        };
+      }
+
+      function getScrollMetrics(scrollEl) {
+        if (scrollEl && scrollEl !== window && scrollEl !== document && scrollEl !== document.documentElement) {
+          const innerMax = Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight);
+          if (innerMax > 2) {
+            return {
+              source: 'element',
+              scrollTop: scrollEl.scrollTop,
+              scrollHeight: scrollEl.scrollHeight,
+              clientHeight: scrollEl.clientHeight,
+              maxScroll: innerMax
+            };
+          }
+        }
+        const docEl = document.documentElement;
+        const winTop = window.scrollY || window.pageYOffset || docEl.scrollTop || 0;
+        const winMax = Math.max(0, docEl.scrollHeight - (window.innerHeight || docEl.clientHeight));
+        return {
+          source: winMax > 2 ? 'window' : 'element',
+          scrollTop: winMax > 2 ? winTop : (scrollEl ? scrollEl.scrollTop : 0),
+          scrollHeight: winMax > 2 ? docEl.scrollHeight : (scrollEl ? scrollEl.scrollHeight : 0),
+          clientHeight: winMax > 2 ? (window.innerHeight || docEl.clientHeight) : (scrollEl ? scrollEl.clientHeight : 0),
+          maxScroll: winMax > 2 ? winMax : 0
+        };
+      }
+
+      function attachScreen(screenId) {
+        if (activeCleanup) {
+          activeCleanup();
+          activeCleanup = null;
+        }
+        activeScreenId = screenId || null;
+        activeApi = null;
+
+        const screenEl = screenId ? document.getElementById(screenId) : null;
+        if (!screenEl) return null;
+
+        const cfg = SCREEN_CONFIGS[screenId] || {};
+        const lowerBar = screenEl.querySelector('.bn');
+
+        function resolveRefs() {
+          const scrollEl = cfg.getScrollEl
+            ? cfg.getScrollEl(screenEl)
+            : (screenEl.querySelector('.sa-sc') || screenEl.querySelector('.sc'));
+          const upperBar = cfg.getUpperBar
+            ? cfg.getUpperBar(screenEl)
+            : screenEl.querySelector('.scroll-upper-bar');
+          const searchInput = cfg.searchInputId
+            ? document.getElementById(cfg.searchInputId)
+            : (upperBar ? upperBar.querySelector('input') : null);
+          const barcodeBtn = upperBar ? upperBar.querySelector('.bc-btn') : null;
+          return { scrollEl, upperBar, searchInput, barcodeBtn };
+        }
+
+        let refs = resolveRefs();
+        if (!refs.scrollEl && !refs.upperBar && !lowerBar) return null;
+
+        const state = {
+          anchorY: 0,
+          barsHiddenByScroll: false,
+          isInputFocused: false,
+          barcodeLocked: false,
+          barcodeTimer: null,
+          rafId: null,
+          contentSyncRaf: null,
+          prevHideUpper: null,
+          prevHideLower: null,
+          boundScrollEl: null
+        };
+
+        function updateUpperBarPadding() {
+          const { upperBar, scrollEl } = refs;
+          if (!upperBar) return;
+          const stage = upperBar.closest('.sa-stage') || screenEl;
+          const h = Math.ceil(upperBar.getBoundingClientRect().height);
+          if (h > 0 && stage) {
+            stage.style.setProperty('--sa-top-pad', h + 'px');
+          }
+          if (scrollEl && scrollEl.scrollTop < 0) {
+            scrollEl.scrollTop = 0;
+          }
+        }
+
+        function applyVisibility(force) {
+          const { upperBar, searchInput, scrollEl } = refs;
+          const metrics = getScrollMetrics(scrollEl);
+          const isScrollable = metrics.maxScroll > 2;
+          const hasActiveQuery = !!(searchInput && searchInput.value.trim().length > 0);
+          const modalLocked = isModalOrScannerOpen();
+
+          if (!isScrollable) {
+            state.barsHiddenByScroll = false;
+            state.anchorY = 0;
+          } else if (state.anchorY > metrics.maxScroll) {
+            state.anchorY = metrics.scrollTop;
+          }
+
+          const vis = computeVisibility({
+            hasUpper: !!upperBar,
+            hasLower: !!lowerBar,
+            modalLocked: modalLocked,
+            barcodeLocked: state.barcodeLocked,
+            isInputFocused: state.isInputFocused,
+            hasActiveQuery: hasActiveQuery,
+            isScrollable: isScrollable,
+            barsHiddenByScroll: state.barsHiddenByScroll
+          });
+
+          if (upperBar && (force || state.prevHideUpper !== vis.hideUpper)) {
+            upperBar.classList.toggle('sa-bar-hidden', vis.hideUpper);
+            state.prevHideUpper = vis.hideUpper;
+          }
+          if (lowerBar && (force || state.prevHideLower !== vis.hideLower)) {
+            lowerBar.classList.toggle('sa-bar-hidden', vis.hideLower);
+            state.prevHideLower = vis.hideLower;
+          }
+        }
+
+        function processScrollFrame() {
+          state.rafId = null;
+          const { scrollEl } = refs;
+          const metrics = getScrollMetrics(scrollEl);
+          const scrollTop = metrics.scrollTop;
+          const maxScroll = metrics.maxScroll;
+          const isScrollable = maxScroll > 2;
+
+          if (!isScrollable) {
+            state.barsHiddenByScroll = false;
+            state.anchorY = 0;
+            applyVisibility(false);
+            return;
+          }
+
+          if (isModalOrScannerOpen() || state.barcodeLocked) {
+            applyVisibility(false);
+            return;
+          }
+
+          // Protect against negative iOS rubber-band overscroll
+          if (scrollTop < 0) {
+            state.barsHiddenByScroll = false;
+            state.anchorY = 0;
+            applyVisibility(false);
+            return;
+          }
+
+          // Reveal immediately near top of page
+          if (scrollTop <= TOP_REVEAL_OFFSET) {
+            state.barsHiddenByScroll = false;
+            state.anchorY = scrollTop;
+            applyVisibility(false);
+            return;
+          }
+
+          // Ignore max-bottom rubber-band overscroll
+          if (scrollTop > maxScroll) {
+            return;
+          }
+
+          const deltaY = scrollTop - state.anchorY;
+          if (Math.abs(deltaY) <= SCROLL_DELTA_THRESHOLD) {
+            return;
+          }
+
+          if (deltaY > SCROLL_DELTA_THRESHOLD) {
+            state.anchorY = scrollTop;
+            if (scrollTop > TOP_HIDE_OFFSET) {
+              state.barsHiddenByScroll = true;
+              applyVisibility(false);
+            }
+          } else if (deltaY < -SCROLL_DELTA_THRESHOLD) {
+            // Ignore bottom rubber-band bounce settling back from maxScroll
+            if (state.anchorY > maxScroll || scrollTop >= maxScroll - 2) {
+              state.anchorY = scrollTop;
+              return;
+            }
+            state.anchorY = scrollTop;
+            state.barsHiddenByScroll = false;
+            applyVisibility(false);
+          }
+        }
+
+        function onScrollEvent(e) {
+          // Ignore window scroll if inner element is actively scrolling, and vice versa
+          if (e && e.target === document && refs.scrollEl) {
+            const innerMax = refs.scrollEl.scrollHeight - refs.scrollEl.clientHeight;
+            if (innerMax > 2) return;
+          }
+          if (state.rafId !== null) return;
+          state.rafId = window.requestAnimationFrame(processScrollFrame);
+        }
+
+        function onSearchFocus() {
+          state.isInputFocused = true;
+          state.barsHiddenByScroll = false;
+          state.anchorY = getScrollMetrics(refs.scrollEl).scrollTop;
+          applyVisibility(false);
+        }
+
+        function onSearchBlur() {
+          state.isInputFocused = false;
+          const hasQuery = !!(refs.searchInput && refs.searchInput.value.trim().length > 0);
+          if (!hasQuery && !state.barcodeLocked) {
+            // Search cleared & blurred: restore default scroll auto-hide cleanly
+            state.barsHiddenByScroll = false;
+          }
+          state.anchorY = getScrollMetrics(refs.scrollEl).scrollTop;
+          applyVisibility(false);
+        }
+
+        function onSearchInput() {
+          const hasQuery = !!(refs.searchInput && refs.searchInput.value.trim().length > 0);
+          if (!hasQuery && !state.isInputFocused) {
+            state.barsHiddenByScroll = false;
+            state.anchorY = getScrollMetrics(refs.scrollEl).scrollTop;
+          }
+          applyVisibility(false);
+        }
+
+        function onBarcodePointerDown() {
+          state.barcodeLocked = true;
+          if (state.barcodeTimer) clearTimeout(state.barcodeTimer);
+          state.barcodeTimer = setTimeout(function () {
+            state.barcodeLocked = false;
+            state.barcodeTimer = null;
+            applyVisibility(false);
+          }, 700);
+          applyVisibility(false);
+        }
+
+        function onUpperTransitionEnd(e) {
+          if (e && e.propertyName === 'transform' && !state.prevHideUpper) {
+            if (refs.searchInput && (state.isInputFocused || refs.searchInput.value.trim().length > 0)) {
+              window.dispatchEvent(new Event('resize'));
+            }
+          }
+        }
+
+        function onResize() {
+          updateUpperBarPadding();
+          applyVisibility(false);
+        }
+
+        let resizeObserver = null;
+        let mutationObserver = null;
+
+        function bindDynamicTargets() {
+          if (state.boundScrollEl && state.boundScrollEl !== refs.scrollEl) {
+            state.boundScrollEl.removeEventListener('scroll', onScrollEvent);
+          }
+          if (refs.scrollEl && state.boundScrollEl !== refs.scrollEl) {
+            refs.scrollEl.addEventListener('scroll', onScrollEvent, { passive: true });
+            state.boundScrollEl = refs.scrollEl;
+          }
+
+          if (mutationObserver) mutationObserver.disconnect();
+          if (refs.scrollEl && typeof MutationObserver === 'function') {
+            mutationObserver = new MutationObserver(function () {
+              if (state.contentSyncRaf !== null) return;
+              state.contentSyncRaf = window.requestAnimationFrame(function () {
+                state.contentSyncRaf = null;
+                applyVisibility(false);
+              });
+            });
+            mutationObserver.observe(refs.scrollEl, { childList: true });
+          }
+        }
+
+        // Attach listeners
+        window.addEventListener('scroll', onScrollEvent, { passive: true });
+        window.addEventListener('resize', onResize, { passive: true });
+
+        if (refs.searchInput) {
+          state.isInputFocused = (document.activeElement === refs.searchInput);
+          refs.searchInput.addEventListener('focus', onSearchFocus);
+          refs.searchInput.addEventListener('blur', onSearchBlur);
+          refs.searchInput.addEventListener('input', onSearchInput);
+        }
+        if (refs.barcodeBtn) {
+          refs.barcodeBtn.addEventListener('pointerdown', onBarcodePointerDown, { passive: true });
+          refs.barcodeBtn.addEventListener('touchstart', onBarcodePointerDown, { passive: true });
+        }
+        if (refs.upperBar) {
+          refs.upperBar.addEventListener('transitionend', onUpperTransitionEnd);
+          if (typeof ResizeObserver === 'function') {
+            resizeObserver = new ResizeObserver(function () {
+              updateUpperBarPadding();
+              applyVisibility(false);
+            });
+            resizeObserver.observe(refs.upperBar);
+          }
+        }
+
+        bindDynamicTargets();
+
+        // Initial resting state on screen activation
+        state.barsHiddenByScroll = false;
+        state.anchorY = Math.max(0, getScrollMetrics(refs.scrollEl).scrollTop);
+        updateUpperBarPadding();
+        applyVisibility(true);
+        window.requestAnimationFrame(function () {
+          updateUpperBarPadding();
+          applyVisibility(false);
+        });
+
+        activeApi = {
+          sync: function () {
+            const nextRefs = resolveRefs();
+            const scrollChanged = nextRefs.scrollEl !== refs.scrollEl;
+            refs = nextRefs;
+            if (scrollChanged) {
+              state.barsHiddenByScroll = false;
+              state.anchorY = Math.max(0, getScrollMetrics(refs.scrollEl).scrollTop);
+              bindDynamicTargets();
+            }
+            updateUpperBarPadding();
+            applyVisibility(false);
+          },
+          onModalStateChange: function () {
+            if (isModalOrScannerOpen() && state.barcodeTimer) {
+              clearTimeout(state.barcodeTimer);
+              state.barcodeTimer = null;
+              state.barcodeLocked = false;
+            }
+            if (!isModalOrScannerOpen()) {
+              state.barcodeLocked = false;
+              state.anchorY = Math.max(0, getScrollMetrics(refs.scrollEl).scrollTop);
+            }
+            applyVisibility(false);
+          }
+        };
+
+        activeCleanup = function () {
+          if (state.rafId !== null) window.cancelAnimationFrame(state.rafId);
+          if (state.contentSyncRaf !== null) window.cancelAnimationFrame(state.contentSyncRaf);
+          if (state.barcodeTimer) clearTimeout(state.barcodeTimer);
+          window.removeEventListener('scroll', onScrollEvent);
+          window.removeEventListener('resize', onResize);
+          if (state.boundScrollEl) {
+            state.boundScrollEl.removeEventListener('scroll', onScrollEvent);
+          }
+          if (refs.searchInput) {
+            refs.searchInput.removeEventListener('focus', onSearchFocus);
+            refs.searchInput.removeEventListener('blur', onSearchBlur);
+            refs.searchInput.removeEventListener('input', onSearchInput);
+          }
+          if (refs.barcodeBtn) {
+            refs.barcodeBtn.removeEventListener('pointerdown', onBarcodePointerDown);
+            refs.barcodeBtn.removeEventListener('touchstart', onBarcodePointerDown);
+          }
+          if (refs.upperBar) {
+            refs.upperBar.removeEventListener('transitionend', onUpperTransitionEnd);
+          }
+          if (resizeObserver) resizeObserver.disconnect();
+          if (mutationObserver) mutationObserver.disconnect();
+          // Restore bar visibility classes cleanly on leave
+          if (refs.upperBar) refs.upperBar.classList.remove('sa-bar-hidden');
+          if (lowerBar) lowerBar.classList.remove('sa-bar-hidden');
+        };
+
+        return activeApi;
+      }
+
+      return {
+        attachToScreen: function (screenId) {
+          return attachScreen(screenId);
+        },
+        sync: function (screenId) {
+          if (screenId && screenId !== activeScreenId) return;
+          if (activeApi) activeApi.sync();
+        },
+        onModalStateChange: function () {
+          if (activeApi) activeApi.onModalStateChange();
+        },
+        detach: function () {
+          if (activeCleanup) {
+            activeCleanup();
+            activeCleanup = null;
+          }
+          activeScreenId = null;
+          activeApi = null;
+        },
+        computeVisibility: computeVisibility,
+        isModalOrScannerOpen: isModalOrScannerOpen
+      };
+    })();
+    window.ScrollChromeController = ScrollChromeController;
+
     const DEFAULT_HOME_SCREEN = 's-search';
 
     // ══════════════════════════════════════════
@@ -11474,8 +12329,11 @@
 
         speak(`Go to location ${prod?.loc || 'unknown'}. You will ${isPick ? 'pick' : 'drop'} ${ci.qty} units of ${prod?.name || 'unknown'}`);
 
-        const imgSrc = FS_IMAGES[prod?.id] || FS_IMAGES[prod?.barcode];
-        const ipIconHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : `<span>${emoji(prod?.name || '')}</span>`;
+        const imgSrc = getProductImageSrc(prod);
+        const imgCors = imgSrc && imgSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
+        const ipIconHtml = imgSrc
+          ? `<img src="${escapeHtml(imgSrc)}"${imgCors} alt="${escapeHtml(prod?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="handleProductImgError(this)">`
+          : renderProductPlaceholderHtml();
 
         area.innerHTML = `
       <div class="snc ${isPick ? 'or-border' : 'rd-border'}">
@@ -11592,8 +12450,11 @@
 
       else if (step === 'confirm_qty') {
         confirmQty = ci.qty;
-        const imgSrc = FS_IMAGES[prod?.id] || FS_IMAGES[prod?.barcode] || '';
-        const imgHtml = imgSrc ? '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="font-size:40px">' + emoji(prod?.name || '') + '</div>';
+        const imgSrc = getProductImageSrc(prod);
+        const imgCors = imgSrc && imgSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
+        const imgHtml = imgSrc
+          ? `<img src="${escapeHtml(imgSrc)}"${imgCors} alt="${escapeHtml(prod?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
+          : renderProductPlaceholderHtml();
 
         // Parse Loc
         const locMatch = (prod?.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
@@ -12182,9 +13043,11 @@
 
       if (avatarEl) {
         if (validImages.length > 0) {
-          avatarEl.innerHTML = `<img src="${validImages[0]}" alt="${p.name || ''}" onerror="this.parentElement.innerHTML='<span>${emoji(p.name || '')}</span>'">`;
+          const avSrc = validImages[0];
+          const avCors = avSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
+          avatarEl.innerHTML = `<img src="${escapeHtml(avSrc)}"${avCors} alt="${escapeHtml(p.name || 'Product')}" onerror="handleProductImgError(this)">`;
         } else {
-          avatarEl.innerHTML = `<span>${emoji(p.name || '')}</span>`;
+          avatarEl.innerHTML = renderProductPlaceholderHtml();
         }
       }
 
@@ -12455,27 +13318,56 @@
       if (!p) return;
 
       try {
-        toast('Processing image...', 'ok');
-        let newUrl = '';
-        if (typeof uploadSingleImage === 'function') {
-          const res = await uploadSingleImage(file, p.id || p.barcode);
-          newUrl = res?.url || res?.dataUrl || res;
-        } else if (window.IMAGE_UPLOADER && typeof window.IMAGE_UPLOADER.uploadSingleImage === 'function') {
-          const res = await window.IMAGE_UPLOADER.uploadSingleImage(file, p.id || p.barcode);
-          newUrl = res?.url || res?.dataUrl || res;
+        toast('Optimizing & uploading image...', 'ok');
+        const prodId = p.id || p.barcode || p.sku || 'unknown';
+        const existingList = Array.isArray(p.images) ? p.images : [];
+        let uploadedMeta = null;
+
+        if (window.PRODUCT_STORAGE && typeof window.PRODUCT_STORAGE.processAndStoreImages === 'function') {
+          const resList = await window.PRODUCT_STORAGE.processAndStoreImages([file], prodId, existingList);
+          uploadedMeta = resList && resList[0] ? resList[0] : null;
         } else {
-          newUrl = URL.createObjectURL(file);
+          let payload = file;
+          let optMeta = null;
+          if (window.IMAGE_OPTIMIZER && typeof window.IMAGE_OPTIMIZER.optimizeProductImage === 'function') {
+            optMeta = await window.IMAGE_OPTIMIZER.optimizeProductImage(file);
+            payload = optMeta?.blob || file;
+          }
+          if (typeof uploadSingleImage === 'function') {
+            const res = await uploadSingleImage(payload, prodId, { width: optMeta?.width || 0, height: optMeta?.height || 0, imageCount: existingList.length });
+            uploadedMeta = res?.url ? res : null;
+          }
         }
 
+        const newUrl = uploadedMeta ? formatImageUrl(uploadedMeta.url || uploadedMeta.dataUrl || '') : '';
         if (newUrl) {
-          p.images = Array.isArray(p.images) ? p.images : [];
-          p.images.push(newUrl);
-          if (!p.image) p.image = newUrl;
-          if (window.PICKER_DB && typeof window.PICKER_DB.saveProduct === 'function') {
-            await window.PICKER_DB.saveProduct(p);
+          p.images = Array.isArray(p.images) ? [...p.images] : [];
+          p.images.push(typeof uploadedMeta === 'object' ? { ...uploadedMeta, url: newUrl } : newUrl);
+          if (!p.image || p.image.startsWith('blob:')) p.image = newUrl;
+          p.updated_at = new Date().toISOString();
+
+          syncProductToAppStores(p);
+
+          if (window.IMAGE_CACHE && typeof window.IMAGE_CACHE.cacheImage === 'function') {
+            window.IMAGE_CACHE.cacheImage(newUrl, uploadedMeta?.dataUrl || file).catch(() => {});
+          }
+          if (typeof fsSave === 'function') {
+            fsSave().catch(() => {});
+          }
+          if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
+            await window.SUPABASE_PRODUCTS.saveProduct(p);
+          } else if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+            await window.PICKER_DB.putProducts([p]);
+          }
+          if (typeof renderProductsList === 'function') renderProductsList('');
+          if (typeof renderSearch === 'function') {
+            const sq = document.getElementById('homeQ')?.value?.trim() || '';
+            if (sq) renderSearch(sq);
           }
           openProdDetail(p);
           toast('✓ Photo added', 'ok');
+        } else {
+          toast('Failed to process uploaded photo', 'err');
         }
       } catch (err) {
         toast('Failed to upload photo: ' + err.message, 'err');
@@ -12624,18 +13516,18 @@
       if (N > 0) {
         images.forEach((src, i) => {
           const isPrimary = i === 0;
+          const corsAttr = src.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
           html += `
             <div class="pdm-primary-img-tile" onclick="openPdmFullscreenIndex(${i})" style="flex: ${isPrimary ? '1.5' : '1'}; min-width: ${isPrimary ? '160px' : '120px'}; height: 100%; position: relative; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid #E5E7EB; flex-shrink: 0; cursor: pointer;">
-              <img src="${src}" alt="Product Image ${i + 1}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity='0.3'">
+              <img src="${escapeHtml(src)}"${corsAttr} alt="Product Image ${i + 1}" style="width:100%; height:100%; object-fit:cover;" onerror="handleProductImgError(this)">
               ${isPrimary ? '<span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;backdrop-filter:blur(4px);">Primary</span>' : ''}
             </div>
           `;
         });
       } else {
-        const p = PRODUCT_GALLERY.product || {};
         html += `
-          <div class="pdm-primary-img-tile" style="flex: 1.5; min-width: 160px; height: 100%; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; flex-shrink: 0;">
-            <div style="font-size:48px;">${emoji(p.name || '')}</div>
+          <div class="pdm-primary-img-tile" style="flex: 1.5; min-width: 160px; height: 100%; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; flex-shrink: 0; overflow: hidden;">
+            ${renderProductPlaceholderHtml()}
           </div>
         `;
       }
@@ -12781,11 +13673,24 @@
 
       resetPdmZoom();
 
-      if (imgEl && PRODUCT_GALLERY.images[idx]) {
-        imgEl.src = PRODUCT_GALLERY.images[idx];
+      if (imgEl) {
+        if (N > 0 && PRODUCT_GALLERY.images[idx]) {
+          const nextSrc = PRODUCT_GALLERY.images[idx];
+          imgEl.onerror = function () { onPdmGalleryImageError(this.src); };
+          if (nextSrc.includes('prince-picker-image-worker')) {
+            imgEl.crossOrigin = 'anonymous';
+          } else {
+            imgEl.removeAttribute('crossorigin');
+          }
+          imgEl.src = nextSrc;
+        } else {
+          imgEl.onerror = null;
+          imgEl.removeAttribute('crossorigin');
+          imgEl.src = PRODUCT_PLACEHOLDER_DATA_URI;
+        }
       }
 
-      if (counterEl) counterEl.textContent = `${idx + 1} / ${N}`;
+      if (counterEl) counterEl.textContent = N > 0 ? `${idx + 1} / ${N}` : '0 / 0';
 
       if (prevBtn) prevBtn.style.display = N > 1 ? 'flex' : 'none';
       if (nextBtn) nextBtn.style.display = N > 1 ? 'flex' : 'none';
@@ -12803,25 +13708,33 @@
     }
 
     function onPdmGalleryImageError(failedUrl) {
-      if (!failedUrl) return;
+      const imgEl = document.getElementById('pdmFullscreenImg');
+      if (imgEl) imgEl.onerror = null;
+      if (!failedUrl || String(failedUrl).startsWith('data:image/svg+xml')) return;
       const target = String(failedUrl).trim();
       const idx = PRODUCT_GALLERY.images.findIndex(img => {
         if (!img) return false;
         const clean = String(img).trim();
-        return clean === target ||
-               target.endsWith(clean) ||
-               clean.endsWith(target) ||
-               decodeURIComponent(clean) === decodeURIComponent(target);
+        try {
+          return clean === target ||
+                 target.endsWith(clean) ||
+                 clean.endsWith(target) ||
+                 decodeURIComponent(clean) === decodeURIComponent(target);
+        } catch (_) {
+          return clean === target;
+        }
       });
 
       if (idx !== -1) {
         PRODUCT_GALLERY.images.splice(idx, 1);
-        const N = PRODUCT_GALLERY.images.length;
-        if (PRODUCT_GALLERY.currentIndex >= N) {
-          PRODUCT_GALLERY.currentIndex = Math.max(0, N - 1);
-        }
-        renderPdmGalleryView();
+      } else {
+        PRODUCT_GALLERY.images = [];
       }
+      const N = PRODUCT_GALLERY.images.length;
+      if (PRODUCT_GALLERY.currentIndex >= N) {
+        PRODUCT_GALLERY.currentIndex = Math.max(0, N - 1);
+      }
+      renderPdmGalleryView();
     }
 
     function initPdmGalleryGestures() {
@@ -13697,7 +14610,6 @@
       if (!prods.length) { body.innerHTML = hintCard('🔲', 'Bin is empty', 'No products at this location'); return; }
       body.innerHTML = '';
       prods.forEach(function (p, i) {
-        var imgSrc = FS_IMAGES[p.id] || FS_IMAGES[p.barcode];
         var effStock = p.qty != null ? Number(p.qty) : getEffectiveInventory(p.barcode || p.sku, p.loc);
         var qty = effStock;
         var isWh = mapTab === 'warehouse';
@@ -13707,7 +14619,7 @@
         row.style.animationDelay = i * 20 + 'ms';
         row.style.cursor = 'pointer';
         row.onclick = function () { openProdDetail(p.id || p.barcode); };
-        row.innerHTML = '<div class="pr-img" style="margin-right:0;flex-shrink:0">' + (imgSrc ? '<img src="' + imgSrc + '">' : emoji(p.name)) + '</div>' +
+        row.innerHTML = renderProductImgHtml(p, 'pr-img', 'margin-right:0;flex-shrink:0') +
           '<div style="flex:1;min-width:0;padding:0 10px"><div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px">' + p.name + '</div>' +
           '<div style="font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px">' +
             '<span>' + p.barcode + '</span>' +
@@ -14526,12 +15438,14 @@
       }
 
       modal.style.display = 'flex';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
       setTimeout(function () { input.focus(); }, 100);
     }
 
     function closeManualEntryModal() {
       const modal = document.getElementById('manual-input-modal');
       if (modal) modal.style.display = 'none';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
 
     function onManualInputUpdate(val) {
@@ -14704,6 +15618,9 @@
         document.querySelectorAll('.bn .bnt').forEach(function (btn) {
           if (btn.getAttribute('onclick') === 'openMore()') btn.classList.add('on');
         });
+      }
+      if (window.ScrollChromeController && typeof window.ScrollChromeController.attachToScreen === 'function') {
+        window.ScrollChromeController.attachToScreen(id);
       }
     }
 
@@ -15322,8 +16239,11 @@
       stopInlineScanner();
       adhocState.targetProd = p; adhocState.confirmQty = 1;
       const isP = adhocState.mode === 'pick';
-      const imgUrl = FS_IMAGES[p?.id] || FS_IMAGES[p?.barcode] || '';
-      const imgHtml = imgUrl ? '<img src="' + imgUrl + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="font-size:40px">' + emoji(p?.name || '') + '</div>';
+      const imgUrl = getProductImageSrc(p);
+      const imgCors = imgUrl && imgUrl.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
+      const imgHtml = imgUrl
+        ? `<img src="${escapeHtml(imgUrl)}"${imgCors} alt="${escapeHtml(p?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
+        : renderProductPlaceholderHtml();
       const locMatch = (p?.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
       const zCode = locMatch ? 'Zone R' + locMatch[1] : 'Zone —';
       const bCode = locMatch ? 'Bin L' + locMatch[2] + 'B' + locMatch[3] : 'Bin —';
@@ -15976,8 +16896,11 @@
       </div>`;
       } else {
         cartHtml = DROP.cart.map((item, idx) => {
-          const imgSrc = FS_IMAGES[item.product?.id] || FS_IMAGES[item.barcode];
-          const thumbHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : `<span>${emoji(item.name)}</span>`;
+          const imgSrc = getProductImageSrc(item.product || item);
+          const imgCors = imgSrc && imgSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
+          const thumbHtml = imgSrc
+            ? `<img src="${escapeHtml(imgSrc)}"${imgCors} alt="${escapeHtml(item.name || 'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="handleProductImgError(this)">`
+            : renderProductPlaceholderHtml();
           return `
         <div class="pick-row" style="margin:0 16px 8px;padding:12px;background:var(--card);border-radius:14px;border:1px solid var(--bd)">
           <div class="pick-thumb" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${thumbHtml}</div>
@@ -16823,7 +17746,14 @@
 
     async function handleMultiImageFiles(files, targetSlot) {
       if (!files || files.length === 0) return;
-      const fileList = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+      const fileList = Array.from(files).filter(f => {
+        if (!f) return false;
+        if (f.type && f.type.startsWith('image/')) return true;
+        if (!f.type || f.type === 'application/octet-stream') {
+          return !f.name || /\.(webp|png|jpe?g|gif|avif|heic|bmp)$/i.test(f.name);
+        }
+        return false;
+      });
       if (fileList.length === 0) {
         toast('Please select valid image files', 'err');
         return;
@@ -16921,14 +17851,16 @@
         if (imgObj) {
           const rawUrl = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
           const url = formatImageUrl(rawUrl) || rawUrl;
-          const sz = imgObj.sizeBytes ? `${Math.round(imgObj.sizeBytes / 1024)}KB` : 'WebP';
+          const fmtLabel = (imgObj.mime === 'image/jpeg') ? 'JPEG' : (imgObj.mime === 'image/png' ? 'PNG' : 'WebP');
+          const sz = imgObj.sizeBytes ? `${Math.round(imgObj.sizeBytes / 1024)}KB` : fmtLabel;
           const dim = (imgObj.width && imgObj.height) ? `${imgObj.width}×${imgObj.height}` : '';
-          const infoStr = [sz, 'WebP', dim].filter(Boolean).join(' · ');
+          const infoStr = [sz, fmtLabel, dim].filter(Boolean).join(' · ');
           const isPrimary = i === 0;
+          const corsAttr = url && url.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
 
           html += `
             <div class="img-slot-card has-img" id="imgSlot_${i}">
-              <img src="${url}" loading="${isPrimary ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${isPrimary ? 'high' : 'low'}" sizes="(max-width: 480px) 100vw, 96px" alt="Product Image ${i + 1}">
+              <img src="${escapeHtml(url)}"${corsAttr} loading="${isPrimary ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${isPrimary ? 'high' : 'low'}" sizes="(max-width: 480px) 100vw, 96px" alt="Product Image ${i + 1}" onerror="handleProductImgError(this)">
               <div class="img-slot-actions">
                 <button type="button" class="img-slot-btn" onclick="triggerSlotReplace(${i})" title="Replace Image">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -17117,18 +18049,8 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
       try {
-        const existing = FS_PRODUCTS.findIndex(p => p.barcode === barcode || p.id === id);
-        if (existing >= 0) FS_PRODUCTS[existing] = product;
-        else FS_PRODUCTS.push(product);
-
-        const si = STATE.products.findIndex(p => p.barcode === barcode || p.id === id);
-        if (si >= 0) STATE.products[si] = { ...STATE.products[si], ...product };
-        else STATE.products.push(product);
-        STATE.barcodeIndex.set(barcode, product);
+        syncProductToAppStores(product, { clearStaleFsImages: true });
         STATE.warehouseMap = buildWarehouseMap(STATE.products);
-        if (window.PrinceSearchEngine) {
-          window.PrinceSearchEngine.indexProduct(product);
-        }
 
         const savedToDisk = await fsSave();
 
@@ -17164,6 +18086,10 @@
         renderAPExistingLocations();
 
         if (typeof renderProductsList === 'function') renderProductsList('');
+        if (typeof renderSearch === 'function') {
+          const sq = document.getElementById('homeQ')?.value?.trim() || '';
+          if (sq) renderSearch(sq);
+        }
 
         if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
 
@@ -17544,7 +18470,7 @@
             <div class="empty-state-title">No Matching Products</div>
             <div class="empty-state-sub">We couldn't find any products in your inventory matching "${q || ''}".</div>
             <div class="empty-state-actions">
-              <button class="btn-p" onclick="document.getElementById('prodQ').value = ''; renderProductsList('');">
+              <button class="btn-p" onclick="document.getElementById('prodQ').value = ''; renderProductsList(''); if (window.ScrollChromeController) window.ScrollChromeController.sync('s-products');">
                 Clear Search
               </button>
             </div>
@@ -18482,6 +19408,7 @@
       container.innerHTML = '<div style="color:var(--t3);font-size:13px;padding:20px">Generating preview...</div>';
       var modal = document.getElementById('qrPreviewModal');
       if (modal) modal.style.display = 'flex';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
 
       await new Promise(function (r) { setTimeout(r, 30); });
 
@@ -18512,6 +19439,7 @@
     function closeQrPreview() {
       var modal = document.getElementById('qrPreviewModal');
       if (modal) modal.style.display = 'none';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
 
     // ─────────────────────────────────────────────
@@ -18737,9 +19665,11 @@
       document.getElementById('customQrLabel').value = '';
       document.getElementById('customQrPreview').innerHTML = '';
       document.getElementById('customQrModal').style.display = 'flex';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
     function closeCustomQrModal() {
       document.getElementById('customQrModal').style.display = 'none';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
     async function generateCustomQr() {
       var val = document.getElementById('customQrVal').value.trim();
@@ -18989,6 +19919,7 @@
       document.getElementById('logsSessionPanel').style.display = tab === 'sessions' ? 'flex' : 'none';
       document.getElementById('logsPostPanel').style.display = tab === 'pos' ? 'flex' : 'none';
       if (tab === 'pos') LogsUI.render();
+      if (window.ScrollChromeController) window.ScrollChromeController.sync('s-logs');
     }
 
     function refreshLogsView() {
@@ -19326,10 +20257,12 @@
     function startNewAudit() {
       document.getElementById('auditAuditorName').value = STATE.pickerName || '';
       document.getElementById('auditStartModal').style.display = 'flex';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
 
     function closeAuditStartModal() {
       document.getElementById('auditStartModal').style.display = 'none';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
 
     let activeAudit = null;
@@ -19896,6 +20829,7 @@
     function closeTransferLogsModal() {
       const modal = document.getElementById('transferLogsModal');
       if (modal) modal.style.display = 'none';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
 
     function showTransferLogsModal(transferId) {
@@ -19998,6 +20932,7 @@
 
       bodyEl.innerHTML = html;
       modal.style.display = 'flex';
+      if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
     }
 
     function renderTransferDashboard() {

@@ -4,7 +4,11 @@
 (function(window) {
   async function validateImageFile(file) {
     if (!file) throw new Error('No file provided');
-    if (!file.type || !file.type.startsWith('image/')) {
+    const typeLower = (file.type || '').toLowerCase();
+    // Capacitor/Android WebView pickers may supply empty MIME or application/octet-stream; verify via pixel decode
+    const hasImageMime = typeLower.startsWith('image/');
+    const isGenericMime = !typeLower || typeLower === 'application/octet-stream';
+    if (!hasImageMime && !isGenericMime) {
       throw new Error('Unsupported file format. Please select a valid image.');
     }
     return new Promise((resolve, reject) => {
