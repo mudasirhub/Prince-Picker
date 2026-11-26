@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.mudasirkhan.princepicker",
+      "sha256_cert_fingerprints": [
+        "REPLACE_WITH_PRODUCTION_APK_SHA256_FINGERPRINT"
+      ]
+    }
+  }
+]

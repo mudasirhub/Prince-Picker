@@ -5,8 +5,9 @@
   "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#ec5b13",
+  "display_override": ["standalone", "fullscreen"],
+  "background_color": "#F8F6F4",
+  "theme_color": "#F8F6F4",
   "categories": ["business", "productivity"],
   "icons": [
     {

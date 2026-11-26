@@ -17,11 +17,11 @@
   <script src="./supabase/storage.js"></script>
   <script src="./search_engine.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ec5b13">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#F8F6F4">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Prince Picker">
   <meta name="application-name" content="Prince Picker">
   <meta name="description"
@@ -6010,7 +6010,63 @@
         font-size: 16px !important;
       }
 
-      /* iOS Top Navigation Bar (Translucent glassmorphism) */
+      /* Hide redundant top page-title header bar on mobile (< 768px) for full-screen native view */
+      .S:not(#s-picking):not(#s-adhoc):not(#s-add-product):not(#s-log-detail):not(#s-audit-active):not(#s-transfer-active) > .tb {
+        display: none !important;
+      }
+
+      /* Safe-area top spacing so search/controls sit cleanly below phone status bar / notch */
+      #s-search > .sa-stage > .scroll-upper-bar > .search-area:first-child,
+      #s-qr > .sa-stage > .scroll-upper-bar > .search-area:first-child {
+        padding: max(12px, env(safe-area-inset-top, 0px)) 14px 10px !important;
+      }
+      #s-search .search-row,
+      #s-products .search-row,
+      #s-qr .search-row {
+        padding: 0 !important;
+      }
+      #s-orders > .sa-stage > .scroll-upper-bar,
+      #s-cart > .sa-stage > .scroll-upper-bar,
+      #s-drop > .sa-stage > .scroll-upper-bar,
+      #s-map > .sa-stage > .scroll-upper-bar,
+      #s-products > .sa-stage > .scroll-upper-bar {
+        padding-top: max(12px, env(safe-area-inset-top, 0px)) !important;
+      }
+      #s-products .search-area {
+        padding: 6px 14px 10px !important;
+      }
+      #s-logs > .logs-tab-bar {
+        margin-top: max(12px, env(safe-area-inset-top, 0px)) !important;
+      }
+      #s-dashboard > .sc,
+      #s-settings > .sc,
+      #s-audit > .sc,
+      #s-transfer > .sc,
+      #s-login > .sc,
+      #s-summary > .sc {
+        padding-top: max(12px, env(safe-area-inset-top, 0px)) !important;
+      }
+      .more-item {
+        position: relative;
+      }
+      #more-notifications .notification-badge {
+        display: none;
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: var(--rd, #dc2626);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 18px;
+        text-align: center;
+      }
+
+      /* Compact Top Bar on sub-workflow screens that lack bottom nav */
       .tb {
         height: calc(48px + env(safe-area-inset-top, 0px)) !important;
         padding-top: env(safe-area-inset-top, 0px) !important;
@@ -6931,6 +6987,26 @@
           </svg>
           Start Picking
         </button>
+
+        <button class="btn-s" id="biometricLoginBtn" onclick="doBiometricLogin()" style="display:none;margin-bottom:10px;gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--or,#c84a0d)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4" />
+            <path d="M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2" />
+            <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+            <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+            <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+            <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+            <path d="M2 16h.01" />
+            <path d="M21.8 16c.2-2 .131-5.354 0-6" />
+            <path d="M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 1.17-.02 2" />
+          </svg>
+          <span id="biometricLoginLabel">Unlock with Fingerprint</span>
+        </button>
+
+        <label id="biometricEnrollOpt" style="display:none;width:100%;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;">
+          <input type="checkbox" id="enrollBiometricAfterLogin" style="width:16px;height:16px;accent-color:var(--or,#c84a0d);">
+          <span>Enable Fingerprint unlock for next time</span>
+        </label>
 
         <div style="width:100%;display:flex;align-items:center;gap:10px;margin:6px 0 10px">
           <span style="flex:1;height:1px;background:var(--bd)"></span>
@@ -8280,6 +8356,13 @@
             display: flex;
             gap: 12px;
             height: 200px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .pdm-image-grid::-webkit-scrollbar {
+            display: none;
           }
 
           .pdm-primary-img-tile {
@@ -8293,6 +8376,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            scroll-snap-align: start;
           }
           .pdm-primary-img-tile img {
             width: 100%;
@@ -8745,7 +8829,7 @@
           .pdm-fullscreen-viewer {
             position: fixed;
             inset: 0;
-            z-index: 500;
+            z-index: 1100;
             background: #000;
             display: flex;
             flex-direction: column;
@@ -8990,7 +9074,7 @@
 
   <!-- ══ PRODUCT DETAIL BOTTOM SHEET MODAL ══ -->
   <div id="prodDetailModal"
-    style="display:none;position:fixed;inset:0;z-index:450;flex-direction:column;align-items:center;justify-content:flex-end">
+    style="display:none;position:fixed;inset:0;z-index:950;flex-direction:column;align-items:center;justify-content:flex-end">
     <!-- Dimmed Background -->
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.5);transition:opacity 0.2s" onclick="closeProdDetail()"></div>
 
@@ -9459,7 +9543,7 @@
 
   <!-- ══ QR PREVIEW MODAL ══ -->
   <div id="qrPreviewModal"
-    style="display:none;position:fixed;inset:0;z-index:460;align-items:center;justify-content:center">
+    style="display:none;position:fixed;inset:0;z-index:960;align-items:center;justify-content:center">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.7)" onclick="closeQrPreview()"></div>
     <div
       style="position:relative;background:var(--card);border-radius:20px;padding:20px;max-width:380px;width:92%;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column">
@@ -9557,6 +9641,21 @@
             <line x1="20" y1="10" x2="3" y2="21"></line>
           </svg>
           <span>Transfer</span>
+        </div>
+        <div class="more-item" id="more-notifications" onclick="closeMore();openNotificationCenter()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notification-badge"></span>
+          <span>Notifications</span>
+        </div>
+        <div class="more-item" id="more-add-product" onclick="closeMore();nav('s-add-product')">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Add Product</span>
         </div>
         <div class="more-item" id="more-install" onclick="closeMore();showInstallApp()">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--or,#c84a0d)" stroke-width="2.2">
@@ -9790,6 +9889,37 @@
             <input type="checkbox" id="settVoice" onchange="toggleVoice(this.checked)">
             <span class="slider"></span>
           </label>
+        </div>
+      </div>
+
+      <div class="settings-group" style="margin-top:20px;">
+        <div class="settings-group-title">Security & Biometrics</div>
+        <div class="settings-row">
+          <div class="settings-label-wrap">
+            <div class="settings-label">Fingerprint Login</div>
+            <div class="settings-desc" id="settBiometricDesc">Use device fingerprint to unlock & sign in</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="settBiometric" onchange="toggleBiometricLogin(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-row" style="margin-top:12px;">
+          <div class="settings-label-wrap">
+            <div class="settings-label">Require Fingerprint on Launch</div>
+            <div class="settings-desc">Prompt for fingerprint when reopening app</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="settBiometricLock" onchange="toggleBiometricLock(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-row clickable" onclick="lockAppToLogin()" style="margin-top:12px;border-top:1px solid var(--bd);" title="Lock App">
+          <div class="settings-label-wrap">
+            <div class="settings-label">Lock App Now</div>
+            <div class="settings-desc">Return to login screen without clearing data</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
 
@@ -10688,9 +10818,8 @@
         ? `class="${containerClass}"`
         : 'style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;"';
       if (src) {
-        const corsAttr = src.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
         const fbAttr = fallback ? ` data-fallback-src="${escapeHtml(fallback)}"` : '';
-        return `<div ${cls}><img src="${escapeHtml(src)}"${corsAttr}${fbAttr} alt="${escapeHtml(p?.name || 'Product')}" style="${extraImgStyle}" loading="lazy" decoding="async" fetchpriority="low" onerror="handleProductImgError(this)"></div>`;
+        return `<div ${cls}><img src="${escapeHtml(src)}"${fbAttr} alt="${escapeHtml(p?.name || 'Product')}" style="${extraImgStyle}" loading="lazy" decoding="async" fetchpriority="low" onerror="handleProductImgError(this)"></div>`;
       }
       return `<div ${cls}>${renderProductPlaceholderHtml()}</div>`;
     }
@@ -11496,46 +11625,68 @@
         }
 
         if (savedPicker && savedPicker.name) {
-          setSplash('Welcome back...', 80);
           STATE.pickerName = savedPicker.name;
           STATE.pickerRole = localStorage.getItem('pa_role') || 'picker';
           if (document.getElementById('ordersPickerLbl')) document.getElementById('ordersPickerLbl').textContent = savedPicker.name;
           if (document.getElementById('sessPickerLbl')) document.getElementById('sessPickerLbl').textContent = savedPicker.name;
 
-          setSplash('Opening App...', 100);
-          setTimeout(() => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const reqScreen = urlParams.get('screen');
-            let targetScreen = DEFAULT_HOME_SCREEN;
-            if (reqScreen) {
-              const mapped = reqScreen.startsWith('s-') ? reqScreen : ('s-' + reqScreen);
-              if (document.getElementById(mapped)) targetScreen = mapped;
-              else if (reqScreen === 'inventory') targetScreen = 's-search';
-            }
+          const requiresBiometricUnlock = window.SUPABASE_AUTH &&
+            typeof window.SUPABASE_AUTH.isBiometricLockEnabled === 'function' &&
+            window.SUPABASE_AUTH.isBiometricLockEnabled();
 
-            if (localStorage.getItem(LS_ACTIVE_TRANSFER)) {
-              nav(DEFAULT_HOME_SCREEN);
-              document.getElementById('transferResumeModal').style.display = 'flex';
-              ScrollLockManager.lock('transferResumeModal');
-            } else if (localStorage.getItem(LS_ACTIVE_AUDIT)) {
-              nav(DEFAULT_HOME_SCREEN);
-              document.getElementById('auditResumeModal').style.display = 'flex';
-              ScrollLockManager.lock('auditResumeModal');
-            } else {
-              nav(targetScreen);
-            }
-            // Trigger background sync non-blocking
-            if (window.SUPABASE_SYNC) {
-              window.SUPABASE_SYNC.runBackgroundSync((updatedProds) => {
-                if (updatedProds && updatedProds.length > 0) {
-                  loadProducts(updatedProds);
-                  renderSearch(document.getElementById('searchInput')?.value || '');
-                }
-              });
-            }
-          }, 150);
+          if (requiresBiometricUnlock) {
+            setSplash('Biometric Lock Active...', 90);
+            setTimeout(async () => {
+              const nameInput = document.getElementById('pickerName');
+              if (nameInput) nameInput.value = savedPicker.name;
+              goTo('s-login');
+              if (typeof refreshBiometricLoginUI === 'function') await refreshBiometricLoginUI();
+              if (typeof doBiometricLogin === 'function') doBiometricLogin();
+            }, 150);
+          } else {
+            setSplash('Welcome back...', 80);
+            setSplash('Opening App...', 100);
+            setTimeout(() => {
+              const urlParams = new URLSearchParams(window.location.search);
+              const reqScreen = urlParams.get('screen');
+              let targetScreen = DEFAULT_HOME_SCREEN;
+              if (reqScreen) {
+                const mapped = reqScreen.startsWith('s-') ? reqScreen : ('s-' + reqScreen);
+                if (document.getElementById(mapped)) targetScreen = mapped;
+                else if (reqScreen === 'inventory') targetScreen = 's-search';
+                else if (reqScreen === 'scan') targetScreen = 's-adhoc';
+              }
+
+              if (localStorage.getItem(LS_ACTIVE_TRANSFER)) {
+                nav(DEFAULT_HOME_SCREEN);
+                document.getElementById('transferResumeModal').style.display = 'flex';
+                ScrollLockManager.lock('transferResumeModal');
+              } else if (localStorage.getItem(LS_ACTIVE_AUDIT)) {
+                nav(DEFAULT_HOME_SCREEN);
+                document.getElementById('auditResumeModal').style.display = 'flex';
+                ScrollLockManager.lock('auditResumeModal');
+              } else if (targetScreen === 's-adhoc' && typeof startAdhocScan === 'function') {
+                nav(DEFAULT_HOME_SCREEN);
+                startAdhocScan();
+              } else {
+                nav(targetScreen);
+              }
+              // Trigger background sync non-blocking
+              if (window.SUPABASE_SYNC) {
+                window.SUPABASE_SYNC.runBackgroundSync((updatedProds) => {
+                  if (updatedProds && updatedProds.length > 0) {
+                    loadProducts(updatedProds);
+                    renderSearch(document.getElementById('searchInput')?.value || '');
+                  }
+                });
+              }
+            }, 150);
+          }
         } else {
-          setTimeout(function () { goTo('s-login'); }, 250);
+          setTimeout(function () {
+            goTo('s-login');
+            if (typeof refreshBiometricLoginUI === 'function') refreshBiometricLoginUI();
+          }, 250);
         }
       } catch (err) {
         console.warn('[Startup] IndexedDB load exception:', err);
@@ -11875,11 +12026,89 @@
 
         if (window.PICKER_DB) await window.PICKER_DB.setMeta('lastSync', new Date().toISOString());
 
+        const enrollBox = document.getElementById('enrollBiometricAfterLogin');
+        if (enrollBox && enrollBox.checked && window.SUPABASE_AUTH && typeof window.SUPABASE_AUTH.enrollBiometric === 'function') {
+          const bioRes = await window.SUPABASE_AUTH.enrollBiometric(authResult.picker.name, authResult.picker.id, authResult.picker.role);
+          if (bioRes && bioRes.success) {
+            toast('✓ Fingerprint login enabled', 'ok');
+          } else if (bioRes && bioRes.error) {
+            toast(bioRes.error, 'err');
+          }
+          enrollBox.checked = false;
+        }
+
         doLoginWithName(authResult.picker.name, authResult.picker?.role);
       } catch (err) {
         console.error('[doLogin] Login error:', err);
         setBadge('err', 'Invalid PIN');
         toast('Invalid PIN. Access denied.', 'err');
+      }
+    }
+
+    async function refreshBiometricLoginUI() {
+      const btn = document.getElementById('biometricLoginBtn');
+      const lbl = document.getElementById('biometricLoginLabel');
+      const enrollWrap = document.getElementById('biometricEnrollOpt');
+      if (!window.SUPABASE_AUTH || typeof window.SUPABASE_AUTH.isBiometricSupported !== 'function') return;
+
+      const support = await window.SUPABASE_AUTH.isBiometricSupported();
+      const enrollment = window.SUPABASE_AUTH.getBiometricEnrollment();
+
+      if (btn) {
+        if (support.supported && enrollment) {
+          btn.style.display = 'flex';
+          if (lbl) lbl.textContent = `Unlock with Fingerprint (${enrollment.pickerName})`;
+          const nameInput = document.getElementById('pickerName');
+          if (nameInput && !nameInput.value.trim()) {
+            nameInput.value = enrollment.pickerName;
+          }
+        } else {
+          btn.style.display = 'none';
+        }
+      }
+
+      if (enrollWrap) {
+        enrollWrap.style.display = (support.supported && !enrollment) ? 'flex' : 'none';
+      }
+    }
+
+    async function doBiometricLogin() {
+      if (!window.SUPABASE_AUTH || typeof window.SUPABASE_AUTH.verifyBiometric !== 'function') {
+        toast('Biometric authentication unavailable', 'err');
+        return;
+      }
+
+      setBadge('chk', 'Verifying Fingerprint...');
+      const res = await window.SUPABASE_AUTH.verifyBiometric();
+      if (!res || !res.success) {
+        setBadge('err', 'Biometric Failed');
+        toast(res?.error || 'Fingerprint verification failed', 'err');
+        return;
+      }
+
+      setBadge('ok', 'Fingerprint Verified');
+      toast(`Welcome, ${res.picker.name}!`, 'ok');
+
+      try {
+        const cachedProds = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
+        if (cachedProds && cachedProds.length > 0) {
+          loadProducts(cachedProds);
+        } else if (typeof navigator !== 'undefined' && navigator.onLine !== false && window.SUPABASE_PRODUCTS) {
+          const products = await window.SUPABASE_PRODUCTS.downloadAllProducts();
+          if (products && products.length > 0) loadProducts(products);
+          if (window.SUPABASE_INVENTORY) await window.SUPABASE_INVENTORY.downloadAllInventory();
+        }
+      } catch (e) { }
+
+      doLoginWithName(res.picker.name, res.picker.role);
+
+      if (window.SUPABASE_SYNC && typeof navigator !== 'undefined' && navigator.onLine !== false) {
+        window.SUPABASE_SYNC.runBackgroundSync((updatedProds) => {
+          if (updatedProds && updatedProds.length > 0) {
+            loadProducts(updatedProds);
+            renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+          }
+        });
       }
     }
 
@@ -11889,6 +12118,9 @@
         localStorage.removeItem('picker_id');
         localStorage.removeItem('sp_project_url');
         localStorage.removeItem('sp_anon_key');
+        if (window.SUPABASE_AUTH && typeof window.SUPABASE_AUTH.clearBiometric === 'function') {
+          await window.SUPABASE_AUTH.clearBiometric();
+        }
         if (window.PICKER_DB) {
           await window.PICKER_DB.clearDatabase();
         }
@@ -12330,9 +12562,8 @@
         speak(`Go to location ${prod?.loc || 'unknown'}. You will ${isPick ? 'pick' : 'drop'} ${ci.qty} units of ${prod?.name || 'unknown'}`);
 
         const imgSrc = getProductImageSrc(prod);
-        const imgCors = imgSrc && imgSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
         const ipIconHtml = imgSrc
-          ? `<img src="${escapeHtml(imgSrc)}"${imgCors} alt="${escapeHtml(prod?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="handleProductImgError(this)">`
+          ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(prod?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="handleProductImgError(this)">`
           : renderProductPlaceholderHtml();
 
         area.innerHTML = `
@@ -12451,9 +12682,8 @@
       else if (step === 'confirm_qty') {
         confirmQty = ci.qty;
         const imgSrc = getProductImageSrc(prod);
-        const imgCors = imgSrc && imgSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
         const imgHtml = imgSrc
-          ? `<img src="${escapeHtml(imgSrc)}"${imgCors} alt="${escapeHtml(prod?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
+          ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(prod?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
           : renderProductPlaceholderHtml();
 
         // Parse Loc
@@ -13044,9 +13274,12 @@
       if (avatarEl) {
         if (validImages.length > 0) {
           const avSrc = validImages[0];
-          const avCors = avSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
-          avatarEl.innerHTML = `<img src="${escapeHtml(avSrc)}"${avCors} alt="${escapeHtml(p.name || 'Product')}" onerror="handleProductImgError(this)">`;
+          avatarEl.style.cursor = 'pointer';
+          avatarEl.onclick = function () { openPdmFullscreenIndex(0); };
+          avatarEl.innerHTML = `<img src="${escapeHtml(avSrc)}" alt="${escapeHtml(p.name || 'Product')}" onerror="handleProductImgError(this)">`;
         } else {
+          avatarEl.style.cursor = 'default';
+          avatarEl.onclick = null;
           avatarEl.innerHTML = renderProductPlaceholderHtml();
         }
       }
@@ -13516,10 +13749,9 @@
       if (N > 0) {
         images.forEach((src, i) => {
           const isPrimary = i === 0;
-          const corsAttr = src.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
           html += `
             <div class="pdm-primary-img-tile" onclick="openPdmFullscreenIndex(${i})" style="flex: ${isPrimary ? '1.5' : '1'}; min-width: ${isPrimary ? '160px' : '120px'}; height: 100%; position: relative; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid #E5E7EB; flex-shrink: 0; cursor: pointer;">
-              <img src="${escapeHtml(src)}"${corsAttr} alt="Product Image ${i + 1}" style="width:100%; height:100%; object-fit:cover;" onerror="handleProductImgError(this)">
+              <img src="${escapeHtml(src)}" alt="Product Image ${i + 1}" style="width:100%; height:100%; object-fit:cover;" onerror="handleProductImgError(this)">
               ${isPrimary ? '<span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;backdrop-filter:blur(4px);">Primary</span>' : ''}
             </div>
           `;
@@ -13674,18 +13906,13 @@
       resetPdmZoom();
 
       if (imgEl) {
+        imgEl.removeAttribute('crossorigin');
         if (N > 0 && PRODUCT_GALLERY.images[idx]) {
           const nextSrc = PRODUCT_GALLERY.images[idx];
           imgEl.onerror = function () { onPdmGalleryImageError(this.src); };
-          if (nextSrc.includes('prince-picker-image-worker')) {
-            imgEl.crossOrigin = 'anonymous';
-          } else {
-            imgEl.removeAttribute('crossorigin');
-          }
           imgEl.src = nextSrc;
         } else {
           imgEl.onerror = null;
-          imgEl.removeAttribute('crossorigin');
           imgEl.src = PRODUCT_PLACEHOLDER_DATA_URI;
         }
       }
@@ -15582,6 +15809,9 @@
       }
 
       if (id === 's-login') {
+        if (typeof refreshBiometricLoginUI === 'function') {
+          refreshBiometricLoginUI();
+        }
         setTimeout(function () {
           const nameEl = document.getElementById('pickerName');
           const serverEl = document.getElementById('serverUrl');
@@ -16240,9 +16470,8 @@
       adhocState.targetProd = p; adhocState.confirmQty = 1;
       const isP = adhocState.mode === 'pick';
       const imgUrl = getProductImageSrc(p);
-      const imgCors = imgUrl && imgUrl.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
       const imgHtml = imgUrl
-        ? `<img src="${escapeHtml(imgUrl)}"${imgCors} alt="${escapeHtml(p?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
+        ? `<img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
         : renderProductPlaceholderHtml();
       const locMatch = (p?.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
       const zCode = locMatch ? 'Zone R' + locMatch[1] : 'Zone —';
@@ -16897,9 +17126,8 @@
       } else {
         cartHtml = DROP.cart.map((item, idx) => {
           const imgSrc = getProductImageSrc(item.product || item);
-          const imgCors = imgSrc && imgSrc.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
           const thumbHtml = imgSrc
-            ? `<img src="${escapeHtml(imgSrc)}"${imgCors} alt="${escapeHtml(item.name || 'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="handleProductImgError(this)">`
+            ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.name || 'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="handleProductImgError(this)">`
             : renderProductPlaceholderHtml();
           return `
         <div class="pick-row" style="margin:0 16px 8px;padding:12px;background:var(--card);border-radius:14px;border:1px solid var(--bd)">
@@ -17837,6 +18065,24 @@
       triggerGallerySelect(slotIdx);
     }
 
+    function previewApImageSlot(idx) {
+      const targetObj = AP_PRODUCT_IMAGES[idx];
+      const targetRaw = targetObj ? (targetObj.url || targetObj.dataUrl || (typeof targetObj === 'string' ? targetObj : '')) : '';
+      const targetUrl = targetRaw ? (formatImageUrl(targetRaw) || targetRaw) : '';
+      const urls = AP_PRODUCT_IMAGES
+        .map(imgObj => {
+          if (!imgObj) return '';
+          const rawUrl = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
+          return formatImageUrl(rawUrl) || rawUrl;
+        })
+        .filter(u => u && !String(u).startsWith('blob:'));
+      if (urls.length === 0) return;
+      const mappedIdx = targetUrl ? urls.indexOf(targetUrl) : -1;
+      PRODUCT_GALLERY.images = urls;
+      PRODUCT_GALLERY.currentIndex = mappedIdx >= 0 ? mappedIdx : Math.max(0, Math.min(idx || 0, urls.length - 1));
+      openPdmFullscreen();
+    }
+
     function renderMultiImageGrid() {
       const grid = document.getElementById('apMultiImgGrid');
       const badge = document.getElementById('apImgCountBadge');
@@ -17851,21 +18097,22 @@
         if (imgObj) {
           const rawUrl = imgObj.url || imgObj.dataUrl || (typeof imgObj === 'string' ? imgObj : '');
           const url = formatImageUrl(rawUrl) || rawUrl;
+          const fbUrl = (imgObj.dataUrl && imgObj.dataUrl !== url && !String(imgObj.dataUrl).startsWith('blob:')) ? imgObj.dataUrl : '';
+          const fbAttr = fbUrl ? ` data-fallback-src="${escapeHtml(fbUrl)}"` : '';
           const fmtLabel = (imgObj.mime === 'image/jpeg') ? 'JPEG' : (imgObj.mime === 'image/png' ? 'PNG' : 'WebP');
           const sz = imgObj.sizeBytes ? `${Math.round(imgObj.sizeBytes / 1024)}KB` : fmtLabel;
           const dim = (imgObj.width && imgObj.height) ? `${imgObj.width}×${imgObj.height}` : '';
           const infoStr = [sz, fmtLabel, dim].filter(Boolean).join(' · ');
           const isPrimary = i === 0;
-          const corsAttr = url && url.includes('prince-picker-image-worker') ? ' crossorigin="anonymous"' : '';
 
           html += `
-            <div class="img-slot-card has-img" id="imgSlot_${i}">
-              <img src="${escapeHtml(url)}"${corsAttr} loading="${isPrimary ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${isPrimary ? 'high' : 'low'}" sizes="(max-width: 480px) 100vw, 96px" alt="Product Image ${i + 1}" onerror="handleProductImgError(this)">
+            <div class="img-slot-card has-img" id="imgSlot_${i}" onclick="previewApImageSlot(${i})">
+              <img src="${escapeHtml(url)}"${fbAttr} loading="${isPrimary ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${isPrimary ? 'high' : 'low'}" sizes="(max-width: 480px) 100vw, 96px" alt="Product Image ${i + 1}" onerror="handleProductImgError(this)">
               <div class="img-slot-actions">
-                <button type="button" class="img-slot-btn" onclick="triggerSlotReplace(${i})" title="Replace Image">
+                <button type="button" class="img-slot-btn" onclick="event.stopPropagation(); triggerSlotReplace(${i})" title="Replace Image">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                 </button>
-                <button type="button" class="img-slot-btn" onclick="removeImageSlot(${i})" title="Delete Image" style="background:rgba(239,68,68,0.85)">
+                <button type="button" class="img-slot-btn" onclick="event.stopPropagation(); removeImageSlot(${i})" title="Delete Image" style="background:rgba(239,68,68,0.85)">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
@@ -19756,7 +20003,85 @@
       const sUrl = document.getElementById('settServerUrl');
       if (sUrl) sUrl.value = STATE.serverUrl || '';
 
+      syncBiometricSettingsUI();
       applyTheme(STATE.theme);
+    }
+
+    async function syncBiometricSettingsUI() {
+      const sBio = document.getElementById('settBiometric');
+      const sLock = document.getElementById('settBiometricLock');
+      const desc = document.getElementById('settBiometricDesc');
+      if (!window.SUPABASE_AUTH) return;
+
+      const enrollment = window.SUPABASE_AUTH.getBiometricEnrollment();
+      const lockEnabled = window.SUPABASE_AUTH.isBiometricLockEnabled();
+      if (sBio) sBio.checked = !!enrollment;
+      if (sLock) {
+        sLock.checked = lockEnabled;
+        sLock.disabled = !enrollment;
+      }
+
+      if (typeof window.SUPABASE_AUTH.isBiometricSupported === 'function') {
+        const support = await window.SUPABASE_AUTH.isBiometricSupported();
+        if (!support.supported) {
+          if (sBio) sBio.disabled = true;
+          if (sLock) sLock.disabled = true;
+          if (desc) desc.textContent = 'Biometric sensor unavailable in this browser/context';
+        } else if (enrollment && desc) {
+          desc.textContent = `Enabled for ${enrollment.pickerName}`;
+        } else if (desc) {
+          desc.textContent = 'Use device fingerprint to unlock & sign in';
+        }
+      }
+    }
+
+    async function toggleBiometricLogin(checked) {
+      const sBio = document.getElementById('settBiometric');
+      const sLock = document.getElementById('settBiometricLock');
+      if (!window.SUPABASE_AUTH) return;
+
+      if (!checked) {
+        await window.SUPABASE_AUTH.clearBiometric();
+        if (sLock) { sLock.checked = false; sLock.disabled = true; }
+        await syncBiometricSettingsUI();
+        toast('Fingerprint login disabled');
+        return;
+      }
+
+      const pickerName = STATE.pickerName || localStorage.getItem(LS_PICKER) || '';
+      const pickerId = localStorage.getItem('picker_id') || '';
+      const role = STATE.pickerRole || localStorage.getItem('pa_role') || 'picker';
+
+      const res = await window.SUPABASE_AUTH.enrollBiometric(pickerName, pickerId, role);
+      if (!res || !res.success) {
+        if (sBio) sBio.checked = false;
+        toast(res?.error || 'Could not enable fingerprint', 'err');
+      } else {
+        toast('✓ Fingerprint login enabled', 'ok');
+      }
+      await syncBiometricSettingsUI();
+    }
+
+    function toggleBiometricLock(checked) {
+      if (!window.SUPABASE_AUTH) return;
+      const enrollment = window.SUPABASE_AUTH.getBiometricEnrollment();
+      const sLock = document.getElementById('settBiometricLock');
+      if (checked && !enrollment) {
+        if (sLock) sLock.checked = false;
+        toast('Enable Fingerprint Login first', 'err');
+        return;
+      }
+      window.SUPABASE_AUTH.setBiometricLockEnabled(checked);
+      toast(checked ? 'Fingerprint lock on launch enabled' : 'Fingerprint lock on launch disabled', 'ok');
+    }
+
+    function lockAppToLogin() {
+      const nameInput = document.getElementById('pickerName');
+      const pinInput = document.getElementById('pickerPin');
+      if (nameInput && STATE.pickerName) nameInput.value = STATE.pickerName;
+      if (pinInput) pinInput.value = '';
+      goTo('s-login');
+      toast('App locked');
     }
 
     function toggleDarkMode(checked) {
@@ -19770,7 +20095,7 @@
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', theme === 'dark' ? '#121214' : '#ec5b13');
+      if (meta) meta.setAttribute('content', theme === 'dark' ? '#101012' : '#F8F6F4');
     }
 
     function toggleSound(checked) {

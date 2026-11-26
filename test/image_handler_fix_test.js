@@ -501,6 +501,21 @@ async function asyncTest(name, fn) {
     assert.strictEqual(fbChildren[0].className, 'img-fallback-placeholder');
   });
 
+  test('Image previews layer above bottom nav, scroll horizontally, omit crossorigin, and open multi-image slots', () => {
+    const pdmModalMatch = html.match(/id="prodDetailModal"[^>]*z-index\s*:\s*(\d+)/i);
+    assert.ok(pdmModalMatch && Number(pdmModalMatch[1]) > 900, 'prodDetailModal must layer above .bn (900)');
+    const qrModalMatch = html.match(/id="qrPreviewModal"[\s\S]{0,120}z-index\s*:\s*(\d+)/i);
+    assert.ok(qrModalMatch && Number(qrModalMatch[1]) > 900, 'qrPreviewModal must layer above .bn (900)');
+    const fsViewerBlock = html.slice(html.indexOf('.pdm-fullscreen-viewer {'), html.indexOf('.pdm-fullscreen-viewer {') + 300);
+    const fsZMatch = fsViewerBlock.match(/z-index\s*:\s*(\d+)/i);
+    assert.ok(fsZMatch && Number(fsZMatch[1]) >= 1000, 'pdm-fullscreen-viewer must layer above modals');
+    const gridBlock = html.slice(html.indexOf('.pdm-image-grid {'), html.indexOf('.pdm-image-grid {') + 400);
+    assert.ok(/overflow-x\s*:\s*auto/i.test(gridBlock), '.pdm-image-grid must allow horizontal scroll');
+    assert.strictEqual(/<img\b[^>]*crossorigin=["']anonymous["']/i.test(html), false, 'display <img> tags must not force crossorigin="anonymous"');
+    assert.ok(html.includes('onclick="previewApImageSlot(${i})"'), 'renderMultiImageGrid must wire previewApImageSlot');
+    assert.ok(html.includes('function previewApImageSlot(idx)'), 'previewApImageSlot helper must exist');
+  });
+
   console.log('\n======================================================================');
   console.log(`VERIFICATION RESULTS: ${passed}/${total} PASSED`);
   console.log('======================================================================');

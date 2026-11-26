@@ -3,13 +3,13 @@
   "name": "Prince Picker",
   "short_name": "Prince Picker",
   "description": "Offline-first warehouse picking and inventory management software.",
-  "start_url": "/app/index.html",
+  "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": ["standalone", "fullscreen"],
   "orientation": "portrait",
-  "background_color": "#050505",
-  "theme_color": "#ec5b13",
+  "background_color": "#F8F6F4",
+  "theme_color": "#F8F6F4",
   "lang": "en",
   "dir": "ltr",
   "categories": ["business", "productivity"],
@@ -18,19 +18,19 @@
     {
       "name": "Inventory",
       "short_name": "Inventory",
-      "url": "/app/index.html?screen=inventory",
+      "url": "/app/?screen=inventory",
       "description": "Browse and search warehouse inventory"
     },
     {
       "name": "My Orders",
       "short_name": "Orders",
-      "url": "/app/index.html?screen=orders",
+      "url": "/app/?screen=orders",
       "description": "View assigned picking orders"
     },
     {
       "name": "Scan Item",
       "short_name": "Scan",
-      "url": "/app/index.html?screen=scan",
+      "url": "/app/?screen=scan",
       "description": "Scan barcode for picking or ad-hoc"
     }
   ],
