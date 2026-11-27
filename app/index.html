@@ -10804,7 +10804,16 @@
       if (!primary) return { primary: '', fallback: '' };
       const idKey = p?.id || '';
       const bcKey = p?.barcode || p?.sku || '';
-      const fsBackup = (idKey && FS_IMAGES[idKey]) || (bcKey && FS_IMAGES[bcKey]) || '';
+      let inlineBackup = '';
+      if (Array.isArray(p?.images)) {
+        for (const img of p.images) {
+          if (img && typeof img === 'object' && img.dataUrl && typeof img.dataUrl === 'string' && !img.dataUrl.startsWith('blob:')) {
+            inlineBackup = img.dataUrl.trim();
+            break;
+          }
+        }
+      }
+      const fsBackup = (idKey && FS_IMAGES[idKey]) || (bcKey && FS_IMAGES[bcKey]) || inlineBackup || '';
       const formattedBackup = (fsBackup && !fsBackup.startsWith('blob:')) ? formatImageUrl(fsBackup) : '';
       return {
         primary,
@@ -17674,6 +17683,113 @@
     }
 
     // ══════════════════════════════════════════════════════════
+    //  BARCODE / PRODUCT ID GENERATION
+    //  Format: PA-{VEH}-{COMP}-{TIMESTAMP}-{DEVICE}
+    //  Example: PA-HO-CL-93847291-A7
+    // ══════════════════════════════════════════════════════════
+    function getDeviceId() {
+      let did = '';
+      try { did = localStorage.getItem('pa_device_id') || ''; } catch (e) { }
+      if (!did) {
+        did = Math.random().toString(36).slice(2, 4).toUpperCase().padEnd(2, 'X');
+        try { localStorage.setItem('pa_device_id', did); } catch (e) { }
+      }
+      // Keep device suffix compact (2 chars if legacy DEV- prefix exists)
+      return did.startsWith('DEV-') ? did.slice(4, 6) : did.slice(0, 4);
+    }
+
+    const VEH_CODES = {
+      'honda': 'HO', 'bajaj': 'BA', 'hero': 'HR',
+      'tvs': 'TV', 'yamaha': 'YA', 'suzuki': 'SU',
+      'royal enfield': 'RE', 'ktm': 'KT', 'kawasaki': 'KW',
+      'piaggio': 'PI', 'mahindra': 'MH', 'jawa': 'JW',
+      'triumph': 'TR', 'harley-davidson': 'HD', 'ducati': 'DU',
+      'bmw': 'BM', 'generic': 'GN', 'universal': 'UN',
+    };
+
+    const COMP_CODES = {
+      'cable': 'CL', 'brake pad': 'BP', 'brake disc': 'BD',
+      'brake drum': 'BD', 'clutch plate': 'CP', 'chain sprocket': 'CS',
+      'air filter': 'AF', 'oil filter': 'OF', 'fuel filter': 'FF',
+      'spark plug': 'SP', 'battery': 'BT', 'headlight': 'HL',
+      'taillight': 'TL', 'indicator': 'IN', 'bulb': 'BL',
+      'horn': 'HN', 'mirror': 'MR', 'handle bar': 'HB',
+      'grip': 'GR', 'lever': 'LV', 'foot rest': 'FR',
+      'body panel': 'PN', 'mudguard': 'MG', 'seat': 'ST',
+      'fuel tank': 'FT', 'exhaust': 'EX', 'silencer': 'SL',
+      'carburetor': 'CB', 'fuel pump': 'FP', 'piston': 'PS',
+      'piston ring': 'PR', 'cylinder': 'CY', 'valve': 'VL',
+      'bearing': 'BR', 'oil seal': 'OS', 'gasket': 'GK',
+      'coolant': 'CO', 'engine oil': 'EO', 'gear oil': 'GO',
+      'brake fluid': 'BF', 'shock absorber': 'SA', 'wheel': 'WL',
+      'tyre': 'TY', 'tube': 'TB', 'spoke': 'SK',
+      'steering': 'SG', 'other': 'XX',
+    };
+
+    function getVehCode(brand) {
+      if (!brand) return 'GN';
+      const key = String(brand).toLowerCase().trim();
+      for (const [k, v] of Object.entries(VEH_CODES)) {
+        if (key.includes(k)) return v;
+      }
+      const clean = String(brand).replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
+      return clean || 'GN';
+    }
+
+    function getCompCode(category) {
+      if (!category) return 'XX';
+      const key = String(category).toLowerCase().trim();
+      for (const [k, v] of Object.entries(COMP_CODES)) {
+        if (key.includes(k)) return v;
+      }
+      const clean = String(category).replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
+      return clean || 'XX';
+    }
+
+    function generateProductId(brand, category) {
+      const veh = getVehCode(brand);
+      const comp = getCompCode(category);
+      const ts = Date.now().toString().slice(-8);
+      const dev = getDeviceId();
+      return 'PA-' + veh + '-' + comp + '-' + ts + '-' + dev;
+    }
+
+    function generateUniqueId(brand, category) {
+      let id = generateProductId(brand, category);
+      let tries = 0;
+      while (isIdDuplicate(id) && tries < 5) {
+        tries++;
+        const ts2 = (Date.now() + tries).toString().slice(-8);
+        id = 'PA-' + getVehCode(brand) + '-' + getCompCode(category) + '-' + ts2 + '-' + getDeviceId();
+      }
+      return id;
+    }
+
+    function genBarcode() {
+      const brand = (document.getElementById('apBrand')?.value || '').trim();
+      const category = (document.getElementById('apCat')?.value || '').trim();
+      const id = generateUniqueId(brand, category);
+      const inp = document.getElementById('apBarcode');
+      if (inp) {
+        inp.value = id;
+        inp.classList.add('filled');
+      }
+      if (typeof renderAPExistingLocations === 'function') renderAPExistingLocations();
+      toast('Generated: ' + id);
+    }
+
+    function onBarcodeFieldScan(val) {
+      const clean = String(val || '').trim();
+      const inp = document.getElementById('apBarcode');
+      if (inp && clean) {
+        inp.value = clean;
+        inp.classList.add('filled');
+      }
+      if (typeof renderAPExistingLocations === 'function') renderAPExistingLocations();
+      if (clean) toast('Scanned: ' + clean, 'ok');
+    }
+
+    // ══════════════════════════════════════════════════════════
     //  STORAGE & LOCATION HELPERS
     // ══════════════════════════════════════════════════════════
     let AP_STORAGE_TYPE = 'SHOP';
@@ -17919,6 +18035,7 @@
       <span class="compat-lbl">${v}</span>
     </div>
   `).join('');
+      renderSelectedCompat();
     }
 
     function toggleCompat(v) {
@@ -17947,6 +18064,10 @@
     //  SMART PRODUCT IMAGES
     // ══════════════════════════════════════════════════════════
     AP_PRODUCT_IMAGES = []; // Array of image metadata objects
+
+    function triggerMultiCamera(slotIdx) {
+      triggerCameraCapture(slotIdx);
+    }
 
     function triggerCameraCapture(slotIdx) {
       if (AP_PRODUCT_IMAGES.length >= 4 && (slotIdx === undefined || !AP_PRODUCT_IMAGES[slotIdx])) {
@@ -18299,7 +18420,9 @@
         syncProductToAppStores(product, { clearStaleFsImages: true });
         STATE.warehouseMap = buildWarehouseMap(STATE.products);
 
-        const savedToDisk = await fsSave();
+        if (FS_PROD_HANDLE) {
+          try { await fsSave(); } catch (fsErr) { console.warn('[Save] fsSave warning:', fsErr); }
+        }
 
         if (window.SUPABASE_PRODUCTS && typeof window.SUPABASE_PRODUCTS.saveProduct === 'function') {
           const res = await window.SUPABASE_PRODUCTS.saveProduct(product);
@@ -18308,6 +18431,8 @@
             toast('✓ Saved & Synced to Cloud', 'ok');
           } else if (res && res.queued) {
             toast('✓ Saved Locally (Queued for Sync)', 'ok');
+          } else if (res && res.success === false) {
+            throw new Error(res.error?.message || res.error || 'Failed to save product');
           } else {
             toast('✓ Saved Locally', 'ok');
           }
@@ -18347,7 +18472,7 @@
           window.PRODUCT_STORAGE.rollbackOrphanedR2Images(newlyUploadedUrls);
         }
         toast('Save failed: ' + e.message, 'err');
-        if (btn) { btn.disabled = false; btn.innerHTML = 'Save Product'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
       }
     }
 
@@ -18999,21 +19124,20 @@
       // Update FS_PRODUCTS to be the full merged set
       FS_PRODUCTS = Array.from(merged.values());
 
-      const saveObj = {
-        products: FS_PRODUCTS,
-        _meta: {
-          saved_at: new Date().toISOString(),
-          custom_cats: CATS.filter(c => !DEFAULT_CATS.includes(c)),
-          custom_vehicles: VEHICLES.filter(v => !DEFAULT_VEHICLES.includes(v)),
-          custom_brands: BRANDS.filter(b => !DEFAULT_BRANDS.includes(b)),
-          count: FS_PRODUCTS.length,
-        }
-      };
-      const json = JSON.stringify(saveObj, null, 2);
-
       // 1. File handle — write in place
       if (FS_PROD_HANDLE) {
         try {
+          const saveObj = {
+            products: FS_PRODUCTS,
+            _meta: {
+              saved_at: new Date().toISOString(),
+              custom_cats: CATS.filter(c => !DEFAULT_CATS.includes(c)),
+              custom_vehicles: VEHICLES.filter(v => !DEFAULT_VEHICLES.includes(v)),
+              custom_brands: BRANDS.filter(b => !DEFAULT_BRANDS.includes(b)),
+              count: FS_PRODUCTS.length,
+            }
+          };
+          const json = JSON.stringify(saveObj, null, 2);
           await _writeHandle(FS_PROD_HANDLE, json);
           updateFileLbl();
           // Also write all to IDB

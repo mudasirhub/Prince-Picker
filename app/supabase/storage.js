@@ -98,6 +98,7 @@
         const metadata = {
           id: uuid,
           url: finalUrl,
+          dataUrl: (optRes.optimized?.dataUrl && !String(optRes.optimized.dataUrl).startsWith('blob:')) ? optRes.optimized.dataUrl : '',
           storagePath: upRes.storagePath || '',
           width: optRes.optimized?.width || upRes.width || 0,
           height: optRes.optimized?.height || upRes.height || 0,

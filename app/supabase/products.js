@@ -88,6 +88,12 @@
           const fallback = (img.dataUrl && !img.dataUrl.startsWith('blob:')) ? img.dataUrl : '';
           return { ...img, url: fallback };
         }
+        // Strip transient preview dataUrl when a persistent http(s) URL is already stored
+        if (u && /^https?:\/\//i.test(u) && img.dataUrl) {
+          const copy = { ...img };
+          delete copy.dataUrl;
+          return copy;
+        }
       }
       return img;
     }).filter(img => {
@@ -118,6 +124,7 @@
       mrp: Number(product.mrp || 0),
       sp: Number(product.sp || 0),
       stock: Number(product.stock ?? product.qty ?? 0),
+      qty: Number(product.qty ?? product.stock ?? 0),
       threshold: Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5),
       fitment_group: product.fitment_group || '',
       intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
@@ -147,8 +154,7 @@
       fitment_group: product.fitment_group || '',
       intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
       image: primaryImageUrl,
-      updated_at: product.updated_at || new Date().toISOString(),
-      transactionId: txId
+      updated_at: product.updated_at || new Date().toISOString()
     };
 
     // Legacy fallback payload (for Supabase tables without multi-location SQL columns added yet)
