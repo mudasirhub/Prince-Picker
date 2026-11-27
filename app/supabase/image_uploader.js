@@ -18,7 +18,7 @@
   }
 
   const DEFAULT_WORKER_ENDPOINT = 'https://prince-picker-image-worker.prince-picker.workers.dev/upload';
-  const DEFAULT_R2_PUBLIC_URL = 'https://prince-picker-image-worker.prince-picker.workers.dev';
+  const DEFAULT_R2_PUBLIC_URL = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
   const MAX_RETRIES = 3;
   const RETRY_DELAYS = [1000, 3000, 5000];
 

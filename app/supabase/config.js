@@ -3,10 +3,11 @@
  * Centralized Production Image Delivery & Cloudflare Worker Endpoint
  */
 (function(window) {
-  const PRODUCTION_IMAGE_BASE_URL = 'https://prince-picker-image-worker.prince-picker.workers.dev';
+  const PRODUCTION_IMAGE_BASE_URL = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+  const WORKER_API_BASE_URL = 'https://prince-picker-image-worker.prince-picker.workers.dev';
   const OLD_R2_DOMAINS = [
     'pub-091b1d2070306c80f830d33d243cf4f0.r2.dev',
-    'pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev'
+    'prince-picker-image-worker.prince-picker.workers.dev'
   ];
 
   const defaultConfig = {
@@ -14,7 +15,13 @@
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6d3BiaXFpcGxzdXV1a2J4aG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NjQzNDcsImV4cCI6MjEwMDQ0MDM0N30.-Sxvmx1hsz3P64GKS_77T2iGDTYj5ysMtQZxw1vdtM0',
   };
 
-  function isLegacyR2Host(val) {
+  function isLegacyImageHost(val) {
+    if (!val || typeof val !== 'string') return false;
+    if (val.includes('pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev')) return false;
+    return /\.r2\.dev\b/i.test(val) || val.includes('prince-picker-image-worker.prince-picker.workers.dev');
+  }
+
+  function isLegacyWorkerHost(val) {
     if (!val || typeof val !== 'string') return false;
     return /\.r2\.dev\b/i.test(val);
   }
@@ -24,14 +31,14 @@
   const rawStoredWorker = typeof localStorage !== 'undefined' ? localStorage.getItem('sp_worker_endpoint') : null;
   const rawStoredImageBase = typeof localStorage !== 'undefined' ? localStorage.getItem('sp_image_base_url') : null;
 
-  const storedWorker = (rawStoredWorker && !isLegacyR2Host(rawStoredWorker)) ? rawStoredWorker : null;
-  const storedImageBase = (rawStoredImageBase && !isLegacyR2Host(rawStoredImageBase)) ? rawStoredImageBase : null;
+  const storedWorker = (rawStoredWorker && !isLegacyWorkerHost(rawStoredWorker)) ? rawStoredWorker : null;
+  const storedImageBase = (rawStoredImageBase && !isLegacyImageHost(rawStoredImageBase)) ? rawStoredImageBase : null;
 
   function getImageBaseUrl() {
     const raw = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.imageBaseUrl)
       ? String(window.SUPABASE_CONFIG.imageBaseUrl)
       : PRODUCTION_IMAGE_BASE_URL;
-    return (isLegacyR2Host(raw) ? PRODUCTION_IMAGE_BASE_URL : raw).replace(/\/+$/, '');
+    return (isLegacyImageHost(raw) ? PRODUCTION_IMAGE_BASE_URL : raw).replace(/\/+$/, '');
   }
 
   /**
@@ -81,7 +88,14 @@
       return resolveImageUrl(unwrapped);
     }
 
-    // 1. Target known legacy Cloudflare R2 development domains
+    // 1. Normalize already-pointed public R2 URLs (collapse duplicate slashes)
+    if (url.startsWith(base)) {
+      const rest = url.slice(base.length);
+      if (!rest || rest === '/') return base;
+      return `${base}/${normalizeImagePath(rest)}`;
+    }
+
+    // 2. Rewrite legacy R2 dev domain & worker GET URLs to the active public R2 URL
     for (const oldDomain of OLD_R2_DOMAINS) {
       if (url.includes(oldDomain)) {
         const escaped = oldDomain.replace(/\./g, '\\.');
@@ -90,17 +104,10 @@
       }
     }
 
-    // 2. Generic pattern match for any pub-*.r2.dev development subdomain
+    // 3. Generic pattern match for any other pub-*.r2.dev subdomain
     if (/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\b/i.test(url)) {
       const stripped = url.replace(/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/*/i, '');
       return `${base}/${normalizeImagePath(stripped)}`;
-    }
-
-    // 3. Normalize already-pointed production Worker URLs (collapse duplicate slashes)
-    if (url.startsWith(base)) {
-      const rest = url.slice(base.length);
-      if (!rest || rest === '/') return base;
-      return `${base}/${normalizeImagePath(rest)}`;
     }
 
     // 4. Relative or root-relative product keys wrapped under app domain (e.g. https://princepicker.mudasirkhan.in/products/...)
@@ -129,20 +136,20 @@
     imageBaseUrl: storedImageBase || PRODUCTION_IMAGE_BASE_URL,
     r2Endpoint: storedImageBase || PRODUCTION_IMAGE_BASE_URL,
     r2PublicUrl: storedImageBase || PRODUCTION_IMAGE_BASE_URL,
-    workerEndpoint: storedWorker || `${PRODUCTION_IMAGE_BASE_URL}/upload`,
+    workerEndpoint: storedWorker || `${WORKER_API_BASE_URL}/upload`,
     getImageBaseUrl,
     resolveImageUrl,
     updateConfig: function(url, key, worker, imageBase) {
       if (typeof localStorage !== 'undefined') {
         if (url) localStorage.setItem('sp_project_url', url);
         if (key) localStorage.setItem('sp_anon_key', key);
-        if (worker && !isLegacyR2Host(worker)) localStorage.setItem('sp_worker_endpoint', worker);
-        if (imageBase && !isLegacyR2Host(imageBase)) localStorage.setItem('sp_image_base_url', imageBase);
+        if (worker && !isLegacyWorkerHost(worker)) localStorage.setItem('sp_worker_endpoint', worker);
+        if (imageBase && !isLegacyImageHost(imageBase)) localStorage.setItem('sp_image_base_url', imageBase);
       }
       if (url) window.SUPABASE_CONFIG.url = url;
       if (key) window.SUPABASE_CONFIG.anonKey = key;
-      if (worker && !isLegacyR2Host(worker)) window.SUPABASE_CONFIG.workerEndpoint = worker;
-      if (imageBase && !isLegacyR2Host(imageBase)) {
+      if (worker && !isLegacyWorkerHost(worker)) window.SUPABASE_CONFIG.workerEndpoint = worker;
+      if (imageBase && !isLegacyImageHost(imageBase)) {
         window.SUPABASE_CONFIG.imageBaseUrl = imageBase;
         window.SUPABASE_CONFIG.r2Endpoint = imageBase;
         window.SUPABASE_CONFIG.r2PublicUrl = imageBase;
@@ -158,6 +165,7 @@
     module.exports = {
       SUPABASE_CONFIG: configObj,
       PRODUCTION_IMAGE_BASE_URL,
+      WORKER_API_BASE_URL,
       OLD_R2_DOMAINS,
       resolveImageUrl,
       getImageBaseUrl

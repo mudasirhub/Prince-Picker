@@ -1,9 +1,12 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v19';
+const CACHE_NAME = 'pa-picker-v20';
 const IMAGE_CACHE_NAME = 'prince-picker-images-v1';
 
 const WORKER_IMAGE_HOSTS = [
   'prince-picker-image-worker.prince-picker.workers.dev'
+];
+const PUBLIC_R2_HOSTS = [
+  'pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev'
 ];
 
 const STATIC_ASSETS = [
@@ -74,6 +77,11 @@ function isWorkerImageUrl(url) {
     (url.pathname.startsWith('/products/') || url.pathname.includes('/cdn-cgi/image/') || isImagePath(url.pathname));
 }
 
+function isPublicR2ImageUrl(url) {
+  return PUBLIC_R2_HOSTS.includes(url.hostname) &&
+    (url.pathname.startsWith('/products/') || url.pathname.includes('/cdn-cgi/image/') || isImagePath(url.pathname));
+}
+
 function isImageRequest(request, url) {
   return request.destination === 'image' || isImagePath(url.pathname);
 }
@@ -127,11 +135,11 @@ self.addEventListener('message', e => {
 });
 
 /* ── IMAGE FETCH HANDLER ── */
-async function handleImageFetch(request, url, isWorkerUrl) {
+async function handleImageFetch(request, url, isWorkerUrl, isR2Url) {
   const imageCache = await caches.open(IMAGE_CACHE_NAME);
   let cached = await imageCache.match(request);
 
-  if (!cached && !isWorkerUrl) {
+  if (!cached && !isWorkerUrl && !isR2Url) {
     const appCache = await caches.open(CACHE_NAME);
     cached = await appCache.match(request);
   }
@@ -194,10 +202,11 @@ self.addEventListener('fetch', e => {
 
   const isSameOrigin = url.origin === location.origin;
   const isWorkerImg = isWorkerImageUrl(url);
+  const isR2Img = isPublicR2ImageUrl(url);
 
-  // Product / worker / local image requests with strict 200-only caching and instant offline fallback
-  if (isWorkerImg || (isSameOrigin && isImageRequest(request, url))) {
-    e.respondWith(handleImageFetch(request, url, isWorkerImg));
+  // Product / worker / public R2 / local image requests with strict 200-only caching and instant offline fallback
+  if (isWorkerImg || isR2Img || (isSameOrigin && isImageRequest(request, url))) {
+    e.respondWith(handleImageFetch(request, url, isWorkerImg, isR2Img));
     return;
   }
 

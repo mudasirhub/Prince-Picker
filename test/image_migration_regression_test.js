@@ -55,32 +55,31 @@ async function asyncTest(name, fn) {
   const workerModule = await import('../workers/image_upload_worker.js');
   const worker = workerModule.default;
 
-  const PROD_BASE = 'https://prince-picker-image-worker.prince-picker.workers.dev';
+  const PROD_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+  const WORKER_BASE = 'https://prince-picker-image-worker.prince-picker.workers.dev';
   const OLD_BASE_1 = 'https://pub-091b1d2070306c80f830d33d243cf4f0.r2.dev';
-  const OLD_BASE_2 = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
+  const OLD_BASE_2 = 'https://prince-picker-image-worker.prince-picker.workers.dev';
 
   // ─────────────────────────────────────────────────────────────
   // SUITE 1: URL MIGRATION & RESOLUTION
   // ─────────────────────────────────────────────────────────────
   console.log('Suite 1: URL Migration & Centralized Resolution');
 
-  test('Migrates old R2 dev domain 1 (pub-091b1d2070306c80f830d33d243cf4f0) to production worker', () => {
+  test('Migrates old R2 dev domain 1 (pub-091b1d2070306c80f830d33d243cf4f0) to public R2 URL', () => {
     const oldUrl = `${OLD_BASE_1}/products/SAI-85-BP/b82d6ece-b192-4df8-a875-0c643916d89d.webp`;
     const resolved = config.resolveImageUrl(oldUrl);
     const expected = `${PROD_BASE}/products/SAI-85-BP/b82d6ece-b192-4df8-a875-0c643916d89d.webp`;
     assert.strictEqual(resolved, expected);
-    assert.strictEqual(resolved.includes('r2.dev'), false);
   });
 
-  test('Migrates old R2 dev domain 2 (pub-f1e8b42c57c64598b4251559ff578b2e) to production worker', () => {
+  test('Migrates worker GET URLs (prince-picker-image-worker.workers.dev) to public R2 URL', () => {
     const oldUrl = `${OLD_BASE_2}/products/BA-150-FRONT/sample_uuid.webp`;
     const resolved = config.resolveImageUrl(oldUrl);
     const expected = `${PROD_BASE}/products/BA-150-FRONT/sample_uuid.webp`;
     assert.strictEqual(resolved, expected);
-    assert.strictEqual(resolved.includes('r2.dev'), false);
   });
 
-  test('Migrates generic pub-*.r2.dev URLs to production worker', () => {
+  test('Migrates generic pub-*.r2.dev URLs to public R2 URL', () => {
     const oldUrl = 'https://pub-999999999999.r2.dev/products/test/img.webp';
     const resolved = config.resolveImageUrl(oldUrl);
     const expected = `${PROD_BASE}/products/test/img.webp`;
@@ -137,13 +136,13 @@ async function asyncTest(name, fn) {
   // ─────────────────────────────────────────────────────────────
   console.log('\nSuite 2: Image Uploader Configuration & Methods');
 
-  test('getR2PublicBaseUrl returns the production Worker URL', () => {
+  test('getR2PublicBaseUrl returns the public R2 URL', () => {
     const base = uploader.getR2PublicBaseUrl();
     assert.strictEqual(base, PROD_BASE);
   });
 
   test('DEFAULT_WORKER_ENDPOINT points to production Worker /upload route', () => {
-    assert.strictEqual(uploader.DEFAULT_WORKER_ENDPOINT, `${PROD_BASE}/upload`);
+    assert.strictEqual(uploader.DEFAULT_WORKER_ENDPOINT, `${WORKER_BASE}/upload`);
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -265,8 +264,8 @@ async function asyncTest(name, fn) {
     assert.strictEqual(res.status, 401);
   });
 
-  await asyncTest('Worker POST generates production Worker URL on upload', async () => {
-    const req = new Request(`${PROD_BASE}/upload`, {
+  await asyncTest('Worker POST generates public R2 URL on upload', async () => {
+    const req = new Request(`${WORKER_BASE}/upload`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer test-valid-jwt-token-prince-picker',
@@ -280,7 +279,6 @@ async function asyncTest(name, fn) {
     const body = await res.json();
     assert.strictEqual(body.success, true);
     assert.ok(body.url.startsWith(`${PROD_BASE}/products/TEST-SKU-99/`));
-    assert.strictEqual(body.url.includes('r2.dev'), false);
   });
 
   await asyncTest('Worker DELETE successfully removes object from bucket', async () => {
@@ -288,7 +286,7 @@ async function asyncTest(name, fn) {
     const key = 'products/TEST-DEL/del_1.webp';
     await mockR2Bucket.put(key, testWebpBytes);
 
-    const req = new Request(`${PROD_BASE}/delete?path=${encodeURIComponent(key)}`, {
+    const req = new Request(`${WORKER_BASE}/delete?path=${encodeURIComponent(key)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': 'Bearer test-valid-jwt-token-prince-picker'
@@ -302,30 +300,25 @@ async function asyncTest(name, fn) {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // SUITE 4: ZERO LEGACY URL REFERENCES IN APPLICATION CODE
+  // SUITE 4: APPLICATION CODE CONFIGURATION CONSISTENCY
   // ─────────────────────────────────────────────────────────────
-  console.log('\nSuite 4: Application Code Cleanliness');
+  console.log('\nSuite 4: Application Code Configuration');
 
-  test('No hardcoded r2.dev URLs exist in app/supabase/config.js', () => {
-    const content = fs.readFileSync(path.join(__dirname, '../app/supabase/config.js'), 'utf8');
-    // Check that default values don't use r2.dev (only OLD_R2_DOMAINS list for migration matching is allowed)
-    const lines = content.split('\n');
-    for (const line of lines) {
-      if (line.includes('r2Endpoint:') || line.includes('r2PublicUrl:') || line.includes('PRODUCTION_IMAGE_BASE_URL')) {
-        assert.strictEqual(line.includes('r2.dev'), false, `Line still contains r2.dev: ${line}`);
-      }
-    }
+  test('app/supabase/config.js points image delivery to active public R2 URL and uploads to Worker', () => {
+    assert.strictEqual(config.PRODUCTION_IMAGE_BASE_URL, PROD_BASE);
+    assert.strictEqual(config.SUPABASE_CONFIG.workerEndpoint, `${WORKER_BASE}/upload`);
   });
 
-  test('No hardcoded r2.dev URLs exist in app/supabase/image_uploader.js', () => {
+  test('app/supabase/image_uploader.js uses active public R2 URL and Worker upload endpoint', () => {
     const content = fs.readFileSync(path.join(__dirname, '../app/supabase/image_uploader.js'), 'utf8');
-    assert.strictEqual(content.includes('r2.dev'), false, 'image_uploader.js must not contain r2.dev');
+    assert.ok(content.includes(PROD_BASE), 'image_uploader.js must reference active public R2 URL');
+    assert.ok(content.includes(`${WORKER_BASE}/upload`), 'image_uploader.js must reference Worker /upload');
   });
 
-  test('workers/wrangler.toml points variables to production worker endpoint', () => {
+  test('workers/wrangler.toml points variables to active public R2 URL', () => {
     const content = fs.readFileSync(path.join(__dirname, '../workers/wrangler.toml'), 'utf8');
-    assert.strictEqual(content.includes('pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev'), false);
-    assert.ok(content.includes('PUBLIC_IMAGE_URL = "https://prince-picker-image-worker.prince-picker.workers.dev"'));
+    assert.ok(content.includes(`PUBLIC_IMAGE_URL = "${PROD_BASE}"`));
+    assert.ok(content.includes(`PUBLIC_R2_URL = "${PROD_BASE}"`));
   });
 
   // ─────────────────────────────────────────────────────────────

@@ -40,6 +40,7 @@ async function asyncTest(name, fn) {
 
 (async function main() {
   const PROD_BASE = 'https://prince-picker-image-worker.prince-picker.workers.dev';
+  const PUBLIC_R2_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
   const workerMod = await import('../workers/image_upload_worker.js');
   const worker = workerMod.default;
   const config = require('../app/supabase/config.js');
@@ -216,22 +217,26 @@ async function asyncTest(name, fn) {
 
   console.log('\n3. Frontend URL Normalization & Uploader Integration');
 
-  test('resolveImageUrl normalizes duplicate slashes & unwraps /cdn-cgi/image/...', () => {
+  test('resolveImageUrl normalizes duplicate slashes, unwraps /cdn-cgi/image/..., & maps to public R2 URL', () => {
+    assert.strictEqual(
+      config.resolveImageUrl(`${PUBLIC_R2_BASE}//products///ABC//1.webp`),
+      `${PUBLIC_R2_BASE}/products/ABC/1.webp`
+    );
     assert.strictEqual(
       config.resolveImageUrl(`${PROD_BASE}//products///ABC//1.webp`),
-      `${PROD_BASE}/products/ABC/1.webp`
+      `${PUBLIC_R2_BASE}/products/ABC/1.webp`
     );
     assert.strictEqual(
       config.resolveImageUrl('/cdn-cgi/image/width=300/products/ABC/1.jpg'),
-      `${PROD_BASE}/products/ABC/1.jpg`
+      `${PUBLIC_R2_BASE}/products/ABC/1.jpg`
     );
     assert.strictEqual(
       config.resolveImageUrl(`https://princepicker.mudasirkhan.in/cdn-cgi/image/w=400/${PROD_BASE}/products/ABC/1.png`),
-      `${PROD_BASE}/products/ABC/1.png`
+      `${PUBLIC_R2_BASE}/products/ABC/1.png`
     );
     assert.strictEqual(
       config.resolveImageUrl('https://pub-091b1d2070306c80f830d33d243cf4f0.r2.dev//products//ABC/1.webp?v=2'),
-      `${PROD_BASE}/products/ABC/1.webp?v=2`
+      `${PUBLIC_R2_BASE}/products/ABC/1.webp?v=2`
     );
     assert.strictEqual(
       config.resolveImageUrl('./picker-logo.png'),
@@ -407,6 +412,24 @@ async function asyncTest(name, fn) {
     assert.strictEqual(res.headers.get('Cross-Origin-Resource-Policy'), 'cross-origin');
     assert.strictEqual(res.headers.get('X-Offline-Fallback'), '1');
     assert.strictEqual(swCacheStore.get('prince-picker-images-v1').has(offlineUrl), false);
+  });
+
+  await asyncTest('SW passes through public R2 image URLs without forcing CORS mode and serves SVG offline', async () => {
+    mockOnline = true;
+    let passedRequestMode = null;
+    mockFetchImpl = async (req) => {
+      passedRequestMode = req.mode;
+      return new Response(webpBytes, { status: 200, headers: { 'Content-Type': 'image/webp' } });
+    };
+    const r2Url = `${PUBLIC_R2_BASE}/products/SW-R2/item.webp`;
+    const onlineRes = await dispatchSwFetch(r2Url);
+    assert.strictEqual(onlineRes.status, 200);
+    assert.strictEqual(passedRequestMode, 'no-cors');
+
+    mockOnline = false;
+    const offlineRes = await dispatchSwFetch(`${PUBLIC_R2_BASE}/products/SW-R2/offline.webp`);
+    assert.strictEqual(offlineRes.status, 200);
+    assert.ok(offlineRes.headers.get('Content-Type').includes('image/svg+xml'));
   });
 
   console.log('\n5. app/index.html Inline Script Syntax & Error Loop Guards');

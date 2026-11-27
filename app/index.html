@@ -10715,10 +10715,10 @@
         return window.resolveImageUrl(url);
       }
 
-      const PROD_WORKER_BASE = 'https://prince-picker-image-worker.prince-picker.workers.dev';
+      const PROD_IMAGE_BASE = 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
       const OLD_R2_DOMAINS = [
         'pub-091b1d2070306c80f830d33d243cf4f0.r2.dev',
-        'pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev'
+        'prince-picker-image-worker.prince-picker.workers.dev'
       ];
 
       const normPath = p => {
@@ -10737,33 +10737,33 @@
         return formatImageUrl(target);
       }
 
-      // Map any old R2 URL dynamically to the production Worker domain
+      if (url.startsWith(PROD_IMAGE_BASE)) {
+        const rest = url.slice(PROD_IMAGE_BASE.length);
+        return rest ? `${PROD_IMAGE_BASE}/${normPath(rest)}` : PROD_IMAGE_BASE;
+      }
+
+      // Map any old R2 or unservable worker GET URL dynamically to the active public R2 URL
       for (const oldDom of OLD_R2_DOMAINS) {
         if (url.includes(oldDom)) {
           const escaped = oldDom.replace(/\./g, '\\.');
           const stripped = url.replace(new RegExp(`^https?:\\/\\/${escaped}\\/*`, 'i'), '');
-          return `${PROD_WORKER_BASE}/${normPath(stripped)}`;
+          return `${PROD_IMAGE_BASE}/${normPath(stripped)}`;
         }
       }
 
       if (/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\b/i.test(url)) {
         const stripped = url.replace(/^https?:\/\/pub-[a-z0-9]+\.r2\.dev\/*/i, '');
-        return `${PROD_WORKER_BASE}/${normPath(stripped)}`;
-      }
-
-      if (url.startsWith(PROD_WORKER_BASE)) {
-        const rest = url.slice(PROD_WORKER_BASE.length);
-        return rest ? `${PROD_WORKER_BASE}/${normPath(rest)}` : PROD_WORKER_BASE;
+        return `${PROD_IMAGE_BASE}/${normPath(stripped)}`;
       }
 
       if (/^https?:\/\/[^/]+\/+products\//i.test(url)) {
-        return `${PROD_WORKER_BASE}/${normPath(url.replace(/^https?:\/\/[^/]+\/+/i, ''))}`;
+        return `${PROD_IMAGE_BASE}/${normPath(url.replace(/^https?:\/\/[^/]+\/+/i, ''))}`;
       }
 
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
       if (url.startsWith('./') || (url.startsWith('/') && !/^\/+products\//i.test(url))) return url;
 
-      return `${PROD_WORKER_BASE}/${normPath(url)}`;
+      return `${PROD_IMAGE_BASE}/${normPath(url)}`;
     }
 
     function getProductImageSrc(p) {

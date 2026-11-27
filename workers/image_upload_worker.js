@@ -363,7 +363,7 @@ async function handleUpload(request, env, url, startTime) {
     },
   });
 
-  const domainBase = env.PUBLIC_IMAGE_URL || env.PUBLIC_R2_URL || 'https://prince-picker-image-worker.prince-picker.workers.dev';
+  const domainBase = env.PUBLIC_R2_URL || env.PUBLIC_IMAGE_URL || 'https://pub-f1e8b42c57c64598b4251559ff578b2e.r2.dev';
   const cleanDomain = String(domainBase).replace(/\/+$/, '');
   const publicUrl = `${cleanDomain}/${keyPath}`;
 
