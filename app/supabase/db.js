@@ -4,7 +4,7 @@
  */
 (function(window) {
   const DB_NAME = 'PrincePickerDB';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   let dbPromise = null;
 
   function openDB() {
@@ -20,6 +20,13 @@
           prodStore.createIndex('barcode', 'barcode', { unique: false });
           prodStore.createIndex('updated_at', 'updated_at', { unique: false });
           prodStore.createIndex('category', 'category', { unique: false });
+        }
+        // Product batches store (Multi-MRP & Batch ID)
+        if (!db.objectStoreNames.contains('product_batches')) {
+          const batchStore = db.createObjectStore('product_batches', { keyPath: 'id' });
+          batchStore.createIndex('product_id', 'product_id', { unique: false });
+          batchStore.createIndex('batch_id', 'batch_id', { unique: false });
+          batchStore.createIndex('created_at', 'created_at', { unique: false });
         }
         // Inventory store
         if (!db.objectStoreNames.contains('inventory')) {
@@ -111,6 +118,7 @@
           threshold: Number(p.threshold !== undefined && p.threshold !== null ? p.threshold : 5),
           fitment_group: p.fitment_group || '',
           compatibility: Array.isArray(p.compatibility) ? p.compatibility : [],
+          batches: Array.isArray(p.batches) ? p.batches : [],
           images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image ? [{ id: 'img_primary', url: p.image, mime: 'image/webp' }] : []),
           image: p.image || (Array.isArray(p.images) && p.images[0] ? (p.images[0].url || p.images[0]) : ''),
           updated_at: p.updated_at || new Date().toISOString()
@@ -213,6 +221,11 @@
       if (type === 'update_inventory') {
         return q.payload?.sku && payload?.sku && String(q.payload.sku) === String(payload.sku);
       }
+      if (type === 'save_batch') {
+        return q.payload?.product_id && payload?.product_id &&
+          String(q.payload.product_id) === String(payload.product_id) &&
+          String(q.payload.batch_id || '').trim().toUpperCase() === String(payload.batch_id || '').trim().toUpperCase();
+      }
       return false;
     });
 
@@ -258,14 +271,106 @@
     });
   }
 
+  // Product Batches Store Helpers (Batch ID & Multi-MRP)
+  async function getAllBatches() {
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('product_batches')) return [];
+    return new Promise((resolve) => {
+      const tx = db.transaction('product_batches', 'readonly');
+      const store = tx.objectStore('product_batches');
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+  }
+
+  async function getBatchesByProduct(productId) {
+    if (!productId) return [];
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('product_batches')) return [];
+    const cleanId = String(productId).trim();
+    return new Promise((resolve) => {
+      const tx = db.transaction('product_batches', 'readonly');
+      const store = tx.objectStore('product_batches');
+      try {
+        const idx = store.index('product_id');
+        const req = idx.getAll(cleanId);
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      } catch (e) {
+        resolve([]);
+      }
+    });
+  }
+
+  async function putBatches(batches) {
+    if (!Array.isArray(batches) || batches.length === 0) return;
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('product_batches')) return;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('product_batches', 'readwrite');
+      const store = tx.objectStore('product_batches');
+      let prodIdx = null;
+      try { prodIdx = store.index('product_id'); } catch (e) {}
+
+      batches.forEach(b => {
+        if (!b || !b.product_id || !b.batch_id) return;
+        const prodId = String(b.product_id).trim();
+        const batchId = String(b.batch_id).trim();
+        const id = String(b.id || `${prodId}::${batchId}`);
+        const item = {
+          ...b,
+          id,
+          product_id: prodId,
+          sku: String(b.sku || prodId),
+          batch_id: batchId,
+          mrp: Number(b.mrp || 0),
+          stock_qty: Math.max(0, Number(b.stock_qty ?? b.qty ?? 0)),
+          location: String(b.location || b.loc || ''),
+          created_at: b.created_at || new Date().toISOString(),
+          updated_at: b.updated_at || new Date().toISOString()
+        };
+        if (prodIdx) {
+          const req = prodIdx.getAll(prodId);
+          req.onsuccess = () => {
+            const existing = req.result || [];
+            existing.forEach(ex => {
+              if (ex && ex.id !== id && String(ex.batch_id || '').trim().toUpperCase() === batchId.toUpperCase()) {
+                store.delete(ex.id);
+              }
+            });
+            store.put(item);
+          };
+          req.onerror = () => store.put(item);
+        } else {
+          store.put(item);
+        }
+      });
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  async function deleteBatch(id) {
+    if (!id) return false;
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('product_batches')) return false;
+    return new Promise((resolve) => {
+      const tx = db.transaction('product_batches', 'readwrite');
+      const store = tx.objectStore('product_batches');
+      store.delete(String(id));
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  }
+
   async function clearDatabase() {
     const db = await openDB();
+    const stores = ['products', 'inventory', 'meta', 'sync_queue'];
+    if (db.objectStoreNames.contains('product_batches')) stores.push('product_batches');
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(['products', 'inventory', 'meta', 'sync_queue'], 'readwrite');
-      tx.objectStore('products').clear();
-      tx.objectStore('inventory').clear();
-      tx.objectStore('meta').clear();
-      tx.objectStore('sync_queue').clear();
+      const tx = db.transaction(stores, 'readwrite');
+      stores.forEach(s => tx.objectStore(s).clear());
       tx.oncomplete = () => resolve(true);
       tx.onerror = (e) => reject(e.target.error);
     });
@@ -299,8 +404,9 @@
     const targetStr = String(identifier);
     try {
       const db = await openDB();
+      const stores = db.objectStoreNames.contains('product_batches') ? ['products', 'product_batches'] : ['products'];
       return new Promise((resolve) => {
-        const tx = db.transaction('products', 'readwrite');
+        const tx = db.transaction(stores, 'readwrite');
         const store = tx.objectStore('products');
         
         // 1. Direct delete by primary key 'sku'
@@ -317,6 +423,20 @@
             });
           };
         } catch (eIdx) {}
+
+        // 3. Clean up any matching product_batches rows
+        if (stores.includes('product_batches')) {
+          try {
+            const batchStore = tx.objectStore('product_batches');
+            const pIdx = batchStore.index('product_id');
+            const bReq = pIdx.getAll(targetStr);
+            bReq.onsuccess = () => {
+              (bReq.result || []).forEach(b => {
+                if (b && b.id) batchStore.delete(b.id);
+              });
+            };
+          } catch (eBatch) {}
+        }
 
         tx.oncomplete = () => resolve(true);
         tx.onerror = () => resolve(false);
@@ -335,6 +455,10 @@
     getProductById,
     putProducts,
     deleteProduct,
+    getAllBatches,
+    getBatchesByProduct,
+    putBatches,
+    deleteBatch,
     getAllInventory,
     putInventory,
     updateInventoryItem,

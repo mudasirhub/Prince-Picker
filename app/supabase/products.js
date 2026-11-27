@@ -124,12 +124,14 @@
       mrp: Number(product.mrp || 0),
       sp: Number(product.sp || 0),
       stock: Number(product.stock ?? product.qty ?? 0),
+      total_stock: Number(product.total_stock ?? product.stock ?? product.qty ?? 0),
       qty: Number(product.qty ?? product.stock ?? 0),
       threshold: Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5),
       fitment_group: product.fitment_group || '',
       intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
       is_intact: Boolean(product.is_intact ?? product.intact ?? (product.fitment_group ? true : false)),
       compatibility: Array.isArray(product.compatibility) ? product.compatibility : [],
+      batches: Array.isArray(product.batches) ? product.batches : [],
       images: imagesList,
       image: primaryImageUrl,
       updated_at: product.updated_at || new Date().toISOString()
@@ -234,6 +236,15 @@
         lastError = error;
         const errStr = String(error?.message || error?.details || error?.hint || '');
         console.warn(`[SAVE_PRODUCT] Stage ${i + 1} failed (${att.name}):`, errStr);
+
+        // If PostgreSQL schema cache missing 'batches' or 'total_stock' column, jump cleanly to Core Payload
+        if ((errStr.includes('batches') || errStr.includes('total_stock')) && att.name.startsWith('Full Payload')) {
+          const coreIdx = attempts.findIndex(a => a.name === 'Core Payload (id conflict)');
+          if (coreIdx > i) {
+            i = coreIdx - 1;
+            continue;
+          }
+        }
 
         // If PostgreSQL schema cache missing column error, jump directly to legacy payload to avoid 400 spam
         if ((errStr.includes('locations') || errStr.includes('primary_location') || errStr.includes('primary_storage') || errStr.includes('storage_type')) && att.name !== 'Legacy Payload (no new columns, id conflict)') {

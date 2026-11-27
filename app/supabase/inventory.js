@@ -97,23 +97,35 @@
     }
   }
 
-  async function processMovement(type, sku, qty, location, picker, sessionId, transactionId) {
+  async function processMovement(type, sku, qty, location, picker, sessionId, transactionId, batchId, unitMrp) {
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
     const isOnline = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
     const cleanType = String(type || 'PICK').toUpperCase();
     const cleanQty = Number(qty) || 1;
     const txId = transactionId || '';
+    const cleanBatchId = batchId ? String(batchId).trim() : '';
+    const cleanUnitMrp = (unitMrp !== undefined && unitMrp !== null && unitMrp !== '') ? Number(unitMrp) : null;
 
     // Offline or Client Unavailable
     if (!client || !isOnline) {
       if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId, transactionId: txId });
+        await window.PICKER_DB.addSyncQueue('process_movement', {
+          type: cleanType,
+          sku,
+          qty: cleanQty,
+          location,
+          picker,
+          sessionId,
+          transactionId: txId,
+          batchId: cleanBatchId,
+          unitMrp: cleanUnitMrp
+        });
       }
       return { success: true, queued: true, synced: false, transactionId: txId };
     }
 
     try {
-      const { data, error } = await client.rpc('fn_process_inventory_movement', {
+      const rpcParams = {
         p_type: cleanType,
         p_sku: sku,
         p_qty: cleanQty,
@@ -121,12 +133,35 @@
         p_picker: picker || 'Picker',
         p_session_id: sessionId || ('SES-' + Date.now()),
         p_transaction_id: txId
-      });
+      };
+      if (cleanBatchId) rpcParams.p_batch_id = cleanBatchId;
+      if (cleanUnitMrp !== null && !isNaN(cleanUnitMrp)) rpcParams.p_unit_mrp = cleanUnitMrp;
+
+      let { data, error } = await client.rpc('fn_process_inventory_movement', rpcParams);
+
+      // Backward compatibility if remote DB RPC hasn't added p_batch_id/p_unit_mrp yet
+      if (error && (cleanBatchId || cleanUnitMrp !== null) && String(error.message || '').toLowerCase().includes('function')) {
+        delete rpcParams.p_batch_id;
+        delete rpcParams.p_unit_mrp;
+        const retry = await client.rpc('fn_process_inventory_movement', rpcParams);
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         console.warn('[Inventory] RPC movement error, queuing:', error.message);
         if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-          await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId, transactionId: txId });
+          await window.PICKER_DB.addSyncQueue('process_movement', {
+            type: cleanType,
+            sku,
+            qty: cleanQty,
+            location,
+            picker,
+            sessionId,
+            transactionId: txId,
+            batchId: cleanBatchId,
+            unitMrp: cleanUnitMrp
+          });
         }
         return { success: true, queued: true, synced: false, transactionId: txId, error };
       }
@@ -135,7 +170,17 @@
     } catch (e) {
       console.error('[Inventory] Exception in processMovement:', e);
       if (window.PICKER_DB && typeof window.PICKER_DB.addSyncQueue === 'function') {
-        await window.PICKER_DB.addSyncQueue('process_movement', { type: cleanType, sku, qty: cleanQty, location, picker, sessionId, transactionId: txId });
+        await window.PICKER_DB.addSyncQueue('process_movement', {
+          type: cleanType,
+          sku,
+          qty: cleanQty,
+          location,
+          picker,
+          sessionId,
+          transactionId: txId,
+          batchId: cleanBatchId,
+          unitMrp: cleanUnitMrp
+        });
       }
       return { success: true, queued: true, synced: false, transactionId: txId, error: e };
     }

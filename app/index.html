@@ -8,6 +8,7 @@
   <script src="./supabase/db.js"></script>
   <script src="./supabase/auth.js"></script>
   <script src="./supabase/products.js"></script>
+  <script src="./supabase/batches.js"></script>
   <script src="./supabase/inventory.js"></script>
   <script src="./supabase/sync.js"></script>
   <script src="./supabase/image_utils.js"></script>
@@ -1352,6 +1353,273 @@
     .c-pu {
       background: var(--pu-bg);
       color: var(--pu)
+    }
+
+    /* ══ BRAND PILLS (INVENTORY STRIP, PRODUCT CARDS & ADD/EDIT FORM) ══ */
+    .inv-brand-strip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px 4px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      touch-action: pan-x;
+    }
+
+    .inv-brand-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .inv-brand-strip:empty {
+      display: none;
+      padding: 0;
+    }
+
+    .inv-brand-pill {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--bd, #e8e2db);
+      background: #f8f5f0;
+      color: var(--t2, #555560);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .inv-brand-pill:active {
+      transform: scale(0.95);
+    }
+
+    .inv-brand-pill .bp-cnt {
+      font-size: 10px;
+      font-weight: 800;
+      opacity: 0.72;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 1px 6px;
+      border-radius: 999px;
+      line-height: 1.3;
+    }
+
+    .inv-brand-pill.active {
+      background: #C84B11;
+      border-color: #C84B11;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(200, 75, 17, 0.24);
+    }
+
+    .inv-brand-pill.active .bp-cnt {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      opacity: 1;
+    }
+
+    [data-theme="dark"] .inv-brand-pill {
+      background: #23252d;
+      border-color: var(--bd);
+      color: var(--t2);
+    }
+
+    [data-theme="dark"] .inv-brand-pill .bp-cnt {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .inv-brand-pill.active {
+      background: #C84B11;
+      border-color: #C84B11;
+      color: #ffffff;
+    }
+
+    .res-brand-clear {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(200, 75, 17, 0.35);
+      background: var(--or-lt, #fdf0e8);
+      color: #C84B11;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.12s ease;
+    }
+
+    .res-brand-clear:active {
+      transform: scale(0.95);
+    }
+
+    [data-theme="dark"] .res-brand-clear {
+      background: var(--or-lt);
+      color: var(--or);
+      border-color: var(--or-md);
+    }
+
+    .brand-card-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.25;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--bd, #e8e2db);
+      background: #f8f5f0;
+      color: var(--t2, #555560);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .brand-card-pill:active {
+      transform: scale(0.94);
+    }
+
+    .brand-card-pill.active {
+      background: #C84B11;
+      border-color: #C84B11;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(200, 75, 17, 0.25);
+    }
+
+    [data-theme="dark"] .brand-card-pill {
+      background: #262830;
+      border-color: var(--bd);
+      color: var(--t2);
+    }
+
+    [data-theme="dark"] .brand-card-pill.active {
+      background: #C84B11;
+      border-color: #C84B11;
+      color: #ffffff;
+    }
+
+    .ap-brand-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ap-brand-selected {
+      font-size: 11px;
+      font-weight: 700;
+      color: #C84B11;
+    }
+
+    .ap-brand-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      max-height: 152px;
+      overflow-y: auto;
+      padding: 9px 10px;
+      background: #faf8f5;
+      border: 1.5px solid var(--bd, #e8e2db);
+      border-radius: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    [data-theme="dark"] .ap-brand-pills {
+      background: #18191f;
+      border-color: var(--bd);
+    }
+
+    .ap-brand-pill {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--bd, #e8e2db);
+      background: var(--card, #ffffff);
+      color: var(--t2, #555560);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .ap-brand-pill:active {
+      transform: scale(0.95);
+    }
+
+    .ap-brand-pill.active {
+      background: #C84B11;
+      border-color: #C84B11;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(200, 75, 17, 0.24);
+    }
+
+    [data-theme="dark"] .ap-brand-pill {
+      background: #23252d;
+      border-color: var(--bd);
+      color: var(--t2);
+    }
+
+    [data-theme="dark"] .ap-brand-pill.active {
+      background: #C84B11;
+      border-color: #C84B11;
+      color: #ffffff;
+    }
+
+    .ap-custom-brand-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .ap-custom-brand-input {
+      height: 42px !important;
+      border-radius: 12px !important;
+      font-size: 13px !important;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ap-custom-brand-btn {
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1.5px solid #C84B11;
+      background: var(--or-lt, #fdf0e8);
+      color: #C84B11;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: transform 0.12s ease;
+    }
+
+    .ap-custom-brand-btn:active {
+      transform: scale(0.96);
     }
 
     /* ══ TOAST ══ */
@@ -4666,6 +4934,98 @@
       display: block;
     }
 
+    /* ══ BATCH ID & MULTI-MRP PILLS ══ */
+    .batch-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 6px 0 8px;
+      align-items: center;
+    }
+    .batch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: 10px;
+      border: 1.5px solid var(--bd2, #d4d4d8);
+      background: var(--bg, #f8f6f4);
+      color: var(--t1);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      line-height: 1.2;
+    }
+    .batch-pill.active {
+      border-color: var(--or, #ec5b13);
+      background: var(--or-lt, rgba(236, 91, 19, 0.12));
+      color: var(--or, #ec5b13);
+      font-weight: 800;
+      box-shadow: 0 1px 4px rgba(236, 91, 19, 0.16);
+    }
+    .batch-pill.batch-pill-add {
+      border-style: dashed;
+      border-color: var(--or-md, rgba(236, 91, 19, 0.45));
+      background: transparent;
+      color: var(--or, #ec5b13);
+    }
+    .pdm-batches-block {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid var(--bd);
+      margin-bottom: 12px;
+    }
+    .pdm-add-batch-card {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1.5px solid var(--or-md, rgba(236, 91, 19, 0.35));
+    }
+    .pdm-batch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .pdm-batch-field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+    }
+    .pdm-batch-field input {
+      width: 100%;
+      height: 40px;
+      border-radius: 10px;
+      border: 1.5px solid var(--bd2);
+      background: var(--card);
+      color: var(--t1);
+      padding: 0 10px;
+      font-size: 16px;
+      font-weight: 700;
+      box-sizing: border-box;
+    }
+    .batch-b1-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      background: var(--or-lt, rgba(236, 91, 19, 0.12));
+      color: var(--or, #ec5b13);
+      border: 1px solid var(--or-md, rgba(236, 91, 19, 0.3));
+      white-space: nowrap;
+    }
+
     .pr-info {
       flex: 1;
       min-width: 0
@@ -7273,9 +7633,13 @@
             </button>
           </div>
         </div>
+        <div id="invBrandStrip" class="inv-brand-strip" role="tablist" aria-label="Filter inventory by brand"></div>
         <div class="res-hdr">
           <div class="res-lbl">Results</div>
-          <div class="res-cnt" id="searchCnt">–</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button type="button" id="invBrandClearChip" class="res-brand-clear" style="display:none" onclick="clearInventoryBrandFilter()"></button>
+            <div class="res-cnt" id="searchCnt">–</div>
+          </div>
         </div>
       </div>
       <div class="sc sa-sc sa-has-bn" style="padding:0 16px 16px" id="searchList"></div>
@@ -7928,12 +8292,16 @@
 
         <!-- 2. Brand -->
         <div class="ap-field">
-          <label class="ap-label">Brand</label>
-          <div class="ap-dropdown" id="brandDD">
-            <input class="ap-input" id="apBrand" placeholder="Search or type brand..." autocomplete="off"
-              oninput="filterDD('brandDD','apBrand',BRANDS,true)" onfocus="openDD('brandDD','apBrand',BRANDS,true)"
-              onblur="closeDD('brandDD',200)">
-            <div class="ap-dropdown-list" id="brandDD-list"></div>
+          <div class="ap-brand-head">
+            <label class="ap-label">Brand</label>
+            <span class="ap-brand-selected" id="apBrandSelectedHint">Tap a brand</span>
+          </div>
+          <input type="hidden" id="apBrand" value="">
+          <div class="ap-brand-pills" id="apBrandPills" role="radiogroup" aria-label="Select brand"></div>
+          <div class="ap-custom-brand-row">
+            <input class="ap-input ap-custom-brand-input" id="apCustomBrandIn" placeholder="+ Custom Brand (e.g. Rolon)" autocomplete="off"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBrandFromInput();}">
+            <button type="button" class="ap-custom-brand-btn" id="apCustomBrandAddBtn" onclick="addCustomBrandFromInput()">+ Add</button>
           </div>
         </div>
 
@@ -8034,6 +8402,15 @@
             <label class="ap-label">SP (₹)</label>
             <input class="ap-input" id="apSP" type="number" min="0" placeholder="0">
           </div>
+        </div>
+
+        <!-- 9b. Batches Quick Access (shown when editing an existing product) -->
+        <div class="ap-field" id="apBatchesSummaryRow" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <label class="ap-label" style="margin:0">Batches & Multi-MRP</label>
+            <button type="button" class="batch-pill batch-pill-add" onclick="if(AP_EDIT_ID) openAddBatchForProduct(AP_EDIT_ID)">+ Batch</button>
+          </div>
+          <div class="batch-pills-row" id="apBatchesPills" style="margin:0"></div>
         </div>
 
         <!-- 10. Compatibility -->
@@ -9186,6 +9563,51 @@
           </div>
         </div>
 
+        <!-- 3b. Batches & Multi-MRP Block -->
+        <div class="pdm-batches-block" id="pdmBatchesBlock">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:800;color:var(--t3);letter-spacing:0.6px;text-transform:uppercase" id="pdmBatchesTitle">Batches & MRPs</div>
+            <div style="display:flex;gap:6px">
+              <button type="button" class="batch-pill batch-pill-add" id="pdmToggleAddBatchBtn" onclick="togglePdmAddBatchForm()">+ Batch</button>
+              <button type="button" class="batch-pill active" id="pdmAddBatchCartBtn" onclick="pdmAddSelectedBatchToCart()">+ Cart</button>
+            </div>
+          </div>
+          <div class="batch-pills-row" id="pdmBatchPills"></div>
+
+          <!-- Compact 4-Field Inline Add Batch Form -->
+          <div class="pdm-add-batch-card" id="pdmAddBatchForm" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;font-weight:800;color:var(--t1)">Add New Batch</span>
+              <button type="button" onclick="togglePdmAddBatchForm(false)" style="background:none;border:none;color:var(--t3);font-size:12px;font-weight:700;cursor:pointer">Cancel</button>
+            </div>
+            <div class="pdm-batch-grid">
+              <div class="pdm-batch-field">
+                <label for="pdmBatchIdIn">Batch ID</label>
+                <input id="pdmBatchIdIn" type="text" placeholder="B2" autocomplete="off">
+              </div>
+              <div class="pdm-batch-field">
+                <label for="pdmBatchMrpIn">MRP (₹)</label>
+                <input id="pdmBatchMrpIn" type="number" min="0" step="0.01" placeholder="120" oninput="onPdmBatchMrpInput()">
+              </div>
+              <div class="pdm-batch-field">
+                <label for="pdmBatchQtyIn">Stock Qty</label>
+                <input id="pdmBatchQtyIn" type="number" min="1" step="1" placeholder="10">
+              </div>
+              <div class="pdm-batch-field">
+                <label for="pdmBatchLocIn">Location</label>
+                <input id="pdmBatchLocIn" type="text" placeholder="WR1L1B1" autocomplete="off">
+              </div>
+            </div>
+            <label id="pdmBatchMergeHint" style="display:none;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:700;color:var(--or);cursor:pointer">
+              <input type="checkbox" id="pdmBatchMergeChk" style="width:16px;height:16px;accent-color:var(--or)">
+              <span id="pdmBatchMergeText">Same MRP exists — merge stock into existing batch</span>
+            </label>
+            <button type="button" class="btn-p" id="pdmBatchSaveBtn" style="width:100%;height:42px;margin-top:10px;font-size:14px" onclick="submitPdmAddBatch()">
+              Save Batch
+            </button>
+          </div>
+        </div>
+
         <!-- 4. Product Information Block -->
         <div class="pdm-info-block">
           <div class="pdm-block-item">
@@ -9333,6 +9755,21 @@
           <span>Edit Product</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ QUICK-ADD MULTI-MRP BATCH SELECTOR SHEET ══ -->
+  <div id="batchSelectModal"
+    style="display:none;position:fixed;inset:0;z-index:965;flex-direction:column;align-items:center;justify-content:flex-end">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.5)" onclick="closeBatchSelectModal()"></div>
+    <div style="position:relative;width:100%;max-width:480px;background:var(--card);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,0.22);z-index:2">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:800;color:var(--or);letter-spacing:0.6px;text-transform:uppercase">Select Batch / MRP</div>
+        <button type="button" onclick="closeBatchSelectModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);color:var(--t2);font-size:16px;font-weight:700;cursor:pointer">✕</button>
+      </div>
+      <div id="batchSelectProdName" style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:2px">—</div>
+      <div id="batchSelectProdSku" style="font-size:12px;color:var(--t3);font-family:monospace;margin-bottom:12px">—</div>
+      <div id="batchSelectList" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto"></div>
     </div>
   </div>
 
@@ -10857,7 +11294,11 @@
       if (typeof STATE !== 'undefined' && Array.isArray(STATE.products)) {
         const si = STATE.products.findIndex(matchesProd);
         if (si >= 0) {
+          const prevIdx = STATE.products[si]._idx;
           STATE.products[si] = { ...STATE.products[si], ...updatedProd };
+          if (STATE.products[si]._idx === undefined || STATE.products[si]._idx === null) {
+            STATE.products[si]._idx = prevIdx;
+          }
           if (STATE.barcodeIndex) {
             if (barcode) STATE.barcodeIndex.set(barcode, STATE.products[si]);
             if (sku) STATE.barcodeIndex.set(sku, STATE.products[si]);
@@ -10866,6 +11307,9 @@
             window.PrinceSearchEngine.indexProduct(STATE.products[si]);
           }
         } else {
+          if (updatedProd._idx === undefined || updatedProd._idx === null) {
+            updatedProd._idx = STATE.products.length;
+          }
           STATE.products.push(updatedProd);
           if (STATE.barcodeIndex) {
             if (barcode) STATE.barcodeIndex.set(barcode, updatedProd);
@@ -10883,6 +11327,9 @@
           if (matchesProd(item)) {
             item.images = Array.isArray(updatedProd.images) ? [...updatedProd.images] : [];
             item.image = updatedProd.image || '';
+            if (Array.isArray(updatedProd.batches)) {
+              item.batches = JSON.parse(JSON.stringify(updatedProd.batches));
+            }
             item.updated_at = updatedProd.updated_at || item.updated_at;
             cartChanged = true;
           }
@@ -11126,7 +11573,7 @@
           if (el && (el.classList.contains('on') || el.classList.contains('open'))) return true;
         }
         const displayModals = [
-          'filterModal', 'prodDetailModal', 'customQrModal', 'qrPreviewModal',
+          'filterModal', 'prodDetailModal', 'batchSelectModal', 'customQrModal', 'qrPreviewModal',
           'manual-input-modal', 'auditStartModal', 'auditResumeModal',
           'transferResumeModal', 'transferLogsModal', 'pwaInstallPromptModal',
           'installHelpModal'
@@ -11627,9 +12074,15 @@
           await window.PICKER_DB.purgeDemoProducts();
         }
         const cachedProducts = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
+        const cachedBatches = (window.PICKER_DB && typeof window.PICKER_DB.getAllBatches === 'function')
+          ? await window.PICKER_DB.getAllBatches()
+          : [];
         const savedPicker = window.SUPABASE_AUTH ? await window.SUPABASE_AUTH.getSavedPicker() : null;
 
         if (cachedProducts && cachedProducts.length > 0) {
+          if (cachedBatches.length > 0 && window.SUPABASE_BATCHES) {
+            window.SUPABASE_BATCHES.attachBatchesToProducts(cachedProducts, cachedBatches);
+          }
           loadProducts(cachedProducts);
         }
 
@@ -11685,7 +12138,10 @@
                 window.SUPABASE_SYNC.runBackgroundSync((updatedProds) => {
                   if (updatedProds && updatedProds.length > 0) {
                     loadProducts(updatedProds);
-                    renderSearch(document.getElementById('searchInput')?.value || '');
+                    renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+                    if (document.getElementById('s-products')?.classList.contains('on') && typeof renderProductsList === 'function') {
+                      renderProductsList(document.getElementById('prodQ')?.value?.trim() || '');
+                    }
                   }
                 });
               }
@@ -11935,6 +12391,28 @@
         : (r.image ? [{ id: 'img_primary', url: r.image, mime: 'image/webp' }] : []);
       const primaryImg = r.image || (imagesList[0] ? (imagesList[0].url || imagesList[0]) : '');
 
+      const rawBatches = Array.isArray(r.batches) ? r.batches : [];
+      let normalizedBatches = [];
+      let finalStockNum = stockNum;
+      let finalMrpNum = mrpNum;
+      if (rawBatches.length > 0 && window.SUPABASE_BATCHES) {
+        normalizedBatches = window.SUPABASE_BATCHES.normalizeBatches({
+          ...r,
+          id: idKey,
+          sku: skuKey,
+          barcode: barcodeKey,
+          mrp: mrpNum,
+          stock: stockNum,
+          primary_location: finalPrimaryLoc,
+          batches: rawBatches
+        });
+        finalStockNum = window.SUPABASE_BATCHES.computeTotalStock(normalizedBatches);
+        const defB = window.SUPABASE_BATCHES.getDefaultBatch({ batches: normalizedBatches, mrp: mrpNum, stock: finalStockNum });
+        if (defB && (Number(defB.mrp) > 0 || !finalMrpNum)) {
+          finalMrpNum = Number(defB.mrp || 0);
+        }
+      }
+
       return {
         ...r,
         _idx: idx,
@@ -11948,12 +12426,14 @@
         loc: finalPrimaryLoc,
         location: finalPrimaryLoc,
         locations: locationsList,
-        stock: stockNum,
-        qty: primaryObj ? primaryObj.qty : stockNum,
+        batches: normalizedBatches,
+        total_stock: finalStockNum,
+        stock: finalStockNum,
+        qty: normalizedBatches.length > 0 ? finalStockNum : (primaryObj ? primaryObj.qty : finalStockNum),
         brand: f('brand', 'Brand', 'manufacturer', 'Manufacturer', 'make') || '',
         category: f('category', 'Category', 'cat', 'Cat') || '',
-        mrp: mrpNum,
-        sp: Number(f('sp', 'SP', 'selling_price', 'SellingPrice') ?? mrpNum),
+        mrp: finalMrpNum,
+        sp: Number(f('sp', 'SP', 'selling_price', 'SellingPrice') ?? finalMrpNum),
         threshold: primaryObj ? primaryObj.threshold : threshNum,
         fitment_group: f('fitment_group', 'FitmentGroup') || '',
         compatibility: Array.isArray(r.compatibility) ? r.compatibility : [],
@@ -11977,8 +12457,137 @@
           status: it.status || 'pending',
           skipReason: it.skip_reason || null,
           mode: it.mode || 'pick',
+          batch_id: it.batch_id || it.batchId || '',
+          unit_mrp: (it.unit_mrp !== undefined && it.unit_mrp !== null) ? Number(it.unit_mrp) : (it.mrp !== undefined && it.mrp !== null ? Number(it.mrp) : null),
+          loc: it.loc || it.location || ''
         }))
       };
+    }
+
+    // ══════════════════════════════════════════
+    //  BATCH ID & MULTI-MRP HELPERS
+    // ══════════════════════════════════════════
+    const SELECTED_PRODUCT_BATCHES = {};
+    let _batchSelectState = { product: null, qty: 1, mode: 'pick', onPick: null };
+
+    function getProductBatchKey(p) {
+      return String(p?.id || p?.barcode || p?.sku || p?._idx || '');
+    }
+
+    function getProductBatchesInfo(p) {
+      const api = window.SUPABASE_BATCHES;
+      const allBatches = api ? api.normalizeBatches(p) : [{
+        id: `${getProductBatchKey(p)}::B1`,
+        product_id: getProductBatchKey(p),
+        sku: p?.sku || p?.barcode || '',
+        batch_id: 'B1',
+        mrp: Number(p?.mrp || 0),
+        stock_qty: Math.max(0, Number(p?.stock ?? p?.qty ?? 0)),
+        location: String(p?.primary_location || p?.location || p?.loc || '').trim(),
+        created_at: p?.created_at || '1970-01-01T00:00:00.000Z'
+      }];
+      const activeBatches = allBatches.filter(b => Number(b.stock_qty || 0) > 0);
+      const isMulti = activeBatches.length > 1 || (Array.isArray(p?.batches) && p.batches.length > 1 && activeBatches.length >= 1);
+      const totalStock = allBatches.reduce((sum, b) => sum + (Number(b.stock_qty || 0) > 0 ? Number(b.stock_qty || 0) : 0), 0);
+      const key = getProductBatchKey(p);
+      const preferredId = SELECTED_PRODUCT_BATCHES[key];
+      let selectedBatch = preferredId
+        ? (activeBatches.find(b => b.batch_id === preferredId) || allBatches.find(b => b.batch_id === preferredId))
+        : null;
+      if (!selectedBatch) {
+        selectedBatch = activeBatches[0] || allBatches[0] || null;
+        if (selectedBatch && key) SELECTED_PRODUCT_BATCHES[key] = selectedBatch.batch_id;
+      }
+      return { allBatches, activeBatches, isMulti, totalStock, selectedBatch };
+    }
+
+    function selectInventoryBatch(prodKey, batchId) {
+      if (!prodKey || !batchId) return;
+      SELECTED_PRODUCT_BATCHES[String(prodKey)] = String(batchId);
+      if (document.getElementById('s-search')?.classList.contains('on')) {
+        renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+      }
+    }
+
+    function openAddBatchForProduct(prodId) {
+      openProdDetail(prodId).then(() => {
+        if (typeof togglePdmAddBatchForm === 'function') {
+          togglePdmAddBatchForm(true);
+          const form = document.getElementById('pdmAddBatchForm');
+          if (form && typeof form.scrollIntoView === 'function') {
+            setTimeout(() => {
+              form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              document.getElementById('pdmBatchMrpIn')?.focus();
+            }, 90);
+          } else {
+            setTimeout(() => document.getElementById('pdmBatchMrpIn')?.focus(), 80);
+          }
+        }
+      });
+    }
+
+    function openBatchSelectModal(p, qty = 1, mode = 'pick', onPickCallback = null) {
+      if (!p) return;
+      const info = getProductBatchesInfo(p);
+      const listEl = document.getElementById('batchSelectList');
+      const nameEl = document.getElementById('batchSelectProdName');
+      const skuEl = document.getElementById('batchSelectProdSku');
+      const modal = document.getElementById('batchSelectModal');
+      if (!listEl || !modal) return;
+
+      _batchSelectState = { product: p, qty: qty || 1, mode: mode || 'pick', onPick: onPickCallback };
+      if (nameEl) nameEl.textContent = p.name || '—';
+      if (skuEl) skuEl.textContent = `SKU: ${p.sku || p.barcode || '—'} · Total Stock: ${info.totalStock}`;
+
+      const batchesToShow = info.activeBatches.length > 0 ? info.activeBatches : info.allBatches;
+      listEl.innerHTML = batchesToShow.map((b, idx) => {
+        const isDef = info.selectedBatch && b.batch_id === info.selectedBatch.batch_id;
+        return `
+          <button type="button" class="batch-pill ${isDef ? 'active' : ''}" data-batch-pick="${escapeHtml(b.batch_id)}"
+            style="width:100%;justify-content:space-between;padding:12px 14px;font-size:13px;border-radius:12px"
+            onclick="pickBatchFromSelectModal('${escapeHtml(b.batch_id).replace(/'/g, "\\'")}')">
+            <span style="display:flex;align-items:center;gap:8px">
+              <span style="font-weight:800">${escapeHtml(b.batch_id)}</span>
+              <span>•</span>
+              <span style="font-weight:800">₹${Number(b.mrp || 0)}</span>
+              ${b.location ? `<span style="font-size:11px;color:var(--t3)">(${escapeHtml(b.location)})</span>` : ''}
+            </span>
+            <span style="font-size:12px;font-weight:800">Stock: ${Number(b.stock_qty || 0)}</span>
+          </button>`;
+      }).join('');
+
+      modal.style.display = 'flex';
+      if (typeof ScrollLockManager !== 'undefined') ScrollLockManager.lock('batchSelectModal');
+      setTimeout(() => {
+        const activeBtn = listEl.querySelector('.batch-pill.active') || listEl.querySelector('.batch-pill');
+        if (activeBtn) activeBtn.focus();
+      }, 40);
+    }
+
+    function closeBatchSelectModal() {
+      const modal = document.getElementById('batchSelectModal');
+      if (modal) modal.style.display = 'none';
+      if (typeof ScrollLockManager !== 'undefined') ScrollLockManager.unlock('batchSelectModal');
+    }
+
+    function pickBatchFromSelectModal(batchId) {
+      const { product, qty, mode, onPick } = _batchSelectState;
+      closeBatchSelectModal();
+      if (!product) return;
+      const info = getProductBatchesInfo(product);
+      const batch = info.allBatches.find(b => b.batch_id === batchId) || info.selectedBatch;
+      if (batch) {
+        SELECTED_PRODUCT_BATCHES[getProductBatchKey(product)] = batch.batch_id;
+      }
+      if (typeof onPick === 'function') {
+        onPick(product, batch);
+      } else {
+        addItemToCart(product, qty, mode, batch);
+        toast(`✓ Added ${product.name} (${batch?.batch_id || 'B1'} · ₹${Number(batch?.mrp ?? product.mrp ?? 0)}) to cart`, 'ok');
+        if (document.getElementById('s-search')?.classList.contains('on')) {
+          renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+        }
+      }
     }
 
     // ══════════════════════════════════════════
@@ -12025,11 +12634,24 @@
         // 2. Initial Download from Supabase to IndexedDB
         let products = window.SUPABASE_PRODUCTS ? await window.SUPABASE_PRODUCTS.downloadAllProducts() : [];
         if (window.SUPABASE_INVENTORY) await window.SUPABASE_INVENTORY.downloadAllInventory();
+        let batches = [];
+        if (window.SUPABASE_BATCHES && typeof window.SUPABASE_BATCHES.downloadAllBatches === 'function') {
+          try { batches = await window.SUPABASE_BATCHES.downloadAllBatches(); } catch (eB) { }
+        }
 
         if (products && products.length > 0) {
+          if (batches.length > 0 && window.SUPABASE_BATCHES) {
+            window.SUPABASE_BATCHES.attachBatchesToProducts(products, batches);
+          }
           loadProducts(products);
         } else {
           const cachedProds = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
+          const cachedBatches = (window.PICKER_DB && typeof window.PICKER_DB.getAllBatches === 'function')
+            ? await window.PICKER_DB.getAllBatches()
+            : [];
+          if (cachedBatches.length > 0 && window.SUPABASE_BATCHES && Array.isArray(cachedProds)) {
+            window.SUPABASE_BATCHES.attachBatchesToProducts(cachedProds, cachedBatches);
+          }
           loadProducts(cachedProds || []);
         }
 
@@ -12100,10 +12722,22 @@
 
       try {
         const cachedProds = window.PICKER_DB ? await window.PICKER_DB.getAllProducts() : [];
+        const cachedBatches = (window.PICKER_DB && typeof window.PICKER_DB.getAllBatches === 'function')
+          ? await window.PICKER_DB.getAllBatches()
+          : [];
         if (cachedProds && cachedProds.length > 0) {
+          if (cachedBatches.length > 0 && window.SUPABASE_BATCHES) {
+            window.SUPABASE_BATCHES.attachBatchesToProducts(cachedProds, cachedBatches);
+          }
           loadProducts(cachedProds);
         } else if (typeof navigator !== 'undefined' && navigator.onLine !== false && window.SUPABASE_PRODUCTS) {
           const products = await window.SUPABASE_PRODUCTS.downloadAllProducts();
+          const batches = (window.SUPABASE_BATCHES && typeof window.SUPABASE_BATCHES.downloadAllBatches === 'function')
+            ? await window.SUPABASE_BATCHES.downloadAllBatches()
+            : [];
+          if (batches.length > 0 && window.SUPABASE_BATCHES && Array.isArray(products)) {
+            window.SUPABASE_BATCHES.attachBatchesToProducts(products, batches);
+          }
           if (products && products.length > 0) loadProducts(products);
           if (window.SUPABASE_INVENTORY) await window.SUPABASE_INVENTORY.downloadAllInventory();
         }
@@ -12460,6 +13094,17 @@
       // Build session items from order - resolve barcodes to products
       const items = order.items.map(oi => {
         const product = STATE.barcodeIndex.get(oi.barcode);
+        let batchId = oi.batch_id || oi.batchId || '';
+        let unitMrp = (oi.unit_mrp !== undefined && oi.unit_mrp !== null) ? Number(oi.unit_mrp) : (oi.mrp !== undefined && oi.mrp !== null ? Number(oi.mrp) : null);
+        let itemLoc = oi.loc || oi.location || '';
+        if (!batchId && product && window.SUPABASE_BATCHES && window.SUPABASE_BATCHES.hasMultiBatches(product)) {
+          const defBatch = window.SUPABASE_BATCHES.getDefaultBatch(product);
+          if (defBatch) {
+            batchId = defBatch.batch_id || '';
+            if (unitMrp === null) unitMrp = Number(defBatch.mrp || 0);
+            if (!itemLoc && defBatch.location) itemLoc = defBatch.location;
+          }
+        }
         return {
           barcode: oi.barcode,
           qty: oi.qty,
@@ -12468,14 +13113,17 @@
           skipReason: oi.skipReason || null,
           product: product || null,
           mode: oi.mode || 'pick',
+          batch_id: batchId,
+          unit_mrp: unitMrp,
+          loc: itemLoc || product?.loc || '',
           pickTime: null,
           itemStart: null,
         };
       }).filter(i => i.status !== 'done'); // skip already completed items
 
       // Sort by location path
-      items.sort((a, b) => locSort(a.product?.loc || '') - locSort(b.product?.loc || '') ||
-        (a.product?.loc || '').localeCompare(b.product?.loc || ''));
+      items.sort((a, b) => locSort(a.loc || a.product?.loc || '') - locSort(b.loc || b.product?.loc || '') ||
+        (a.loc || a.product?.loc || '').localeCompare(b.loc || b.product?.loc || ''));
 
       STATE.session = {
         orderId: order.order_id,
@@ -12568,7 +13216,8 @@
         scanState = { loc: null, prod: null };
         confirmQty = ci.qty;
 
-        speak(`Go to location ${prod?.loc || 'unknown'}. You will ${isPick ? 'pick' : 'drop'} ${ci.qty} units of ${prod?.name || 'unknown'}`);
+        const targetLoc = ci.loc || prod?.loc || '';
+        speak(`Go to location ${targetLoc || 'unknown'}. You will ${isPick ? 'pick' : 'drop'} ${ci.qty} units of ${prod?.name || 'unknown'}`);
 
         const imgSrc = getProductImageSrc(prod);
         const ipIconHtml = imgSrc
@@ -12578,8 +13227,8 @@
         area.innerHTML = `
       <div class="snc ${isPick ? 'or-border' : 'rd-border'}">
         <div class="snc-lbl ${isPick ? 'or' : 'rd'}">${isPick ? '📍 Next Pick' : '📦 Next Drop'}</div>
-        <div class="snc-big">${prod?.loc || '—'}</div>
-        <div class="snc-sub">${parseLoc(prod?.loc || '')}</div>
+        <div class="snc-big">${ci.loc || prod?.loc || '—'}</div>
+        <div class="snc-sub">${parseLoc(ci.loc || prod?.loc || '')}</div>
         <div class="snc-badge"><span class="dot"></span>Walk to this location</div>
       </div>
       <div class="item-prev">
@@ -12587,7 +13236,7 @@
         <div style="flex:1;min-width:0">
           <div class="ip-lbl">You will ${isPick ? 'pick' : 'drop'}</div>
           <div class="ip-name">${prod?.name || ci.barcode}</div>
-          <div class="ip-meta">${ci.barcode}${prod?.brand ? ' · ' + prod.brand : ''}</div>
+          <div class="ip-meta">${ci.barcode}${prod?.brand ? ' · ' + prod.brand : ''}${ci.batch_id ? ` · <strong>${escapeHtml(ci.batch_id)} (₹${Number(ci.unit_mrp ?? prod?.mrp ?? 0)})</strong>` : ''}</div>
         </div>
         <div class="ip-qty"><div class="ip-qty-val">${ci.qty}</div><div class="ip-qty-lbl">Qty</div></div>
       </div>`;
@@ -12602,7 +13251,8 @@
 
       else if (step === 'scan_loc') {
         // Parse expected loc into R/L/B parts for pre-filling the picker
-        const locMatch = (prod?.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
+        const expectedLoc = ci.loc || prod?.loc || '';
+        const locMatch = expectedLoc.toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
         const defR = locMatch ? locMatch[1] : '1';
         const defL = locMatch ? locMatch[2] : '1';
         const defB = locMatch ? locMatch[3] : '1';
@@ -12610,7 +13260,7 @@
         area.innerHTML = `
       <div class="snc or-border">
         <div class="snc-lbl or">Step 1 / 2 · Verify Location</div>
-        <div class="snc-big" style="font-size:28px">${prod?.loc || '—'}</div>
+        <div class="snc-big" style="font-size:28px">${expectedLoc || '—'}</div>
         <div class="snc-sub">Scan rack barcode or use the picker below</div>
       </div>
       <div id="locResult"></div>
@@ -12658,7 +13308,7 @@
 
         btns.innerHTML = `
       <button class="btn-s" style="flex:1" onclick="setPickStep('skip_reason')">Skip</button>
-      <button class="btn-p" style="flex:2" onclick="openScanner(onLocScan,'Scan rack: ${prod?.loc || ''}')">
+      <button class="btn-p" style="flex:2" onclick="openScanner(onLocScan,'Scan rack: ${(ci.loc || prod?.loc || '').replace(/'/g, "\\'")}')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4"/></svg>
         Scan Barcode
       </button>`;
@@ -12696,8 +13346,9 @@
           : renderProductPlaceholderHtml();
 
         // Parse Loc
-        const locMatch = (prod?.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
-        const zCode = locMatch ? 'Zone R' + locMatch[1] : 'Zone —';
+        const confirmLoc = ci.loc || prod?.loc || '';
+        const locMatch = confirmLoc.toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
+        const zCode = locMatch ? 'Zone R' + locMatch[1] : (confirmLoc || 'Zone —');
         const bCode = locMatch ? 'Bin L' + locMatch[2] + 'B' + locMatch[3] : 'Bin —';
 
         area.innerHTML = `
@@ -12715,7 +13366,8 @@
          </div>
          
          <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:4px">${prod?.name || ci.barcode}</div>
-         <div style="font-size:13px;color:var(--t3);font-weight:500;margin-bottom:16px">${prod?.brand || 'No Description'}</div>
+         <div style="font-size:13px;color:var(--t3);font-weight:500;margin-bottom:12px">${prod?.brand || 'No Description'}</div>
+         ${ci.batch_id ? `<div style="margin-bottom:12px"><span class="chip c-or">${escapeHtml(ci.batch_id)} • ₹${Number(ci.unit_mrp ?? prod?.mrp ?? 0)}</span></div>` : ''}
          
          <div style="display:flex;gap:10px;margin-bottom:16px">
            <div style="flex:1;background:var(--bg);border-radius:12px;padding:12px">
@@ -12787,7 +13439,7 @@
       <div class="snc rd-border">
         <div class="snc-lbl rd">Skip Reason</div>
         <div class="snc-big" style="font-size:18px">${prod?.name || ci.barcode}</div>
-        <div class="snc-sub">${prod?.loc || ''}</div>
+        <div class="snc-sub">${ci.loc || prod?.loc || ''}</div>
       </div>
       <div class="reason-grid" style="margin-bottom:12px">
         <button class="reason-btn" onclick="selReason(this,'Bin Empty')">📦 Bin Empty</button>
@@ -12809,7 +13461,8 @@
     // ── SCAN CALLBACKS ──
     function onLocScan(val) {
       const ci = STATE.session.items[STATE.session.currentIdx];
-      const expected = normalizeLocStr(ci.product?.loc || '');
+      const expectedRaw = ci.loc || ci.product?.loc || '';
+      const expected = normalizeLocStr(expectedRaw);
       const scanned = normalizeLocStr(val);
       const match = scanned === expected || scanned.includes(expected) || expected.includes(scanned);
 
@@ -12823,10 +13476,10 @@
         setTimeout(() => setPickStep('scan_prod'), 750);
       } else {
         playSound('scan_error');
-        speak(`Incorrect location. Expected ${ci.product?.loc || 'unknown'}`);
+        speak(`Incorrect location. Expected ${expectedRaw || 'unknown'}`);
         scanState.wrongVal = val;
         scanState.wrongType = 'LOCATION';
-        scanState.wrongExpected = ci.product?.loc || '';
+        scanState.wrongExpected = expectedRaw;
         setPickStep('wrong_scan');
       }
     }
@@ -12854,7 +13507,13 @@
       const ci = STATE.session.items[STATE.session.currentIdx];
       let max = ci.qty;
       if (STATE.currentMode === 'pick') {
-        max = Math.min(ci.qty, ci.product?.stock ?? 9999);
+        let availStock = ci.product?.stock ?? 9999;
+        if (ci.batch_id && ci.product && window.SUPABASE_BATCHES) {
+          const batches = window.SUPABASE_BATCHES.normalizeBatches(ci.product);
+          const matchB = batches.find(b => b.batch_id === ci.batch_id);
+          if (matchB) availStock = Number(matchB.stock_qty) || 0;
+        }
+        max = Math.min(ci.qty, availStock);
       }
       confirmQty = Math.max(1, Math.min(confirmQty + d, max));
       const el = document.getElementById('confirmQtyVal');
@@ -12887,16 +13546,23 @@
           type: (STATE.currentMode || 'pick').toUpperCase(),
           sku: ci.product.sku || ci.barcode,
           qty: ci.picked,
-          location: ci.product.loc || '',
+          location: ci.loc || ci.product.loc || '',
           sessionId: STATE.session?.id || ('SES-' + Date.now()),
-          transactionId: txId
+          transactionId: txId,
+          batchId: ci.batch_id || '',
+          unitMrp: ci.unit_mrp
         });
       }
 
       // Add to CART
       const pToCart = ci.product || STATE.barcodeIndex.get(ci.barcode) || STATE.products.find(p => p.barcode === ci.barcode || p.sku === ci.barcode);
       if (pToCart) {
-        addItemToCart(pToCart, confirmQty);
+        const pickedBatchObj = ci.batch_id ? {
+          batch_id: ci.batch_id,
+          mrp: ci.unit_mrp ?? pToCart.mrp,
+          location: ci.loc || pToCart.loc || ''
+        } : null;
+        addItemToCart(pToCart, confirmQty, null, pickedBatchObj);
       }
 
       // Phase 5: Push verified item logs
@@ -12904,7 +13570,9 @@
         type: STATE.currentMode || 'pick',
         sku: ci.barcode,
         qty: ci.picked,
-        location: ci.product?.loc || '',
+        batch_id: ci.batch_id || '',
+        unit_mrp: ci.unit_mrp ?? ci.product?.mrp ?? null,
+        location: ci.loc || ci.product?.loc || '',
         note: ci.note || '',
         timestamp: new Date()
       });
@@ -12935,7 +13603,9 @@
         type: 'skip',
         sku: ci.barcode,
         qty: 0,
-        location: ci.product?.loc || '',
+        batch_id: ci.batch_id || '',
+        unit_mrp: ci.unit_mrp ?? ci.product?.mrp ?? null,
+        location: ci.loc || ci.product?.loc || '',
         note: (skipReasonSel + (ci.note ? ': ' + ci.note : '')),
         timestamp: new Date()
       });
@@ -12975,7 +13645,12 @@
             body: JSON.stringify({
               picker: STATE.pickerName,
               items: sess.items.map(i => ({
-                barcode: i.barcode, picked: i.picked, status: i.status, skip_reason: i.skipReason
+                barcode: i.barcode,
+                picked: i.picked,
+                status: i.status,
+                skip_reason: i.skipReason,
+                batch_id: i.batch_id || '',
+                unit_mrp: i.unit_mrp ?? null
               }))
             })
           });
@@ -12990,8 +13665,7 @@
       // Phase 5: Custom session logging
       const itemsCompleted = sess.items.filter(i => i.status === 'picked').length;
       const elapsed = Math.round((new Date(sess.end) - new Date(sess.start)) / 1000);
-      const products = sess.items.map(i => i.product).filter(Boolean);
-      const visitedCount = new Set(products.map(p => p.loc)).size;
+      const visitedCount = new Set(sess.items.map(i => i.loc || i.product?.loc).filter(Boolean)).size;
 
       const sessLog = {
         sessionId: sess.orderId + '_' + Date.now(),
@@ -13045,9 +13719,150 @@
       return r;
     }
 
+    let INVENTORY_BRAND_FILTER = '';
+    let _lastInvBrandStripSig = '';
+
+    function normalizeBrandName(raw) {
+      const cleaned = String(raw || '').trim().replace(/\s+/g, ' ');
+      if (!cleaned) return '';
+      const lower = cleaned.toLowerCase();
+      const catalog = (typeof BRANDS !== 'undefined' && Array.isArray(BRANDS)) ? BRANDS : [];
+      for (let i = 0; i < catalog.length; i++) {
+        if (String(catalog[i] || '').trim().toLowerCase() === lower) {
+          return String(catalog[i]).trim();
+        }
+      }
+      return cleaned.split(' ').map(function (word) {
+        return word.split(/([-&])/).map(function (seg) {
+          if (!seg || seg === '-' || seg === '&') return seg;
+          return seg.charAt(0).toUpperCase() + seg.slice(1).toLowerCase();
+        }).join('');
+      }).join(' ');
+    }
+
+    function getInventoryBrandCounts() {
+      const counts = new Map();
+      const products = (typeof STATE !== 'undefined' && Array.isArray(STATE.products)) ? STATE.products : [];
+      for (let i = 0; i < products.length; i++) {
+        const b = normalizeBrandName(products[i]?.brand);
+        if (!b) continue;
+        const key = b.toLowerCase();
+        const existing = counts.get(key);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          counts.set(key, { brand: b, count: 1 });
+        }
+      }
+      return Array.from(counts.values()).sort(function (a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.brand.localeCompare(b.brand);
+      });
+    }
+
+    function renderInventoryBrandStrip() {
+      const strip = document.getElementById('invBrandStrip');
+      const clearChip = document.getElementById('invBrandClearChip');
+      const brands = getInventoryBrandCounts();
+
+      if (INVENTORY_BRAND_FILTER) {
+        const match = brands.find(b => b.brand.toLowerCase() === INVENTORY_BRAND_FILTER.toLowerCase());
+        if (!match) {
+          INVENTORY_BRAND_FILTER = '';
+        } else {
+          INVENTORY_BRAND_FILTER = match.brand;
+        }
+      }
+
+      if (clearChip) {
+        if (INVENTORY_BRAND_FILTER) {
+          clearChip.style.display = 'inline-flex';
+          clearChip.textContent = '× ' + INVENTORY_BRAND_FILTER;
+          clearChip.setAttribute('aria-label', 'Clear brand filter ' + INVENTORY_BRAND_FILTER);
+        } else {
+          clearChip.style.display = 'none';
+          clearChip.textContent = '';
+        }
+      }
+
+      if (!strip) return;
+      if (!brands.length) {
+        strip.innerHTML = '';
+        _lastInvBrandStripSig = '';
+        return;
+      }
+
+      const activeKey = INVENTORY_BRAND_FILTER.toLowerCase();
+      const totalCount = (typeof STATE !== 'undefined' && Array.isArray(STATE.products)) ? STATE.products.length : 0;
+      const sig = totalCount + '|' + brands.map(b => b.brand + ':' + b.count).join(',');
+
+      if (_lastInvBrandStripSig === sig && strip.children.length === brands.length + 1) {
+        const btns = strip.querySelectorAll('.inv-brand-pill');
+        btns.forEach(function (btn) {
+          const bKey = (btn.dataset.brand || '').toLowerCase();
+          const isAct = bKey === activeKey;
+          btn.classList.toggle('active', isAct);
+          btn.setAttribute('aria-selected', isAct ? 'true' : 'false');
+        });
+        return;
+      }
+
+      const prevScroll = strip.scrollLeft;
+      let html = `<button type="button" class="inv-brand-pill${!activeKey ? ' active' : ''}" data-brand="" role="tab" aria-selected="${!activeKey ? 'true' : 'false'}" onclick="clearInventoryBrandFilter()">All <span class="bp-cnt">${totalCount}</span></button>`;
+      brands.forEach(function (item) {
+        const isAct = item.brand.toLowerCase() === activeKey;
+        const safeBrand = escapeHtml(item.brand);
+        html += `<button type="button" class="inv-brand-pill${isAct ? ' active' : ''}" data-brand="${safeBrand}" role="tab" aria-selected="${isAct ? 'true' : 'false'}" onclick="toggleInventoryBrandFilter(this.dataset.brand)">${safeBrand} <span class="bp-cnt">${item.count}</span></button>`;
+      });
+      strip.innerHTML = html;
+      strip.scrollLeft = prevScroll;
+      _lastInvBrandStripSig = sig;
+    }
+
+    function setInventoryBrandFilter(rawBrand) {
+      const norm = normalizeBrandName(rawBrand);
+      INVENTORY_BRAND_FILTER = norm;
+      const listEl = document.getElementById('searchList');
+      if (listEl) listEl.scrollTop = 0;
+      const q = document.getElementById('homeQ')?.value?.trim() || '';
+      renderSearch(q);
+      const strip = document.getElementById('invBrandStrip');
+      if (strip) {
+        const activeBtn = strip.querySelector('.inv-brand-pill.active');
+        if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+          activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      }
+      if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+        window.ScrollChromeController.sync('s-search');
+      }
+    }
+
+    function toggleInventoryBrandFilter(rawBrand) {
+      const norm = normalizeBrandName(rawBrand);
+      if (!norm) {
+        clearInventoryBrandFilter();
+        return;
+      }
+      if (INVENTORY_BRAND_FILTER && INVENTORY_BRAND_FILTER.toLowerCase() === norm.toLowerCase()) {
+        clearInventoryBrandFilter();
+      } else {
+        setInventoryBrandFilter(norm);
+      }
+    }
+
+    function clearInventoryBrandFilter() {
+      if (!INVENTORY_BRAND_FILTER) return;
+      setInventoryBrandFilter('');
+    }
+
     function renderSearch(q) {
       const list = document.getElementById('searchList');
       const cnt = document.getElementById('searchCnt');
+      renderInventoryBrandStrip();
+      const activeBrand = INVENTORY_BRAND_FILTER;
+      const activeBrandKey = activeBrand.toLowerCase();
+
       if (!STATE.products.length) {
         list.innerHTML = `
           <div class="empty-state-card">
@@ -13072,7 +13887,8 @@
       let data;
       if (q && q.length >= 1) {
         if (window.PrinceSearchEngine && window.PrinceSearchEngine.isReady()) {
-          const searchRes = window.PrinceSearchEngine.search(q, { limit: 120 });
+          const searchLimit = activeBrand ? Math.max(500, STATE.products.length) : 120;
+          const searchRes = window.PrinceSearchEngine.search(q, { limit: searchLimit });
           data = searchRes.items.map(item => {
             const p = item.product;
             p._matchHighlight = item.matchHighlight;
@@ -13083,31 +13899,45 @@
           const ql = q.toLowerCase();
           data = STATE.products.filter(p =>
             fuzzy(p.name, q) ||
-            p.barcode.includes(q) ||
-            p.sku.toLowerCase().includes(ql) ||
-            p.loc.toLowerCase().includes(ql) ||
-            p.brand.toLowerCase().includes(ql)
+            (p.barcode || '').includes(q) ||
+            (p.sku || '').toLowerCase().includes(ql) ||
+            (p.loc || '').toLowerCase().includes(ql) ||
+            (p.brand || '').toLowerCase().includes(ql)
           );
           data.sort((a, b) => {
-            const an = a.name.toLowerCase(), bn = b.name.toLowerCase();
+            const an = (a.name || '').toLowerCase(), bn = (b.name || '').toLowerCase();
             return an.startsWith(ql) ? -1 : bn.startsWith(ql) ? 1 : 0;
           });
-          data = data.slice(0, 100);
+          if (!activeBrand) data = data.slice(0, 100);
         }
       } else {
         // Show all items sorted by location path
         data = [...STATE.products].sort((a, b) => locSort(a.loc) - locSort(b.loc));
       }
 
-      const label = q ? `${data.length} of ${STATE.products.length} found` : `${STATE.products.length} items`;
+      if (activeBrandKey) {
+        data = data.filter(p => normalizeBrandName(p.brand).toLowerCase() === activeBrandKey);
+      }
+
+      const label = (q || activeBrand)
+        ? `${data.length} of ${STATE.products.length} ${q ? 'found' : 'items'}`
+        : `${STATE.products.length} items`;
       cnt.textContent = label;
       if (!data.length) {
+        const emptyTitle = q
+          ? `No Results for "${escapeHtml(q)}"`
+          : `No ${escapeHtml(activeBrand)} Items`;
+        const emptySub = (q && activeBrand)
+          ? `No products matching "${escapeHtml(q)}" in brand ${escapeHtml(activeBrand)}.`
+          : `We couldn't find any products matching your current filter.`;
         list.innerHTML = `
           <div class="empty-state-card">
             <div class="empty-state-icon">🔍</div>
-            <div class="empty-state-title">No Results for "${q}"</div>
-            <div class="empty-state-sub">We couldn't find any products matching your query. Double check the spelling or add a new product.</div>
+            <div class="empty-state-title">${emptyTitle}</div>
+            <div class="empty-state-sub">${emptySub}</div>
             <div class="empty-state-actions">
+              ${activeBrand ? `<button class="btn-s" onclick="clearInventoryBrandFilter()">All Brands</button>` : ''}
+              ${q ? `<button class="btn-s" onclick="document.getElementById('homeQ').value=''; renderSearch('');">Clear Search</button>` : ''}
               <button class="btn-p" onclick="nav('s-add-product')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Product
@@ -13120,25 +13950,52 @@
 
       list.innerHTML = '';
       data.forEach((p, i) => {
-        const effStock = getEffectiveInventory(p.id || p.barcode, p.loc);
+        const prodKey = getProductBatchKey(p);
+        const batchInfo = getProductBatchesInfo(p);
+        const selBatch = batchInfo.selectedBatch;
+        const selBatchId = selBatch ? selBatch.batch_id : 'B1';
+        const displayLoc = (selBatch && selBatch.location) ? selBatch.location : (p.loc || '—');
+        const displayMrp = selBatch ? Number(selBatch.mrp ?? p.mrp ?? 0) : Number(p.mrp || 0);
+
+        const effStock = batchInfo.isMulti
+          ? batchInfo.totalStock
+          : getEffectiveInventory(p.id || p.barcode, p.loc);
         const sc = effStock >= 20 ? 'c-gr' : effStock >= 5 ? 'c-yl' : 'c-rd';
-        const inCartItem = CART.items.find(c => c._idx === p._idx);
+
+        const inCartItems = CART.items.filter(c => c._idx === p._idx || (c.barcode && p.barcode && c.barcode === p.barcode));
+        const totalInCartQty = inCartItems.reduce((sum, c) => sum + (Number(c.qty) || 0), 0);
+        const inCartBatchItem = inCartItems.find(c => (c.batch_id || 'B1') === selBatchId && (c.mode || 'pick') === 'pick');
+        const safeBatchArg = escapeHtml(selBatchId).replace(/'/g, "\\'");
+
+        let batchPillsHtml = '';
+        if (batchInfo.isMulti && batchInfo.activeBatches.length > 0) {
+          batchPillsHtml = `<div class="batch-pills-row" onclick="event.stopPropagation()">` +
+            batchInfo.activeBatches.map(b => {
+              const isActive = b.batch_id === selBatchId;
+              const bidSafe = escapeHtml(b.batch_id).replace(/'/g, "\\'");
+              const pkeySafe = escapeHtml(prodKey).replace(/'/g, "\\'");
+              return `<button type="button" class="batch-pill ${isActive ? 'active' : ''}" onclick="event.stopPropagation(); selectInventoryBatch('${pkeySafe}','${bidSafe}')">${escapeHtml(b.batch_id)} • ₹${Number(b.mrp || 0)} (${Number(b.stock_qty || 0)})</button>`;
+            }).join('') +
+            `<button type="button" class="batch-pill batch-pill-add" onclick="event.stopPropagation(); openAddBatchForProduct('${escapeHtml(prodKey).replace(/'/g, "\\'")}')">+ Batch</button>` +
+          `</div>`;
+        }
+
         let cartBtnHtml = '';
-        if (inCartItem) {
+        if (inCartBatchItem) {
           cartBtnHtml = `
             <div style="display:flex; gap:8px; margin-top:auto; height:44px" onclick="event.stopPropagation()">
-              <button class="btn-cart in-cart" style="flex:1; height:100%; border-radius:12px" ondblclick="removeFromCart(${p._idx})">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> In Cart
+              <button class="btn-cart in-cart" style="flex:1; height:100%; border-radius:12px" ondblclick="removeFromCart(${p._idx}, '${safeBatchArg}', 'pick')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> In Cart${batchInfo.isMulti ? ` (${escapeHtml(selBatchId)} · ${inCartBatchItem.qty})` : ''}
               </button>
-              <button class="btn-cart in-cart" style="flex:0 0 60px; height:100%; font-size:26px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:12px" onclick="adjustSearchCartQty(${p._idx}, 1)">
+              <button class="btn-cart in-cart" style="flex:0 0 60px; height:100%; font-size:26px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:12px" onclick="adjustSearchCartQty(${p._idx}, 1, '${safeBatchArg}')">
                 +
               </button>
             </div>
           `;
         } else {
           cartBtnHtml = `
-            <button class="btn-cart" id="cbt-${p._idx}" style="height:44px; border-radius:12px" onclick="event.stopPropagation(); toggleCart(${p._idx})">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Cart
+            <button class="btn-cart" id="cbt-${p._idx}" style="height:44px; border-radius:12px" onclick="event.stopPropagation(); toggleCart(${p._idx}, '${safeBatchArg}')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Cart${batchInfo.isMulti ? ` (${escapeHtml(selBatchId)} · ₹${displayMrp})` : ''}
             </button>
           `;
         }
@@ -13148,23 +14005,27 @@
         div.style.animationDelay = `${i * 20}ms`;
         // Ensure card has relative positioning for the absolute badge
         div.style.position = 'relative';
+        const cardBrand = normalizeBrandName(p.brand);
+        const isBrandActive = Boolean(cardBrand && activeBrandKey && cardBrand.toLowerCase() === activeBrandKey);
         div.innerHTML = `
-      ${inCartItem ? `<div id="cqt-${p._idx}" style="position:absolute; top:12px; right:12px; background:#fff; color:var(--or); border-radius:12px; padding:2px 8px; font-size:12px; font-weight:800; border:2px solid var(--or); box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:2">Qty: ${inCartItem.qty}</div>` : ''}
+      ${totalInCartQty > 0 ? `<div id="cqt-${p._idx}" style="position:absolute; top:12px; right:12px; background:#fff; color:var(--or); border-radius:12px; padding:2px 8px; font-size:12px; font-weight:800; border:2px solid var(--or); box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:2">Qty: ${totalInCartQty}</div>` : ''}
       <div class="prod-top">
         <div class="prod-info">
           <div class="prod-name" style="padding-right: 50px;">${q ? hl(p.name, q) : p.name}</div>
           <div style="font-size:11px; font-weight:800; color:var(--or); font-family:monospace; margin-top:1px">SKU: ${p.sku || p.barcode}</div>
           ${p._matchHighlight ? `<div class="psd-highlight" style="font-size:11px; font-weight:700; color:#0284c7; margin-top:2px; display:flex; align-items:center; gap:4px">${p._matchHighlight}</div>` : ''}
           <div class="prod-chips">
-            <span class="chip c-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${p.loc || '—'}</span>
-            <span class="chip ${sc}">Stock: ${effStock}</span>
-            ${p.mrp > 0 ? `<span class="chip c-or">₹${p.mrp}</span>` : ''}
-            ${p.brand ? `<span class="chip" style="background:#f4f4f5;color:var(--t2)">${p.brand}</span>` : ''}
+            <span class="chip c-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${displayLoc}</span>
+            <span class="chip ${sc}">${batchInfo.isMulti ? 'Total Stock' : 'Stock'}: ${effStock}</span>
+            ${displayMrp > 0 ? `<span class="chip c-or">₹${displayMrp}</span>` : ''}
+            ${!batchInfo.isMulti ? `<span class="chip" style="background:var(--bg2,#f4f4f5);color:var(--t3);font-weight:800">${escapeHtml(selBatchId)}</span><button type="button" class="chip" style="background:transparent;border:1px dashed var(--or-md);color:var(--or);cursor:pointer;font-weight:800" onclick="event.stopPropagation(); openAddBatchForProduct('${escapeHtml(prodKey).replace(/'/g, "\\'")}')">+ Batch</button>` : ''}
+            ${cardBrand ? `<button type="button" class="brand-card-pill${isBrandActive ? ' active' : ''}" data-brand="${escapeHtml(cardBrand)}" aria-pressed="${isBrandActive ? 'true' : 'false'}" onclick="event.stopPropagation(); toggleInventoryBrandFilter(this.dataset.brand)">${escapeHtml(cardBrand)}${isBrandActive ? ' <span aria-hidden="true">×</span>' : ''}</button>` : ''}
           </div>
           <div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:6px">${p.barcode}</div>
         </div>
         ${renderProductImgHtml(p, 'pr-img')}
       </div>
+      ${batchPillsHtml}
       ${cartBtnHtml}`;
         list.appendChild(div);
         div.onclick = (function (id) { return function () { openProdDetail(id); }; })(p.id || p.barcode);
@@ -13196,15 +14057,26 @@
       }
 
 
-    function onBarcodeSearch(val) {
+    function onBarcodeSearch(rawVal) {
+      const val = String(rawVal || '').trim();
       document.getElementById('homeQ').value = val;
       renderSearch(val);
-      const p = STATE.barcodeIndex.get(val) || STATE.products.find(x => x.barcode === val || x.sku === val);
-      if (p) {
-        addItemToCart(p, 1);
-        toast('✓ Added ' + p.name + ' to cart', 'ok');
-      }
+      const valUpper = val.toUpperCase();
+      const p = STATE.barcodeIndex.get(val) || STATE.products.find(x =>
+        x.barcode === val || x.sku === val ||
+        String(x.barcode || '').trim().toUpperCase() === valUpper ||
+        String(x.sku || '').trim().toUpperCase() === valUpper
+      );
       nav('s-search');
+      if (p) {
+        const batchInfo = getProductBatchesInfo(p);
+        if (batchInfo.activeBatches.length > 1) {
+          openBatchSelectModal(p, 1, 'pick');
+        } else {
+          addItemToCart(p, 1, null, batchInfo.selectedBatch);
+          toast('✓ Added ' + p.name + ' to cart', 'ok');
+        }
+      }
     }
 
     // ══════════════════════════════════════════
@@ -13313,14 +14185,19 @@
       }
 
       // 3. Stats & Quantities
-      let effStock = typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, p.loc || p.location) : 0;
+      const pBatchInfo = getProductBatchesInfo(p);
+      let effStock = (Array.isArray(p.batches) && p.batches.length > 0)
+        ? pBatchInfo.totalStock
+        : (typeof getEffectiveInventory === 'function' ? getEffectiveInventory(p.id || p.barcode, p.loc || p.location) : 0);
       const rawQty = p.qty != null ? Number(p.qty) : (p.stock != null ? Number(p.stock) : 0);
-      if (effStock === 0 && rawQty > 0) {
+      if (effStock === 0 && rawQty > 0 && !(Array.isArray(p.batches) && p.batches.length > 0)) {
         effStock = rawQty;
       }
 
-      // Top STOCK QTY Card represents CURRENT SHOP QUANTITY
-      const shopQty = p.shop_qty != null ? Number(p.shop_qty) : (p.shop_stock != null ? Number(p.shop_stock) : effStock);
+      // Top STOCK QTY Card represents CURRENT SHOP QUANTITY (or total batch stock when batches exist)
+      const shopQty = (Array.isArray(p.batches) && p.batches.length > 0)
+        ? pBatchInfo.totalStock
+        : (p.shop_qty != null ? Number(p.shop_qty) : (p.shop_stock != null ? Number(p.shop_stock) : effStock));
       const whQty = p.wh_qty != null ? Number(p.wh_qty) : (p.wh_stock != null ? Number(p.wh_stock) : (p.warehouse_qty != null ? Number(p.warehouse_qty) : 0));
 
       const threshold = Number(p.threshold || 5);
@@ -13422,6 +14299,10 @@
       // 6. Intact Linked SKUs Block
       renderPdmIntactSection(p, shopLocCode, whLocCode);
 
+      // 6b. Batches & Multi-MRP Block
+      renderPdmBatches(p);
+      togglePdmAddBatchForm(false);
+
       // Show Modal
       const modal = document.getElementById('prodDetailModal');
       if (modal) modal.style.display = 'flex';
@@ -13429,6 +14310,148 @@
       // Reset scroll position
       const scrollBody = document.getElementById('pdmScrollBody');
       if (scrollBody) scrollBody.scrollTop = 0;
+    }
+
+    function renderPdmBatches(p) {
+      if (!p) return;
+      const pillsEl = document.getElementById('pdmBatchPills');
+      const titleEl = document.getElementById('pdmBatchesTitle');
+      if (!pillsEl) return;
+
+      const info = getProductBatchesInfo(p);
+      const sel = info.selectedBatch;
+      const active = info.activeBatches;
+      const toShow = active.length > 0 ? active : info.allBatches;
+
+      if (titleEl) {
+        titleEl.textContent = info.isMulti
+          ? `Batches & MRPs (Total Stock: ${info.totalStock})`
+          : `Batch & MRP (Stock: ${info.totalStock})`;
+      }
+
+      pillsEl.innerHTML = toShow.map(b => {
+        const isActive = sel && b.batch_id === sel.batch_id;
+        const bidSafe = escapeHtml(b.batch_id).replace(/'/g, "\\'");
+        return `<button type="button" class="batch-pill ${isActive ? 'active' : ''}" onclick="selectPdmBatch('${bidSafe}')">${escapeHtml(b.batch_id)} • ₹${Number(b.mrp || 0)} (${Number(b.stock_qty || 0)})</button>`;
+      }).join('');
+
+      if (sel) {
+        const mrpValEl = document.getElementById('pdmMrpVal');
+        const stockValEl = document.getElementById('pdmStockVal');
+        const locInfoEl = document.getElementById('pdmInfoLoc');
+        if (mrpValEl && (info.isMulti || Array.isArray(p.batches) && p.batches.length > 0)) {
+          mrpValEl.textContent = `₹${Number(sel.mrp || 0)}`;
+        }
+        if (stockValEl && (info.isMulti || Array.isArray(p.batches) && p.batches.length > 0)) {
+          stockValEl.textContent = info.isMulti
+            ? `${info.totalStock} pcs (${sel.batch_id}: ${Number(sel.stock_qty || 0)})`
+            : `${info.totalStock} pcs`;
+        }
+        if (locInfoEl) locInfoEl.textContent = sel.location || p.loc || p.location || '—';
+      }
+    }
+
+    function selectPdmBatch(batchId) {
+      const p = PRODUCT_GALLERY.product;
+      if (!p || !batchId) return;
+      SELECTED_PRODUCT_BATCHES[getProductBatchKey(p)] = String(batchId);
+      renderPdmBatches(p);
+      if (document.getElementById('s-search')?.classList.contains('on')) {
+        renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+      }
+    }
+
+    function togglePdmAddBatchForm(forceState) {
+      const form = document.getElementById('pdmAddBatchForm');
+      if (!form) return;
+      const show = (forceState !== undefined) ? Boolean(forceState) : (form.style.display === 'none' || !form.style.display);
+      form.style.display = show ? 'block' : 'none';
+      if (show && PRODUCT_GALLERY.product) {
+        const p = PRODUCT_GALLERY.product;
+        const nextId = window.SUPABASE_BATCHES ? window.SUPABASE_BATCHES.suggestNextBatchId(p) : 'B2';
+        const idIn = document.getElementById('pdmBatchIdIn');
+        const mrpIn = document.getElementById('pdmBatchMrpIn');
+        const qtyIn = document.getElementById('pdmBatchQtyIn');
+        const locIn = document.getElementById('pdmBatchLocIn');
+        const mergeHint = document.getElementById('pdmBatchMergeHint');
+        const mergeChk = document.getElementById('pdmBatchMergeChk');
+        if (idIn) idIn.value = nextId;
+        if (mrpIn) mrpIn.value = '';
+        if (qtyIn) qtyIn.value = '';
+        if (locIn) locIn.value = p.primary_location || p.location || p.loc || '';
+        if (mergeHint) mergeHint.style.display = 'none';
+        if (mergeChk) mergeChk.checked = false;
+      }
+    }
+
+    function onPdmBatchMrpInput() {
+      const p = PRODUCT_GALLERY.product;
+      const mrpIn = document.getElementById('pdmBatchMrpIn');
+      const hint = document.getElementById('pdmBatchMergeHint');
+      const txt = document.getElementById('pdmBatchMergeText');
+      const chk = document.getElementById('pdmBatchMergeChk');
+      if (!p || !mrpIn || !hint) return;
+      const val = mrpIn.value.trim();
+      if (!val || !window.SUPABASE_BATCHES) {
+        hint.style.display = 'none';
+        if (chk) chk.checked = false;
+        return;
+      }
+      const match = window.SUPABASE_BATCHES.findSameMrpBatch(p, Number(val));
+      if (match) {
+        hint.style.display = 'flex';
+        if (txt) txt.textContent = `Same MRP (₹${Number(match.mrp)}) exists in ${match.batch_id} — Merge stock into ${match.batch_id}`;
+      } else {
+        hint.style.display = 'none';
+        if (chk) chk.checked = false;
+      }
+    }
+
+    async function submitPdmAddBatch() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      const batchId = (document.getElementById('pdmBatchIdIn')?.value || '').trim();
+      const mrp = document.getElementById('pdmBatchMrpIn')?.value;
+      const qty = document.getElementById('pdmBatchQtyIn')?.value;
+      const loc = (document.getElementById('pdmBatchLocIn')?.value || '').trim();
+      const mergeSameMrp = Boolean(document.getElementById('pdmBatchMergeChk')?.checked);
+
+      if (!batchId && !mergeSameMrp) { toast('Enter a Batch ID', 'err'); return; }
+      if (mrp === '' || Number(mrp) < 0 || isNaN(Number(mrp))) { toast('Enter valid MRP', 'err'); return; }
+      if (qty === '' || Number(qty) <= 0 || isNaN(Number(qty))) { toast('Enter stock quantity > 0', 'err'); return; }
+
+      const btn = document.getElementById('pdmBatchSaveBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      try {
+        const res = await window.SUPABASE_BATCHES.addOrMergeBatch(p, {
+          batch_id: batchId,
+          mrp: Number(mrp),
+          stock_qty: Number(qty),
+          location: loc || p.primary_location || p.location || p.loc || '',
+          mergeSameMrp
+        });
+        if (!res || !res.success) {
+          toast(res?.error || 'Could not save batch', 'err');
+          return;
+        }
+        SELECTED_PRODUCT_BATCHES[getProductBatchKey(p)] = res.batch.batch_id;
+        togglePdmAddBatchForm(false);
+        openProdDetail(p);
+        if (typeof renderSearch === 'function') renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+        if (typeof renderProductsList === 'function') renderProductsList(document.getElementById('prodQ')?.value?.trim() || '');
+        toast(res.merged ? `✓ Merged into ${res.batch.batch_id} (Total: ${res.totalStock})` : `✓ Added ${res.batch.batch_id} • ₹${res.batch.mrp}`, 'ok');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Batch'; }
+      }
+    }
+
+    function pdmAddSelectedBatchToCart() {
+      const p = PRODUCT_GALLERY.product;
+      if (!p) return;
+      const info = getProductBatchesInfo(p);
+      const batch = info.selectedBatch;
+      addItemToCart(p, 1, 'pick', batch);
+      toast(`✓ Added ${p.name} (${batch?.batch_id || 'B1'} · ₹${Number(batch?.mrp ?? p.mrp ?? 0)}) to cart`, 'ok');
     }
 
     function renderPdmDots(totalImages) {
@@ -14693,7 +15716,7 @@
       if (screen === 's-cart') renderCart();
       if (screen === 's-drop') initDrop();
       if (screen === 's-products') renderProductsList(document.getElementById('prodQ')?.value.trim() || '');
-      if (screen === 's-add-product') { syncAPLoc(); renderCompatList(); }
+      if (screen === 's-add-product') { syncAPLoc(); renderCompatList(); if (typeof renderAPBrandPills === 'function') renderAPBrandPills(); }
       if (screen === 's-qr') renderQrProdList(document.getElementById('qrQ')?.value.trim() || '');
     }
 
@@ -14895,7 +15918,7 @@
             <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:700;color:var(--t1);text-overflow:ellipsis;white-space:nowrap;overflow:hidden">${it.product?.name || it.barcode}</div>
-                <div style="font-size:11px;color:var(--t3);margin-top:2px">Location: ${it.product?.loc || '—'} · Qty: ${it.picked || 0}/${it.qty}</div>
+                <div style="font-size:11px;color:var(--t3);margin-top:2px">Location: ${it.loc || it.product?.loc || '—'} · Qty: ${it.picked || 0}/${it.qty}${it.batch_id ? ` · <strong>${escapeHtml(it.batch_id)} (₹${Number(it.unit_mrp ?? it.product?.mrp ?? 0)})</strong>` : ''}</div>
                 ${it.note ? `<div style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${it.note}</div>` : ''}
               </div>
               <span class="chip ${isPick ? 'c-gr' : 'c-rd'}" style="font-size:10px;font-weight:800;margin-left:auto">${isPick ? 'PICKED' : 'SKIPPED'}</span>
@@ -15424,7 +16447,8 @@
         if (ci) {
           const isLoc = (cb === onLocScan);
           if (isLoc) {
-            const expected = normalizeLocStr(ci.product?.loc || '');
+            const expectedRaw = ci.loc || ci.product?.loc || '';
+            const expected = normalizeLocStr(expectedRaw);
             const scanned = normalizeLocStr(val);
             const match = scanned === expected || scanned.includes(expected) || expected.includes(scanned);
             if (match) {
@@ -15448,8 +16472,8 @@
             } else {
               playSound('scan_error');
               triggerFlash(false);
-              speak(`Incorrect location. Expected ${ci.product?.loc || 'unknown'}`);
-              document.getElementById('scanHint').textContent = `Wrong Location. Expected: ${ci.product?.loc || 'unknown'}`;
+              speak(`Incorrect location. Expected ${expectedRaw || 'unknown'}`);
+              document.getElementById('scanHint').textContent = `Wrong Location. Expected: ${expectedRaw || 'unknown'}`;
               SCAN.lastVal = null;
               SCAN.rafId = requestAnimationFrame(scanLoop);
             }
@@ -15473,22 +16497,31 @@
                   type: (STATE.currentMode || 'pick').toUpperCase(),
                   sku: ci.product.sku || ci.barcode,
                   qty: ci.picked,
-                  location: ci.product.loc || '',
+                  location: ci.loc || ci.product.loc || '',
                   sessionId: STATE.session?.id || ('SES-' + Date.now()),
-                  transactionId: txId
+                  transactionId: txId,
+                  batchId: ci.batch_id || '',
+                  unitMrp: ci.unit_mrp
                 });
               }
 
               const pBatchToCart = ci.product || STATE.barcodeIndex.get(ci.barcode) || STATE.products.find(p => p.barcode === ci.barcode || p.sku === ci.barcode);
               if (pBatchToCart) {
-                addItemToCart(pBatchToCart, ci.picked || 1);
+                const scannedBatchObj = ci.batch_id ? {
+                  batch_id: ci.batch_id,
+                  mrp: ci.unit_mrp ?? pBatchToCart.mrp,
+                  location: ci.loc || pBatchToCart.loc || ''
+                } : null;
+                addItemToCart(pBatchToCart, ci.picked || 1, null, scannedBatchObj);
               }
 
               STATE.logs.push({
                 type: STATE.currentMode || 'pick',
                 sku: ci.barcode,
                 qty: ci.picked,
-                location: ci.product?.loc || '',
+                batch_id: ci.batch_id || '',
+                unit_mrp: ci.unit_mrp ?? ci.product?.mrp ?? null,
+                location: ci.loc || ci.product?.loc || '',
                 note: ci.note || '',
                 timestamp: new Date()
               });
@@ -15505,16 +16538,17 @@
                 const nextCi = STATE.session.items[STATE.session.currentIdx];
                 nextCi.itemStart = Date.now();
 
+                const nextLoc = nextCi.loc || nextCi.product?.loc || '';
                 SCAN.callback = onLocScan;
                 SCAN.lastVal = null;
                 document.getElementById('scanTitle').textContent = 'Scan location barcode';
-                document.getElementById('scanHint').textContent = `Go to ${nextCi.product?.loc || 'next location'}`;
+                document.getElementById('scanHint').textContent = `Go to ${nextLoc || 'next location'}`;
                 document.getElementById('scanVal').textContent = 'Waiting for barcode...';
                 document.getElementById('scanVal').className = 'scan-val muted';
                 document.getElementById('scanOkBtn').style.display = 'none';
-                document.getElementById('scanDemo').textContent = `Demo: scan "${nextCi.product?.loc || ''}"`;
+                document.getElementById('scanDemo').textContent = `Demo: scan "${nextLoc}"`;
 
-                speak(`Go to location ${nextCi.product?.loc || 'unknown'}. Scan location.`);
+                speak(`Go to location ${nextLoc || 'unknown'}. Scan location.`);
 
                 pickStep = 'scan_loc';
                 SCAN.rafId = requestAnimationFrame(scanLoop);
@@ -15659,7 +16693,7 @@
         const ci = STATE.session.items[STATE.session.currentIdx];
         if (ci) {
           if (pickStep === 'scan_loc') {
-            expectedCode = ci.product?.loc || '';
+            expectedCode = ci.loc || ci.product?.loc || '';
           } else if (pickStep === 'scan_prod') {
             expectedCode = ci.barcode || ci.product?.sku || '';
           }
@@ -16034,7 +17068,7 @@
     // ══════════════════════════════════════════
     // CART state is initialized at top level near APP STATE
 
-    function addItemToCart(prod, qty = 1, itemMode = null) {
+    function addItemToCart(prod, qty = 1, itemMode = null, batchObj = null) {
       if (!prod) return;
       // Default mode to 'pick'. Only treat as 'drop' if explicitly specified as 'drop' OR actively on the Drop screen.
       let mode = 'pick';
@@ -16059,11 +17093,39 @@
         }
       }
 
-      const existing = CART.items.find(c => (c._idx === targetProd._idx || (c.barcode && c.barcode === targetProd.barcode) || (c.sku && c.sku === targetProd.sku)) && c.mode === mode);
+      const bInfo = getProductBatchesInfo(targetProd);
+      const chosenBatch = (batchObj && typeof batchObj === 'object')
+        ? batchObj
+        : (typeof batchObj === 'string'
+            ? (bInfo.allBatches.find(b => b.batch_id === batchObj) || bInfo.selectedBatch)
+            : bInfo.selectedBatch);
+
+      const batchId = String(chosenBatch?.batch_id || 'B1').trim();
+      const liveMatchBatch = bInfo.allBatches.find(b => String(b.batch_id).trim().toUpperCase() === batchId.toUpperCase());
+      const unitMrp = Number(chosenBatch?.mrp ?? liveMatchBatch?.mrp ?? targetProd.mrp ?? 0);
+      const batchLoc = String(chosenBatch?.location || liveMatchBatch?.location || targetProd.loc || targetProd.location || '').trim();
+      const batchStock = (chosenBatch && chosenBatch.stock_qty !== undefined)
+        ? Number(chosenBatch.stock_qty)
+        : (liveMatchBatch ? Number(liveMatchBatch.stock_qty ?? 0) : Number(targetProd.stock ?? 0));
+
+      const existing = CART.items.find(c =>
+        (c._idx === targetProd._idx || (c.barcode && c.barcode === targetProd.barcode) || (c.sku && c.sku === targetProd.sku)) &&
+        String(c.batch_id || 'B1') === batchId &&
+        c.mode === mode
+      );
       if (existing) {
         existing.qty = (existing.qty || 0) + (qty || 1);
       } else {
-        CART.items.push({ ...targetProd, qty: qty || 1, mode: mode });
+        CART.items.push({
+          ...targetProd,
+          batch_id: batchId,
+          unit_mrp: unitMrp,
+          mrp: unitMrp,
+          loc: batchLoc || targetProd.loc,
+          stock: batchStock,
+          qty: qty || 1,
+          mode: mode
+        });
       }
 
       updateCartBadge();
@@ -16076,18 +17138,36 @@
       }
     }
 
-    function toggleCart(idx) {
+    function toggleCart(idx, batchId = null) {
       const prod = STATE.products[idx];
       if (!prod) return;
       // Toggling from inventory search always uses 'pick' mode
       const mode = 'pick';
-      const existing = CART.items.findIndex(c => c._idx === idx && c.mode === mode);
+      const bInfo = getProductBatchesInfo(prod);
+      const chosenBatch = batchId
+        ? (bInfo.allBatches.find(b => b.batch_id === batchId) || bInfo.selectedBatch)
+        : bInfo.selectedBatch;
+      const targetBatchId = String(chosenBatch?.batch_id || 'B1').trim();
+      const unitMrp = Number(chosenBatch?.mrp ?? prod.mrp ?? 0);
+      const batchLoc = String(chosenBatch?.location || prod.loc || prod.location || '').trim();
+      const batchStock = chosenBatch ? Number(chosenBatch.stock_qty ?? prod.stock ?? 0) : Number(prod.stock ?? 0);
+
+      const existing = CART.items.findIndex(c => c._idx === idx && String(c.batch_id || 'B1') === targetBatchId && c.mode === mode);
       if (existing >= 0) {
         CART.items.splice(existing, 1);
         toast('Removed from cart');
       } else {
-        CART.items.push({ ...prod, qty: 1, mode: mode });
-        toast('✓ Added to cart', 'ok');
+        CART.items.push({
+          ...prod,
+          batch_id: targetBatchId,
+          unit_mrp: unitMrp,
+          mrp: unitMrp,
+          loc: batchLoc || prod.loc,
+          stock: batchStock,
+          qty: 1,
+          mode: mode
+        });
+        toast(`✓ Added (${targetBatchId} · ₹${unitMrp}) to cart`, 'ok');
       }
       updateCartBadge();
       if (document.getElementById('s-cart').classList.contains('on')) renderCart();
@@ -16096,32 +17176,57 @@
       }
     }
 
-    function adjustCartQty(idx, d) {
-      const item = CART.items.find(c => c._idx === idx);
+    function getCartItemBatchStock(item) {
+      if (!item) return 0;
+      const bid = String(item.batch_id || 'B1').trim();
+      const liveProd = STATE.barcodeIndex.get(item.barcode) ||
+        STATE.barcodeIndex.get(item.sku) ||
+        STATE.products.find(p => p._idx === item._idx || p.id === item.id || p.barcode === item.barcode || p.sku === item.sku) ||
+        item;
+      if (item.batch_id && window.SUPABASE_BATCHES) {
+        const b = getProductBatchesInfo(liveProd).allBatches.find(x => String(x.batch_id).trim().toUpperCase() === bid.toUpperCase());
+        if (b) return Number(b.stock_qty ?? 0);
+      }
+      return getEffectiveInventory(liveProd.id || liveProd.barcode || item.id || item.barcode, item.loc || liveProd.loc);
+    }
+
+    function adjustCartQty(idx, d, batchId = null, mode = null) {
+      const item = CART.items.find(c =>
+        c._idx === idx &&
+        (!batchId || String(c.batch_id || 'B1') === String(batchId)) &&
+        (!mode || (c.mode || 'pick') === mode)
+      );
       if (!item) return;
-      item.qty = Math.max(1, Math.min(item.qty + d, item.stock || 9999));
-      const el = document.getElementById('cqv-' + idx);
+      const bid = String(item.batch_id || 'B1');
+      const liveStock = getCartItemBatchStock(item);
+      const maxQty = (item.mode === 'drop') ? 9999 : (liveStock > 0 ? liveStock : (item.stock || 9999));
+      item.qty = Math.max(1, Math.min(item.qty + d, maxQty));
+      const el = document.getElementById(`cqv-${idx}-${bid}-${item.mode || 'pick'}`) || document.getElementById(`cqv-${idx}-${bid}`) || document.getElementById('cqv-' + idx);
       if (el) el.textContent = item.qty;
       updateCartBadge();
       updateCartTotal();
     }
 
-    function adjustSearchCartQty(idx, d) {
-      event.stopPropagation();
-      const item = CART.items.find(c => c._idx === idx);
+    function adjustSearchCartQty(idx, d, batchId = null) {
+      if (typeof event !== 'undefined' && event) event.stopPropagation();
+      const item = CART.items.find(c => c._idx === idx && (!batchId || String(c.batch_id || 'B1') === String(batchId)) && (c.mode || 'pick') === 'pick');
       if (!item) return;
       if (item.qty === 1 && d === -1) {
-        removeFromCart(idx);
+        removeFromCart(idx, batchId || item.batch_id, 'pick');
         return;
       }
-      adjustCartQty(idx, d);
+      adjustCartQty(idx, d, batchId || item.batch_id, 'pick');
       if (document.getElementById('s-search').classList.contains('on')) {
         renderSearch(document.getElementById('homeQ').value.trim());
       }
     }
 
-    function removeFromCart(idx) {
-      CART.items = CART.items.filter(c => c._idx !== idx);
+    function removeFromCart(idx, batchId = null, mode = null) {
+      CART.items = CART.items.filter(c => !(
+        c._idx === idx &&
+        (!batchId || String(c.batch_id || 'B1') === String(batchId)) &&
+        (!mode || (c.mode || 'pick') === mode)
+      ));
       updateCartBadge();
       renderCart();
       renderSearch(document.getElementById('homeQ').value.trim());
@@ -16152,8 +17257,9 @@
 
     function updateCartTotal() {
       const units = CART.items.reduce((s, c) => s + c.qty, 0);
+      const totalVal = CART.items.reduce((s, c) => s + ((Number(c.unit_mrp ?? c.mrp ?? 0)) * (Number(c.qty) || 0)), 0);
       const el = document.getElementById('cartTotalVal');
-      if (el) el.textContent = `${CART.items.length} SKUs · ${units} units`;
+      if (el) el.textContent = `${CART.items.length} items · ${units} units${totalVal > 0 ? ' · ₹' + totalVal : ''}`;
     }
 
     let cartTabMode = 'loc';
@@ -16170,7 +17276,7 @@
 
       // Low stock badge
       const low = CART.items.filter(c => {
-        const effStock = getEffectiveInventory(c.id || c.barcode, c.loc);
+        const effStock = getCartItemBatchStock(c);
         return effStock > 0 && effStock < 5;
       }).length;
       const lb = document.getElementById('cartLowBadge');
@@ -16203,13 +17309,17 @@
       if (cartTabMode === 'loc') data = [...CART.items].sort((a, b) => locSort(a.loc) - locSort(b.loc));
       else if (cartTabMode === 'name') data = [...CART.items].sort((a, b) => a.name.localeCompare(b.name));
       else data = CART.items.filter(c => {
-        const effStock = getEffectiveInventory(c.id || c.barcode, c.loc);
+        const effStock = getCartItemBatchStock(c);
         return effStock > 0 && effStock < 5;
       });
 
       el.innerHTML = '';
       data.forEach((item, i) => {
-        const effStock = getEffectiveInventory(item.id || item.barcode, item.loc);
+        const bid = String(item.batch_id || 'B1');
+        const bidSafe = escapeHtml(bid).replace(/'/g, "\\'");
+        const modeSafe = escapeHtml(item.mode || 'pick').replace(/'/g, "\\'");
+        const unitMrp = Number(item.unit_mrp ?? item.mrp ?? 0);
+        const effStock = getCartItemBatchStock(item);
         const sc = effStock >= 10 ? 'c-gr' : effStock >= 5 ? 'c-yl' : 'c-rd';
         const row = document.createElement('div');
         row.className = 'pick-row';
@@ -16219,7 +17329,8 @@
       <div class="pick-info">
         <div class="pick-name">${item.name}</div>
         <div class="pick-loc">${item.loc || '—'}</div>
-        <div class="pick-sku" style="display:flex;align-items:center;gap:6px;margin-top:2px">
+        <div class="pick-sku" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:2px">
+          <span class="chip c-or" style="padding:2px 6px;font-size:10px;font-weight:800">${escapeHtml(bid)} • ₹${unitMrp}</span>
           <span class="chip ${sc}" style="padding:2px 6px;font-size:10px">Stock: ${effStock}</span>
           ${item.mode === 'drop'
             ? '<span class="chip c-rd" style="padding:2px 8px;font-size:10px;font-weight:800;letter-spacing:0.5px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:10px">DROP</span>'
@@ -16228,11 +17339,11 @@
       </div>
       <div class="pick-qty-wrap">
         <div class="pick-qty-ctrl">
-          <button class="pqb" onclick="adjustCartQty(${item._idx},-1)">−</button>
-          <span class="pqv" id="cqv-${item._idx}">${item.qty}</span>
-          <button class="pqb" onclick="adjustCartQty(${item._idx},1)">+</button>
+          <button class="pqb" onclick="adjustCartQty(${item._idx},-1,'${bidSafe}','${modeSafe}')">−</button>
+          <span class="pqv" id="cqv-${item._idx}-${escapeHtml(bid)}-${modeSafe}">${item.qty}</span>
+          <button class="pqb" onclick="adjustCartQty(${item._idx},1,'${bidSafe}','${modeSafe}')">+</button>
         </div>
-        <button class="pick-del" onclick="removeFromCart(${item._idx})">✕</button>
+        <button class="pick-del" onclick="removeFromCart(${item._idx},'${bidSafe}','${modeSafe}')">✕</button>
       </div>`;
         el.appendChild(row);
       });
@@ -16294,7 +17405,15 @@
         status: 'assigned',
         picker: STATE.pickerName,
         items: CART.items.map(c => ({
-          barcode: c.barcode, qty: c.qty, picked: 0, status: 'pending', skipReason: null, mode: c.mode || 'pick'
+          barcode: c.barcode,
+          qty: c.qty,
+          picked: 0,
+          status: 'pending',
+          skipReason: null,
+          mode: c.mode || 'pick',
+          batch_id: c.batch_id || 'B1',
+          unit_mrp: c.unit_mrp !== undefined ? c.unit_mrp : c.mrp,
+          loc: c.loc || ''
         }))
       };
       const normalized = normalizeOrder(fakeOrder);
@@ -16369,6 +17488,9 @@
 
     function renderAdhocScanner() {
       adhocState.targetProd = null;
+      adhocState.selectedBatchId = null;
+      adhocState.selectedBatchMrp = null;
+      adhocState.confirmQty = 1;
       const isP = adhocState.mode === 'pick';
       document.getElementById('adhocStepArea').innerHTML = `
     <div class="snc or-border">
@@ -16464,7 +17586,13 @@
       if (navigator.vibrate) navigator.vibrate(40);
       stopInlineScanner();
       const p = STATE.barcodeIndex.get(v) || STATE.products.find(x => x.sku === v);
-      if (p) { playSound('scan_success'); renderAdhocConfirm(p); }
+      if (p) {
+        adhocState.selectedBatchId = null;
+        adhocState.selectedBatchMrp = null;
+        adhocState.confirmQty = 1;
+        playSound('scan_success');
+        renderAdhocConfirm(p);
+      }
       else { playSound('scan_error'); toast('Product not found: ' + v, 'err'); setTimeout(startInlineScanner, 1500); }
     }
 
@@ -16474,17 +17602,54 @@
       }, 'Pick');
     }
 
+    function selectAdhocBatch(batchId) {
+      const p = adhocState.targetProd;
+      if (!p || !batchId) return;
+      const info = getProductBatchesInfo(p);
+      const chosen = info.allBatches.find(b => b.batch_id === batchId) || info.selectedBatch;
+      if (chosen) {
+        adhocState.selectedBatchId = chosen.batch_id;
+        adhocState.selectedBatchMrp = Number(chosen.mrp || 0);
+        SELECTED_PRODUCT_BATCHES[getProductBatchKey(p)] = chosen.batch_id;
+      }
+      renderAdhocConfirm(p);
+    }
+
     function renderAdhocConfirm(p) {
       stopInlineScanner();
-      adhocState.targetProd = p; adhocState.confirmQty = 1;
+      adhocState.targetProd = p;
+      if (!adhocState.confirmQty || adhocState.confirmQty < 1) adhocState.confirmQty = 1;
       const isP = adhocState.mode === 'pick';
+      const batchInfo = getProductBatchesInfo(p);
+      const chosenBatch = (adhocState.selectedBatchId && batchInfo.allBatches.find(b => b.batch_id === adhocState.selectedBatchId))
+        || batchInfo.selectedBatch;
+      adhocState.selectedBatchId = chosenBatch ? chosenBatch.batch_id : 'B1';
+      adhocState.selectedBatchMrp = chosenBatch ? Number(chosenBatch.mrp || 0) : Number(p.mrp || 0);
+      const activeLoc = (chosenBatch && chosenBatch.location) ? chosenBatch.location : (p?.loc || '');
+
       const imgUrl = getProductImageSrc(p);
       const imgHtml = imgUrl
         ? `<img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p?.name || 'Product')}" style="width:100%;height:100%;object-fit:cover" onerror="handleProductImgError(this)">`
         : renderProductPlaceholderHtml();
-      const locMatch = (p?.loc || '').toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
-      const zCode = locMatch ? 'Zone R' + locMatch[1] : 'Zone —';
+      const locMatch = activeLoc.toUpperCase().match(/R(\d+)L(\d+)B(\d+)/);
+      const zCode = locMatch ? 'Zone R' + locMatch[1] : (activeLoc ? activeLoc : 'Zone —');
       const bCode = locMatch ? 'Bin L' + locMatch[2] + 'B' + locMatch[3] : 'Bin —';
+
+      const batchesToShow = isP
+        ? (batchInfo.activeBatches.length > 0 ? batchInfo.activeBatches : batchInfo.allBatches)
+        : batchInfo.allBatches;
+      const batchSelectorHtml = batchesToShow.length > 1
+        ? `<div style="text-align:left;margin-bottom:14px">
+             <div style="font-size:10px;font-weight:800;color:var(--t3);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">SELECT BATCH / MRP (FIFO)</div>
+             <div class="batch-pills-row" style="margin:0">
+               ${batchesToShow.map(b => {
+                 const isSel = b.batch_id === adhocState.selectedBatchId;
+                 const bidSafe = escapeHtml(b.batch_id).replace(/'/g, "\\'");
+                 return `<button type="button" class="batch-pill ${isSel ? 'active' : ''}" onclick="selectAdhocBatch('${bidSafe}')">${escapeHtml(b.batch_id)} • ₹${Number(b.mrp || 0)} (${Number(b.stock_qty || 0)})</button>`;
+               }).join('')}
+             </div>
+           </div>`
+        : `<div style="margin-bottom:12px"><span class="chip c-or">${escapeHtml(adhocState.selectedBatchId)} • ₹${adhocState.selectedBatchMrp}</span></div>`;
 
       document.getElementById('adhocStepArea').innerHTML = `
     <div style="background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--sh2);text-align:center;border:2px solid var(--or-md);margin-bottom:12px;margin-top:12px">
@@ -16496,7 +17661,8 @@
          <div style="font-size:15px;font-weight:800;color:var(--t1)">${p.barcode}</div>
        </div>
        <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:4px">${p.name}</div>
-       <div style="font-size:13px;color:var(--t3);font-weight:500;margin-bottom:16px">${p.brand || 'No Description'}</div>
+       <div style="font-size:13px;color:var(--t3);font-weight:500;margin-bottom:12px">${p.brand || 'No Description'}</div>
+       ${batchSelectorHtml}
        <div style="display:flex;gap:10px;margin-bottom:16px">
          <div style="flex:1;background:var(--bg);border-radius:12px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px">ZONE</div><div style="font-size:14px;font-weight:800;color:var(--t1);margin-top:2px">${zCode}</div></div>
          <div style="flex:1;background:var(--bg);border-radius:12px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px">BIN</div><div style="font-size:14px;font-weight:800;color:var(--t1);margin-top:2px">${bCode}</div></div>
@@ -16504,7 +17670,7 @@
        <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:8px">Quantity Verified</div>
        <div class="qcw-ctrl" style="margin-bottom:0">
          <button class="qcb" onclick="adjustAdhocQty(-1)">−</button>
-         <span class="qcv"><span id="adhocQtyVal" style="color:var(--or)">1</span></span>
+         <span class="qcv"><span id="adhocQtyVal" style="color:var(--or)">${adhocState.confirmQty}</span></span>
          <button class="qcb" onclick="adjustAdhocQty(1)">+</button>
        </div>
     </div>`;
@@ -16514,6 +17680,12 @@
     <button class="btn-p gr" style="flex:2.5;height:56px;font-size:16px" onclick="confirmAdhocPick()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${isP ? 'CONFIRM PICK' : 'CONFIRM DROP'}
     </button>`;
+      if (batchesToShow.length > 1) {
+        setTimeout(() => {
+          const activePill = document.querySelector('#adhocStepArea .batch-pill.active') || document.querySelector('#adhocStepArea .batch-pill');
+          if (activePill) activePill.focus();
+        }, 40);
+      }
     }
 
     function adjustAdhocQty(d) {
@@ -16525,8 +17697,12 @@
       playSound('tap');
       const p = adhocState.targetProd, q = adhocState.confirmQty;
       const mode = (adhocState.mode || 'pick').toUpperCase();
+      const batchId = adhocState.selectedBatchId || 'B1';
+      const unitMrp = adhocState.selectedBatchMrp;
 
       if (p) {
+        const bInfo = getProductBatchesInfo(p);
+        const chosenBatch = bInfo.allBatches.find(b => b.batch_id === batchId) || bInfo.selectedBatch;
         const txId = typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
           : ('tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
@@ -16535,13 +17711,18 @@
           type: mode,
           sku: p.sku || p.barcode,
           qty: q,
-          location: p.loc || '',
+          location: chosenBatch?.location || p.loc || '',
+          batchId: batchId,
+          unitMrp: unitMrp !== undefined ? unitMrp : chosenBatch?.mrp,
           sessionId: 'ADHOC-' + Date.now(),
           transactionId: txId
         });
-        addItemToCart(p, q);
+        addItemToCart(p, q, null, chosenBatch);
       }
 
+      adhocState.selectedBatchId = null;
+      adhocState.selectedBatchMrp = null;
+      adhocState.confirmQty = 1;
       adhocState.itemsScanned += q;
       document.getElementById('adhocCntTxt').textContent = adhocState.itemsScanned + ' Items';
       toast('✓ ' + (mode === 'PICK' ? 'Picked ' : 'Dropped ') + q + ' units', 'ok');
@@ -16590,15 +17771,20 @@
       const origStock = prod.stock;
       const origQty = prod.qty;
       const origLocations = Array.isArray(prod.locations) ? JSON.parse(JSON.stringify(prod.locations)) : null;
+      const origBatches = Array.isArray(prod.batches) ? JSON.parse(JSON.stringify(prod.batches)) : null;
       const fpIdx = FS_PRODUCTS.findIndex(function (x) { return x.id === prod.id || x.barcode === prod.barcode || x.sku === prod.sku; });
       const origFSStock = fpIdx >= 0 ? FS_PRODUCTS[fpIdx].stock : undefined;
       const origFSQty = fpIdx >= 0 ? FS_PRODUCTS[fpIdx].qty : undefined;
+      const targetBatchId = opts.batchId ? String(opts.batchId).trim() : '';
+      const targetUnitMrp = (opts.unitMrp !== undefined && opts.unitMrp !== null) ? Number(opts.unitMrp) : null;
 
       const srcLoc = opts.sourceLocation || (type.includes('SRC') || legDir.includes('src') ? location : null);
       const destLoc = opts.destinationLocation || (type.includes('DEST') || legDir.includes('dest') ? location : null);
       const isMultiLocTransfer = (type.startsWith('TRANSFER') || type === 'TRANSFER') && srcLoc && destLoc;
 
       let newStock = Number(prod.stock ?? prod.qty ?? 0);
+      let batchAdjusted = false;
+      let resolvedBatchId = targetBatchId;
 
       if (isMultiLocTransfer) {
         if (!Array.isArray(prod.locations) || prod.locations.length === 0) {
@@ -16655,6 +17841,19 @@
         // Project primary location stock without changing primary_location
         const primaryObj = prod.locations.find(l => l.is_primary) || prod.locations[0];
         newStock = primaryObj ? Number(primaryObj.qty) : Number(prod.locations.reduce((s, l) => s + Number(l.qty || 0), 0));
+      } else if (window.SUPABASE_BATCHES && (targetBatchId || (Array.isArray(prod.batches) && prod.batches.length > 0))) {
+        const delta = (type === 'DROP') ? qty : (type === 'AUDIT' ? qty : -qty);
+        const bRes = await window.SUPABASE_BATCHES.adjustBatchStock(prod, targetBatchId || null, delta, {
+          mode: type === 'AUDIT' ? 'set' : 'delta',
+          unitMrp: targetUnitMrp,
+          location: location || prod.loc || '',
+          skipRemote: (type === 'PICK' || type === 'DROP')
+        });
+        newStock = (bRes && typeof bRes.totalStock === 'number') ? bRes.totalStock : Number(prod.stock ?? 0);
+        if (!resolvedBatchId && bRes && bRes.batch && bRes.batch.batch_id) {
+          resolvedBatchId = bRes.batch.batch_id;
+        }
+        batchAdjusted = true;
       } else {
         const currentStock = typeof getEffectiveInventory === 'function'
           ? getEffectiveInventory(prod.sku || prod.barcode || prod.id, location || prod.loc)
@@ -16674,12 +17873,17 @@
       // 5. Apply local stock mutation
       prod.stock = newStock;
       prod.qty = newStock;
+      prod.total_stock = newStock;
 
       if (fpIdx >= 0) {
         FS_PRODUCTS[fpIdx].stock = newStock;
         FS_PRODUCTS[fpIdx].qty = newStock;
+        FS_PRODUCTS[fpIdx].total_stock = newStock;
         if (origLocations && Array.isArray(prod.locations)) {
           FS_PRODUCTS[fpIdx].locations = JSON.parse(JSON.stringify(prod.locations));
+        }
+        if (Array.isArray(prod.batches)) {
+          FS_PRODUCTS[fpIdx].batches = JSON.parse(JSON.stringify(prod.batches));
         }
       }
       if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
@@ -16690,10 +17894,12 @@
         prod.stock = origStock;
         prod.qty = origQty;
         if (origLocations) prod.locations = origLocations;
+        if (origBatches) prod.batches = origBatches;
         if (fpIdx >= 0) {
           FS_PRODUCTS[fpIdx].stock = origFSStock;
           FS_PRODUCTS[fpIdx].qty = origFSQty;
           if (origLocations) FS_PRODUCTS[fpIdx].locations = origLocations;
+          if (origBatches) FS_PRODUCTS[fpIdx].batches = origBatches;
         }
         if (prod.barcode) STATE.barcodeIndex.set(prod.barcode, prod);
         if (prod.sku) STATE.barcodeIndex.set(prod.sku, prod);
@@ -16725,7 +17931,17 @@
       let movRes = { success: true, queued: false, synced: true };
       try {
         if (window.SUPABASE_INVENTORY && typeof window.SUPABASE_INVENTORY.processMovement === 'function') {
-          const res = await window.SUPABASE_INVENTORY.processMovement(type, prod.sku || prod.barcode || sku, qty, location, operator, sessionId, transactionId);
+          const res = await window.SUPABASE_INVENTORY.processMovement(
+            type,
+            prod.sku || prod.barcode || sku,
+            qty,
+            location,
+            operator,
+            sessionId,
+            transactionId,
+            resolvedBatchId || targetBatchId || (batchAdjusted && prod.batches?.[0]?.batch_id) || '',
+            targetUnitMrp
+          );
           if (res) movRes = res;
         }
       } catch (errMov) {
@@ -16747,6 +17963,8 @@
         sku: sku,
         qty: qty,
         location: location,
+        batch_id: targetBatchId || '',
+        unit_mrp: targetUnitMrp,
         timestamp: new Date()
       });
 
@@ -17024,6 +18242,46 @@
       }, 'Drop');
     }
 
+    function addDropBatchItem(prod, batchObj = null) {
+      if (!prod) return;
+      const bInfo = getProductBatchesInfo(prod);
+      const chosenBatch = batchObj || bInfo.selectedBatch;
+      const batchId = String(chosenBatch?.batch_id || 'B1').trim();
+      const unitMrp = Number(chosenBatch?.mrp ?? prod.mrp ?? 0);
+      const targetLoc = String(chosenBatch?.location || prod.loc || 'UNASSIGNED').trim() || 'UNASSIGNED';
+      const batchStock = chosenBatch ? Number(chosenBatch.stock_qty ?? prod.stock ?? 0) : Number(prod.stock || 0);
+
+      const existing = DROP.cart.find(c =>
+        (c.sku === prod.sku || c.barcode === prod.barcode) &&
+        String(c.batch_id || 'B1') === batchId
+      );
+      let currentQty = 1;
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+        currentQty = existing.qty;
+      } else {
+        DROP.cart.push({
+          product: prod,
+          sku: prod.sku || prod.barcode,
+          barcode: prod.barcode || prod.sku,
+          name: prod.name,
+          brand: prod.brand || '',
+          batch_id: batchId,
+          unit_mrp: unitMrp,
+          loc: targetLoc,
+          stock: batchStock,
+          qty: 1
+        });
+      }
+
+      playSound('scan_success');
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      // Show Small Success Toast & update Floating Cart without leaving scanner
+      showDropSuccessToast(`${prod.name} (${batchId} · ₹${unitMrp})`, currentQty);
+      updateFloatingCartButton();
+    }
+
     function onDropProductScan(rawVal) {
       if (DROP.isLocked) return;
 
@@ -17047,31 +18305,20 @@
         return;
       }
 
-      // Automatically add one quantity to Drop Cart or merge duplicate
-      const existing = DROP.cart.find(c => c.sku === prod.sku || c.barcode === prod.barcode);
-      let currentQty = 1;
-      if (existing) {
-        existing.qty = (existing.qty || 1) + 1;
-        currentQty = existing.qty;
-      } else {
-        DROP.cart.push({
-          product: prod,
-          sku: prod.sku || prod.barcode,
-          barcode: prod.barcode || prod.sku,
-          name: prod.name,
-          brand: prod.brand || '',
-          loc: prod.loc || 'UNASSIGNED',
-          stock: prod.stock || 0,
-          qty: 1
+      const batchInfo = getProductBatchesInfo(prod);
+      if (batchInfo.allBatches.length > 1) {
+        playSound('scan_success');
+        stopDropInlineScanner();
+        openBatchSelectModal(prod, 1, 'drop', (pickedProd, chosenBatch) => {
+          addDropBatchItem(pickedProd, chosenBatch);
+          if (STATE.currentMode === 'drop' && !DROP.isLocked) {
+            startDropInlineScanner();
+          }
         });
+        return;
       }
 
-      playSound('scan_success');
-      if (navigator.vibrate) navigator.vibrate(40);
-
-      // Show Small Success Toast & update Floating Cart without leaving scanner
-      showDropSuccessToast(prod.name, currentQty);
-      updateFloatingCartButton();
+      addDropBatchItem(prod, batchInfo.selectedBatch);
     }
 
     function renderDropUnknownProductModal(val) {
@@ -17143,9 +18390,9 @@
           <div class="pick-thumb" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${thumbHtml}</div>
           <div class="pick-info" style="flex:1;margin:0 10px">
             <div class="pick-name" style="font-size:14px;font-weight:700">${item.name}</div>
-            <div style="font-size:11px;color:var(--t3);margin-top:2px">SKU: <strong>${item.sku}</strong></div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px">SKU: <strong>${item.sku}</strong>${item.batch_id ? ` · <span class="batch-b1-tag">${escapeHtml(item.batch_id)} • ₹${Number(item.unit_mrp ?? item.product?.mrp ?? 0)}</span>` : ''}</div>
             <div style="font-size:11px;color:var(--or);font-weight:700;margin-top:2px">📍 ${item.loc}</div>
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">Current Stock: ${item.stock}</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:2px">Batch Stock: ${item.stock}</div>
           </div>
           <div class="pick-qty-wrap" style="display:flex;align-items:center;gap:8px">
             <div class="pick-qty-ctrl">
@@ -17284,7 +18531,7 @@
       <div style="background:var(--bg);border-radius:12px;padding:10px">
         ${group.items.map(item => `
           <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--bd2)">
-            <span style="font-weight:700;color:var(--t1)">${item.name} (${item.sku})</span>
+            <span style="font-weight:700;color:var(--t1)">${item.name} (${item.sku})${item.batch_id ? ` · ${escapeHtml(item.batch_id)} ₹${Number(item.unit_mrp ?? 0)}` : ''}</span>
             <span style="font-weight:800;color:var(--or)">Qty ${item.qty}</span>
           </div>
         `).join('')}
@@ -17326,6 +18573,8 @@
             sku: item.sku,
             qty: item.qty,
             location: group.rawLoc,
+            batchId: item.batch_id || '',
+            unitMrp: item.unit_mrp,
             sessionId: DROP.sessionId,
             operator: STATE.pickerName || 'Picker',
             transactionId: txId
@@ -18300,6 +19549,143 @@
     }
 
     // ══════════════════════════════════════════════════════════
+    //  ADD / EDIT PRODUCT — BRAND PILL SELECTOR
+    // ══════════════════════════════════════════════════════════
+    function registerBrandInCatalog(rawBrand) {
+      const norm = normalizeBrandName(rawBrand);
+      if (!norm) return '';
+      const lower = norm.toLowerCase();
+      const existing = BRANDS.find(b => String(b || '').trim().toLowerCase() === lower);
+      if (existing) return existing;
+      BRANDS.push(norm);
+      try {
+        const defLower = new Set((typeof DEFAULT_BRANDS !== 'undefined' ? DEFAULT_BRANDS : []).map(b => b.toLowerCase()));
+        const custom = BRANDS.filter(b => !defLower.has(String(b || '').trim().toLowerCase()));
+        localStorage.setItem('pa_custom_brands', JSON.stringify(custom));
+      } catch (e) { }
+      return norm;
+    }
+
+    function getSelectableBrands(selectedBrand) {
+      const freqMap = new Map();
+      const allProds = [];
+      if (typeof FS_PRODUCTS !== 'undefined' && Array.isArray(FS_PRODUCTS)) allProds.push(...FS_PRODUCTS);
+      if (typeof STATE !== 'undefined' && Array.isArray(STATE.products)) allProds.push(...STATE.products);
+
+      const seenProds = new Set();
+      allProds.forEach(function (p) {
+        if (!p) return;
+        const pKey = p.id || p.barcode || p.sku || '';
+        if (pKey) {
+          if (seenProds.has(pKey)) return;
+          seenProds.add(pKey);
+        }
+        const b = normalizeBrandName(p.brand);
+        if (!b) return;
+        const k = b.toLowerCase();
+        const cur = freqMap.get(k);
+        if (cur) cur.count += 1;
+        else freqMap.set(k, { brand: b, count: 1 });
+      });
+
+      const merged = new Map();
+      Array.from(freqMap.values())
+        .sort(function (a, b) {
+          if (b.count !== a.count) return b.count - a.count;
+          return a.brand.localeCompare(b.brand);
+        })
+        .forEach(function (item) {
+          merged.set(item.brand.toLowerCase(), item.brand);
+        });
+
+      const normSel = normalizeBrandName(selectedBrand);
+      if (normSel && !merged.has(normSel.toLowerCase())) {
+        merged.set(normSel.toLowerCase(), normSel);
+      }
+
+      BRANDS.forEach(function (b) {
+        const nb = normalizeBrandName(b);
+        if (nb && !merged.has(nb.toLowerCase())) {
+          merged.set(nb.toLowerCase(), nb);
+        }
+      });
+
+      return Array.from(merged.values());
+    }
+
+    function renderAPBrandPills() {
+      const wrap = document.getElementById('apBrandPills');
+      const hiddenEl = document.getElementById('apBrand');
+      const hintEl = document.getElementById('apBrandSelectedHint');
+      if (!wrap) return;
+
+      const selected = normalizeBrandName(hiddenEl?.value || '');
+      const selectedKey = selected.toLowerCase();
+      const brands = getSelectableBrands(selected);
+
+      if (hintEl) {
+        hintEl.textContent = selected ? 'Selected: ' + selected : 'Tap a brand';
+      }
+
+      if (!brands.length) {
+        wrap.innerHTML = '<span style="font-size:12px;color:var(--t4)">No brands yet — add below</span>';
+        return;
+      }
+
+      wrap.innerHTML = brands.map(function (b) {
+        const isAct = Boolean(selectedKey && b.toLowerCase() === selectedKey);
+        const safeB = escapeHtml(b);
+        return `<button type="button" class="ap-brand-pill${isAct ? ' active' : ''}" data-brand="${safeB}" role="radio" aria-checked="${isAct ? 'true' : 'false'}" onclick="selectAPBrandPill(this.dataset.brand)">${safeB}</button>`;
+      }).join('');
+    }
+
+    function setAPBrand(rawBrand) {
+      const norm = normalizeBrandName(rawBrand);
+      const hiddenEl = document.getElementById('apBrand');
+      if (hiddenEl) {
+        hiddenEl.value = norm;
+        if (norm) hiddenEl.classList.add('filled');
+        else hiddenEl.classList.remove('filled');
+      }
+      renderAPBrandPills();
+    }
+
+    function selectAPBrandPill(rawBrand) {
+      const norm = normalizeBrandName(rawBrand);
+      const current = normalizeBrandName(document.getElementById('apBrand')?.value || '');
+      const customIn = document.getElementById('apCustomBrandIn');
+      if (customIn) customIn.value = '';
+      if (current && norm && current.toLowerCase() === norm.toLowerCase()) {
+        setAPBrand('');
+      } else {
+        setAPBrand(norm);
+      }
+    }
+
+    function addCustomBrandFromInput() {
+      const inp = document.getElementById('apCustomBrandIn');
+      if (!inp) return;
+      const norm = normalizeBrandName(inp.value);
+      if (!norm) {
+        toast('Enter a brand name', 'err');
+        inp.focus();
+        return;
+      }
+      const lower = norm.toLowerCase();
+      const catalogBrands = getSelectableBrands('');
+      const existingMatch = catalogBrands.find(b => b.toLowerCase() === lower);
+      const finalBrand = existingMatch || registerBrandInCatalog(norm);
+      inp.value = '';
+      setAPBrand(finalBrand);
+      const wrap = document.getElementById('apBrandPills');
+      const activePill = wrap?.querySelector('.ap-brand-pill.active');
+      if (activePill && typeof activePill.scrollIntoView === 'function') {
+        activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+      toast(existingMatch ? 'Selected "' + finalBrand + '"' : 'Brand "' + finalBrand + '" added ✓', 'ok');
+    }
+
+    // ══════════════════════════════════════════════════════════
     //  SAVE PRODUCT
     // ══════════════════════════════════════════════════════════
     async function saveProduct() {
@@ -18311,6 +19697,15 @@
 
       if (!name) { toast('Enter product name', 'err'); document.getElementById('apName')?.focus(); return; }
       if (!barcode) { toast('Enter or generate barcode', 'err'); return; }
+
+      const customBrandVal = gv('apCustomBrandIn');
+      const rawBrand = customBrandVal || gv('apBrand');
+      const normalizedBrand = rawBrand ? registerBrandInCatalog(rawBrand) : '';
+      if (document.getElementById('apBrand')) document.getElementById('apBrand').value = normalizedBrand;
+      if (customBrandVal && document.getElementById('apCustomBrandIn')) {
+        document.getElementById('apCustomBrandIn').value = '';
+      }
+      renderAPBrandPills();
 
       if (isIdDuplicate(barcode, AP_EDIT_ID)) {
         toast('Barcode already exists!', 'err');
@@ -18385,10 +19780,48 @@
       const rawPrimaryUrl = AP_PRODUCT_IMAGES[0]?.url || AP_PRODUCT_IMAGES[0]?.dataUrl || (typeof AP_PRODUCT_IMAGES[0] === 'string' ? AP_PRODUCT_IMAGES[0] : '');
       const primaryUrl = formatImageUrl(rawPrimaryUrl) || rawPrimaryUrl;
 
+      const mrpVal = gn('apMRP');
+      let batchesList = [];
+      if (window.SUPABASE_BATCHES) {
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const existingBatches = pExisting ? window.SUPABASE_BATCHES.normalizeBatches(pExisting) : [];
+        if (pExisting && Array.isArray(pExisting.batches) && pExisting.batches.length > 1) {
+          batchesList = JSON.parse(JSON.stringify(pExisting.batches));
+        } else if (existingBatches.length === 1) {
+          const b0 = { ...existingBatches[0] };
+          delete b0._isVirtualDefault;
+          batchesList = [{
+            ...b0,
+            id: uuidRe.test(String(b0.id || '')) ? b0.id : window.SUPABASE_BATCHES.genUuid(),
+            product_id: id,
+            sku: barcode,
+            mrp: mrpVal,
+            stock_qty: totalStock,
+            location: primaryLocCode,
+            updated_at: new Date().toISOString()
+          }];
+        } else {
+          batchesList = [{
+            id: window.SUPABASE_BATCHES.genUuid(),
+            product_id: id,
+            sku: barcode,
+            batch_id: 'B1',
+            mrp: mrpVal,
+            stock_qty: totalStock,
+            location: primaryLocCode,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }];
+        }
+      }
+      const syncedBatchTotal = (batchesList.length > 1 && window.SUPABASE_BATCHES)
+        ? window.SUPABASE_BATCHES.computeTotalStock(batchesList)
+        : totalStock;
+
       const product = {
         id,
         name,
-        brand: gv('apBrand'),
+        brand: normalizedBrand,
         category: gv('apCat'),
         primary_storage: primaryStorageType,
         primary_location: primaryLocCode,
@@ -18397,9 +19830,11 @@
         loc: primaryLocCode,
         locations: locationsList,
         qty: shopStock,
-        stock: totalStock,
+        stock: syncedBatchTotal,
+        total_stock: syncedBatchTotal,
+        batches: batchesList,
         threshold: primaryLocObj ? primaryLocObj.threshold : threshInput,
-        mrp: gn('apMRP'),
+        mrp: mrpVal,
         sp: gn('apSP'),
         fitment_group: document.getElementById('intactToggle')?.classList.contains('on')
           ? gv('apFG') : '',
@@ -18442,6 +19877,9 @@
         } else {
           toast('✓ Saved: ' + name.slice(0, 28), 'ok');
         }
+        if (window.SUPABASE_BATCHES && typeof window.SUPABASE_BATCHES.saveBatchRemoteOrQueue === 'function' && batchesList.length === 1) {
+          try { await window.SUPABASE_BATCHES.saveBatchRemoteOrQueue(batchesList[0]); } catch (bErr) { console.warn('[Save] batch persist warning:', bErr); }
+        }
         AP_LAST_PRODUCT = { ...product };
         STATE.logs.unshift({
           orderId: AP_EDIT_ID ? 'EDIT-' + id : 'ADD-' + id,
@@ -18456,12 +19894,14 @@
         AP_LOC_MODE = 'EDIT';
         AP_TARGET_EDIT_LOC = loc;
         renderAPExistingLocations();
+        renderAPBatchesSummary(product);
 
         if (typeof renderProductsList === 'function') renderProductsList('');
         if (typeof renderSearch === 'function') {
           const sq = document.getElementById('homeQ')?.value?.trim() || '';
-          if (sq) renderSearch(sq);
+          renderSearch(sq);
         }
+        renderAPBrandPills();
 
         if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Product'; }
 
@@ -18479,10 +19919,11 @@
     let AP_LAST_PRODUCT = null;
 
     function clearFormFields() {
-      ['apName', 'apBrand', 'apCat', 'apQty', 'apThreshold', 'apMRP', 'apSP', 'apFG', 'apBarcode'].forEach(function (fid) {
+      ['apName', 'apBrand', 'apCustomBrandIn', 'apCat', 'apQty', 'apThreshold', 'apMRP', 'apSP', 'apFG', 'apBarcode'].forEach(function (fid) {
         var el = document.getElementById(fid);
         if (el) { el.value = ''; el.classList.remove('filled'); }
       });
+      setAPBrand('');
       setStorageType('SHOP');
       const apR = document.getElementById('apR');
       const apL = document.getElementById('apL');
@@ -18503,7 +19944,28 @@
       AP_TARGET_EDIT_LOC = null;
       const badge = document.getElementById('apLocModeBadge');
       if (badge) badge.style.display = 'none';
+      const bRow = document.getElementById('apBatchesSummaryRow');
+      const bPills = document.getElementById('apBatchesPills');
+      if (bRow) bRow.style.display = 'none';
+      if (bPills) bPills.innerHTML = '';
       renderAPExistingLocations();
+    }
+
+    function renderAPBatchesSummary(p) {
+      const row = document.getElementById('apBatchesSummaryRow');
+      const pills = document.getElementById('apBatchesPills');
+      if (!row || !pills) return;
+      if (!p || !window.SUPABASE_BATCHES) {
+        row.style.display = 'none';
+        pills.innerHTML = '';
+        return;
+      }
+      const info = getProductBatchesInfo(p);
+      row.style.display = 'block';
+      pills.innerHTML = info.allBatches.map(b => {
+        const activeCls = (info.selectedBatch && b.batch_id === info.selectedBatch.batch_id) ? 'active' : '';
+        return `<span class="batch-pill ${activeCls}">${escapeHtml(b.batch_id)} • ₹${Number(b.mrp || 0)} (${Number(b.stock_qty || 0)})${b.location ? ' · ' + escapeHtml(b.location) : ''}</span>`;
+      }).join('');
     }
 
     function resetAPForm() {
@@ -18518,7 +19980,9 @@
       if (!AP_LAST_PRODUCT) { toast('Save a product first to duplicate', 'err'); return; }
       const p = AP_LAST_PRODUCT;
       document.getElementById('apName').value = p.name;
-      document.getElementById('apBrand').value = p.brand || '';
+      const customBrandIn = document.getElementById('apCustomBrandIn');
+      if (customBrandIn) customBrandIn.value = '';
+      setAPBrand(p.brand || '');
       document.getElementById('apCat').value = p.category || '';
       document.getElementById('apThreshold').value = (p.threshold !== undefined && p.threshold !== null) ? p.threshold : 5;
       document.getElementById('apMRP').value = p.mrp || '';
@@ -18581,7 +20045,9 @@
       };
 
       setVal('apName', p.name || '');
-      setVal('apBrand', p.brand || '');
+      const customBrandIn = document.getElementById('apCustomBrandIn');
+      if (customBrandIn) customBrandIn.value = '';
+      setAPBrand(p.brand || '');
       setVal('apCat', p.category || '');
       setVal('apQty', initialQty);
       setVal('apThreshold', initialThresh);
@@ -18618,6 +20084,7 @@
       }
       if (typeof renderMultiImageGrid === 'function') renderMultiImageGrid();
       renderAPExistingLocations();
+      renderAPBatchesSummary(p);
       nav('s-add-product');
     }
 
@@ -18832,7 +20299,10 @@
         });
       }
       // Brand / category filter
-      if (FILTER_BRANDS.size > 0) data = data.filter(p => FILTER_BRANDS.has(p.brand));
+      if (FILTER_BRANDS.size > 0) {
+        const filterBrandKeys = new Set(Array.from(FILTER_BRANDS).map(b => normalizeBrandName(b).toLowerCase()));
+        data = data.filter(p => filterBrandKeys.has(normalizeBrandName(p.brand).toLowerCase()));
+      }
       if (FILTER_CATS.size > 0) data = data.filter(p => FILTER_CATS.has(p.category));
 
       if (!data.length) {
@@ -18891,6 +20361,10 @@
           }
         }
 
+        const batchInfo = getProductBatchesInfo(p);
+        if (batchInfo.isMulti) {
+          displayQty = batchInfo.totalStock;
+        }
         const isLow = displayQty <= thresh && displayQty > 0;
         const isOut = displayQty === 0;
 
@@ -18904,8 +20378,16 @@
           locHtml = `<div class="pr-loc">${displayStorage} · ${displayLoc}</div>`;
         }
 
+        const batchSummaryHtml = batchInfo.isMulti
+          ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${batchInfo.activeBatches.slice(0, 3).map(b => `<span class="batch-b1-tag">${esc(b.batch_id)} · ₹${b.mrp} (${b.stock_qty})</span>`).join('')}${batchInfo.activeBatches.length > 3 ? `<span class="batch-b1-tag">+${batchInfo.activeBatches.length - 3}</span>` : ''}</div>`
+          : '';
+
         let totalHtml = '';
-        if (showTotal) {
+        if (batchInfo.isMulti) {
+          totalHtml = `<div class="pr-qty-total" style="font-size:10px;font-weight:700;color:var(--t3);margin-top:3px;white-space:nowrap;line-height:1.2;background:var(--bg2,#f8fafc);padding:2px 5px;border-radius:4px;border:1px solid var(--bd,#e2e8f0);text-align:center;">
+            ${batchInfo.activeBatches.length} Batches
+          </div>`;
+        } else if (showTotal) {
           if (PROD_FILTER === 'all' && info.hasConflict) {
             totalHtml = `<div class="pr-qty-total" style="font-size:10px;font-weight:700;color:var(--t3);margin-top:3px;white-space:nowrap;line-height:1.2;background:var(--bg2,#f8fafc);padding:2px 5px;border-radius:4px;border:1px solid var(--bd,#e2e8f0);text-align:center;">
               Shop: <span style="font-weight:800;color:var(--or,#ff6b00);">${info.shopQty}</span> · WH: <span style="font-weight:800;color:var(--t1);">${info.whQty}</span>
@@ -18926,10 +20408,11 @@
         ${locHtml}
         <div class="pr-name">${p.name || '—'}</div>
         <div class="pr-brand">${p.brand || ''} ${p.category ? '· ' + p.category : ''}</div>
+        ${batchSummaryHtml}
       </div>
       <div class="pr-qty">
         <div class="pr-qty-val ${isLow ? 'low' : ''} ${isOut ? 'out' : ''}">${displayQty}</div>
-        <div class="pr-qty-lbl">units</div>
+        <div class="pr-qty-lbl">${batchInfo.isMulti ? 'Total Stock' : 'units'}</div>
         ${totalHtml}
         ${isLow ? '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">LOW</div>' : ''}
         ${isOut ? '<div style="font-size:9px;font-weight:800;color:var(--rd);letter-spacing:.5px;margin-top:2px">OUT</div>' : ''}
@@ -19036,6 +20519,7 @@
       await fsLoadImages();
       await syncFStoState();
       updateFileLbl();
+      if (typeof renderAPBrandPills === 'function') renderAPBrandPills();
     }
 
 
@@ -19407,7 +20891,12 @@
 
       // Build brand pills
       var allProds = FS_PRODUCTS.concat(STATE.products);
-      var brands = [...new Set(allProds.map(function (p) { return p.brand; }).filter(Boolean))].sort();
+      var brandMap = new Map();
+      allProds.forEach(function (p) {
+        var nb = normalizeBrandName(p && p.brand);
+        if (nb && !brandMap.has(nb.toLowerCase())) brandMap.set(nb.toLowerCase(), nb);
+      });
+      var brands = Array.from(brandMap.values()).sort();
       var cats = [...new Set(allProds.map(function (p) { return p.category; }).filter(Boolean))].sort();
 
       var bEl = document.getElementById('fmBrands');
@@ -20403,7 +21892,9 @@
             sku: it.barcode || prod.barcode || prod.sku || '',
             name: prod.name || it.barcode || '',
             qty: Number(it.picked || it.qty || 1),
-            location: prod.loc || prod.location || '',
+            batch_id: it.batch_id || '',
+            unit_mrp: it.unit_mrp ?? prod.mrp ?? null,
+            location: it.loc || prod.loc || prod.location || '',
             intent: intent,
             time: sess.start || new Date().toISOString(),
             _sessId: sess.id || sess.orderId || '',
@@ -20413,11 +21904,11 @@
       return items;
     };
 
-    // ── Step 2: Merge duplicates by SKU + intent ──
+    // ── Step 2: Merge duplicates by SKU + intent (+ batch_id) ──
     LogsUI.merge = function (items) {
       var map = {};
       items.forEach(function (i) {
-        var key = i.sku + '_' + i.intent;
+        var key = i.sku + '_' + i.intent + (i.batch_id ? '_' + i.batch_id : '');
         if (!map[key]) {
           map[key] = Object.assign({}, i);
         } else {
@@ -20461,6 +21952,8 @@
           '<span class="pac-intent ' + intentClass + '">' + (INTENT_LABELS[intentClass] || intentClass) + '</span>' +
           '<div class="pac-meta">' +
           'SKU: ' + (item.sku || '—') +
+          (item.batch_id ? ' · <strong>' + item.batch_id + '</strong>' : '') +
+          (item.unit_mrp !== null && item.unit_mrp !== undefined ? ' (₹' + item.unit_mrp + ')' : '') +
           ' · Qty: <strong>' + item.qty + '</strong>' +
           (item.location ? ' · 📍 ' + item.location : '') +
           (item.count ? ' · <span style="color:var(--or);">×' + item.count + ' merged</span>' : '') +
@@ -20560,6 +22053,8 @@
             sku: item.sku,
             name: item.name,
             qty: item.qty,
+            batch_id: item.batch_id || '',
+            unit_mrp: item.unit_mrp ?? null,
             action: item.intent,
             location: item.location,
             time: item.time,
@@ -20597,10 +22092,12 @@
 
         toast('✓ Sent to POS — ' + payload.length + ' item(s)', 'ok');
 
-        // Remove sent sessions from STATE.logs (only the ones that contributed selected items)
-        var sentSkus = new Set(payload.map(function (p) { return p.sku; }));
         // Clear matched items from LogsUI list instead — preserve STATE.logs for history
-        LogsUI.items = (LogsUI.items || []).filter(function (item) { return !sentSkus.has(item.sku); });
+        var sentKeys = new Set(payload.map(function (p) { return p.sku + '_' + p.action + (p.batch_id ? '_' + p.batch_id : ''); }));
+        LogsUI.items = (LogsUI.items || []).filter(function (item) {
+          var k = item.sku + '_' + item.intent + (item.batch_id ? '_' + item.batch_id : '');
+          return !sentKeys.has(k);
+        });
         LogsUI._checked = [];
         LogsUI.render();
 

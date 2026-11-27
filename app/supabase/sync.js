@@ -26,6 +26,15 @@
         invResult = { updatedCount: inventory.length, inventory };
       }
 
+      if (window.SUPABASE_BATCHES && typeof window.SUPABASE_BATCHES.downloadAllBatches === 'function') {
+        try {
+          const batches = await window.SUPABASE_BATCHES.downloadAllBatches();
+          if (Array.isArray(batches) && batches.length > 0 && Array.isArray(prodResult?.products)) {
+            window.SUPABASE_BATCHES.attachBatchesToProducts(prodResult.products, batches);
+          }
+        } catch (eBatch) { }
+      }
+
       await window.PICKER_DB.setMeta('lastSync', now);
 
       if (typeof onUpdateCallback === 'function') {
@@ -98,10 +107,26 @@
           } else {
             await window.PICKER_DB.removeSyncQueue(item.id);
           }
+        } else if (item.type === 'save_batch') {
+          console.log('[SYNC] Uploading queued product batch:', item.payload);
+          const { error } = await client
+            .from('product_batches')
+            .upsert(item.payload, { onConflict: 'product_id,batch_id' });
+          if (!error) {
+            await window.PICKER_DB.removeSyncQueue(item.id);
+            console.log('[SYNC] Batch queue item complete:', item.id);
+          } else {
+            const msg = String(error.message || '').toLowerCase();
+            if (msg.includes('product_batches') && (msg.includes('does not exist') || msg.includes('schema cache'))) {
+              await window.PICKER_DB.removeSyncQueue(item.id);
+            } else {
+              console.error('[SYNC] Error uploading batch queue item:', error);
+            }
+          }
         } else if (item.type === 'process_movement') {
           console.log('[SYNC] Processing queued inventory movement:', item.payload);
           const p = item.payload || {};
-          const { error } = await client.rpc('fn_process_inventory_movement', {
+          const rpcArgs = {
             p_type: String(p.type || 'PICK').toUpperCase(),
             p_sku: p.sku || '',
             p_qty: Number(p.qty) || 1,
@@ -109,7 +134,16 @@
             p_picker: p.picker || 'Picker',
             p_session_id: p.sessionId || ('SES-' + Date.now()),
             p_transaction_id: p.transactionId || p.txId || ''
-          });
+          };
+          if (p.batchId) rpcArgs.p_batch_id = p.batchId;
+          if (p.unitMrp !== undefined && p.unitMrp !== null) rpcArgs.p_unit_mrp = p.unitMrp;
+          let { error } = await client.rpc('fn_process_inventory_movement', rpcArgs);
+          if (error && (p.batchId || p.unitMrp !== undefined) && String(error.message || '').toLowerCase().includes('function')) {
+            delete rpcArgs.p_batch_id;
+            delete rpcArgs.p_unit_mrp;
+            const retry = await client.rpc('fn_process_inventory_movement', rpcArgs);
+            error = retry.error;
+          }
           if (!error) {
             await window.PICKER_DB.removeSyncQueue(item.id);
             console.log('[SYNC] Movement queue item complete:', item.id);

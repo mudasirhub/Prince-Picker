@@ -1,5 +1,5 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v20';
+const CACHE_NAME = 'pa-picker-v21';
 const IMAGE_CACHE_NAME = 'prince-picker-images-v1';
 
 const WORKER_IMAGE_HOSTS = [
@@ -19,6 +19,7 @@ const STATIC_ASSETS = [
   './supabase/db.js',
   './supabase/auth.js',
   './supabase/products.js',
+  './supabase/batches.js',
   './supabase/inventory.js',
   './supabase/sync.js',
   './supabase/image_utils.js',
