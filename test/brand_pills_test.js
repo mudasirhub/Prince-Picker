@@ -270,6 +270,10 @@ function createAppHarness() {
   sandbox.window.ScrollChromeController = sandbox.window.ScrollChromeController;
 
   const fnNames = [
+    'normalizeLocFilterValue',
+    'findMatchingActiveBatchForLocation',
+    'productMatchesLocation',
+    'renderInventoryLocChip',
     'normalizeBrandName',
     'getInventoryBrandCounts',
     'renderInventoryBrandStrip',
@@ -292,6 +296,7 @@ function createAppHarness() {
     ${brandsMatch[0]}
     const DEFAULT_BRANDS = [...BRANDS];
     let INVENTORY_BRAND_FILTER = '';
+    let INVENTORY_LOC_FILTER = '';
     let _lastInvBrandStripSig = '';
     ${fnNames.map(extractFn).join('\n\n')}
   `;

@@ -1471,7 +1471,8 @@
       border-color: var(--or-md);
     }
 
-    .brand-card-pill {
+    .brand-card-pill,
+    .loc-card-pill {
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -1490,24 +1491,28 @@
       transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     }
 
-    .brand-card-pill:active {
+    .brand-card-pill:active,
+    .loc-card-pill:active {
       transform: scale(0.94);
     }
 
-    .brand-card-pill.active {
+    .brand-card-pill.active,
+    .loc-card-pill.active {
       background: #C84B11;
       border-color: #C84B11;
       color: #ffffff;
       box-shadow: 0 2px 6px rgba(200, 75, 17, 0.25);
     }
 
-    [data-theme="dark"] .brand-card-pill {
+    [data-theme="dark"] .brand-card-pill,
+    [data-theme="dark"] .loc-card-pill {
       background: #262830;
       border-color: var(--bd);
       color: var(--t2);
     }
 
-    [data-theme="dark"] .brand-card-pill.active {
+    [data-theme="dark"] .brand-card-pill.active,
+    [data-theme="dark"] .loc-card-pill.active {
       background: #C84B11;
       border-color: #C84B11;
       color: #ffffff;
@@ -7636,7 +7641,8 @@
         <div id="invBrandStrip" class="inv-brand-strip" role="tablist" aria-label="Filter inventory by brand"></div>
         <div class="res-hdr">
           <div class="res-lbl">Results</div>
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button type="button" id="invLocClearChip" class="res-brand-clear" style="display:none" onclick="clearInventoryLocFilter()"></button>
             <button type="button" id="invBrandClearChip" class="res-brand-clear" style="display:none" onclick="clearInventoryBrandFilter()"></button>
             <div class="res-cnt" id="searchCnt">–</div>
           </div>
@@ -13720,7 +13726,83 @@
     }
 
     let INVENTORY_BRAND_FILTER = '';
+    let INVENTORY_LOC_FILTER = '';
     let _lastInvBrandStripSig = '';
+
+    function normalizeLocFilterValue(raw) {
+      const cleaned = String(raw || '').trim();
+      if (!cleaned || cleaned === '—') return '';
+      return cleaned;
+    }
+
+    function findMatchingActiveBatchForLocation(p, targetLocKey) {
+      if (!p || !targetLocKey) return null;
+      const batchInfo = getProductBatchesInfo(p);
+      return batchInfo.activeBatches.find(b =>
+        normalizeLocFilterValue(b.location).toUpperCase() === targetLocKey
+      ) || null;
+    }
+
+    function productMatchesLocation(p, targetLoc) {
+      const targetLocKey = normalizeLocFilterValue(targetLoc).toUpperCase();
+      if (!targetLocKey) return true;
+      if (!p || typeof p !== 'object') return false;
+
+      const primLoc = normalizeLocFilterValue(p.primary_location || p.location || p.loc).toUpperCase();
+      if (primLoc && primLoc === targetLocKey) return true;
+
+      if (findMatchingActiveBatchForLocation(p, targetLocKey)) return true;
+
+      if (Array.isArray(p.locations) && p.locations.some(l =>
+        l && Number(l.qty ?? l.stock ?? 0) > 0 && normalizeLocFilterValue(l.location).toUpperCase() === targetLocKey
+      )) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function renderInventoryLocChip() {
+      const clearChip = document.getElementById('invLocClearChip');
+      if (!clearChip) return;
+      if (INVENTORY_LOC_FILTER) {
+        clearChip.style.display = 'inline-flex';
+        clearChip.textContent = '📍 ' + INVENTORY_LOC_FILTER + ' ×';
+        clearChip.setAttribute('aria-label', 'Clear location filter ' + INVENTORY_LOC_FILTER);
+      } else {
+        clearChip.style.display = 'none';
+        clearChip.textContent = '';
+      }
+    }
+
+    function setInventoryLocFilter(rawLoc) {
+      INVENTORY_LOC_FILTER = normalizeLocFilterValue(rawLoc);
+      const listEl = document.getElementById('searchList');
+      if (listEl) listEl.scrollTop = 0;
+      const q = document.getElementById('homeQ')?.value?.trim() || '';
+      renderSearch(q);
+      if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+        window.ScrollChromeController.sync('s-search');
+      }
+    }
+
+    function toggleInventoryLocFilter(rawLoc) {
+      const clean = normalizeLocFilterValue(rawLoc);
+      if (!clean) {
+        clearInventoryLocFilter();
+        return;
+      }
+      if (INVENTORY_LOC_FILTER && INVENTORY_LOC_FILTER.toUpperCase() === clean.toUpperCase()) {
+        clearInventoryLocFilter();
+      } else {
+        setInventoryLocFilter(clean);
+      }
+    }
+
+    function clearInventoryLocFilter() {
+      if (!INVENTORY_LOC_FILTER) return;
+      setInventoryLocFilter('');
+    }
 
     function normalizeBrandName(raw) {
       const cleaned = String(raw || '').trim().replace(/\s+/g, ' ');
@@ -13860,8 +13942,11 @@
       const list = document.getElementById('searchList');
       const cnt = document.getElementById('searchCnt');
       renderInventoryBrandStrip();
+      renderInventoryLocChip();
       const activeBrand = INVENTORY_BRAND_FILTER;
       const activeBrandKey = activeBrand.toLowerCase();
+      const activeLoc = INVENTORY_LOC_FILTER;
+      const activeLocKey = activeLoc.toUpperCase();
 
       if (!STATE.products.length) {
         list.innerHTML = `
@@ -13887,7 +13972,7 @@
       let data;
       if (q && q.length >= 1) {
         if (window.PrinceSearchEngine && window.PrinceSearchEngine.isReady()) {
-          const searchLimit = activeBrand ? Math.max(500, STATE.products.length) : 120;
+          const searchLimit = (activeBrand || activeLoc) ? Math.max(500, STATE.products.length) : 120;
           const searchRes = window.PrinceSearchEngine.search(q, { limit: searchLimit });
           data = searchRes.items.map(item => {
             const p = item.product;
@@ -13908,7 +13993,7 @@
             const an = (a.name || '').toLowerCase(), bn = (b.name || '').toLowerCase();
             return an.startsWith(ql) ? -1 : bn.startsWith(ql) ? 1 : 0;
           });
-          if (!activeBrand) data = data.slice(0, 100);
+          if (!activeBrand && !activeLoc) data = data.slice(0, 100);
         }
       } else {
         // Show all items sorted by location path
@@ -13918,24 +14003,34 @@
       if (activeBrandKey) {
         data = data.filter(p => normalizeBrandName(p.brand).toLowerCase() === activeBrandKey);
       }
+      if (activeLocKey) {
+        data = data.filter(p => productMatchesLocation(p, activeLocKey));
+      }
 
-      const label = (q || activeBrand)
+      const label = (q || activeBrand || activeLoc)
         ? `${data.length} of ${STATE.products.length} ${q ? 'found' : 'items'}`
         : `${STATE.products.length} items`;
       cnt.textContent = label;
       if (!data.length) {
+        const activeFilterDesc = [
+          activeBrand ? `brand ${escapeHtml(activeBrand)}` : '',
+          activeLoc ? `location ${escapeHtml(activeLoc)}` : ''
+        ].filter(Boolean).join(' and ');
         const emptyTitle = q
           ? `No Results for "${escapeHtml(q)}"`
-          : `No ${escapeHtml(activeBrand)} Items`;
-        const emptySub = (q && activeBrand)
-          ? `No products matching "${escapeHtml(q)}" in brand ${escapeHtml(activeBrand)}.`
-          : `We couldn't find any products matching your current filter.`;
+          : (activeLoc ? `No Items at ${escapeHtml(activeLoc)}` : `No ${escapeHtml(activeBrand)} Items`);
+        const emptySub = (q && activeFilterDesc)
+          ? `No products matching "${escapeHtml(q)}" in ${activeFilterDesc}.`
+          : (activeFilterDesc
+            ? `No products found matching ${activeFilterDesc}.`
+            : `We couldn't find any products matching your current filter.`);
         list.innerHTML = `
           <div class="empty-state-card">
             <div class="empty-state-icon">🔍</div>
             <div class="empty-state-title">${emptyTitle}</div>
             <div class="empty-state-sub">${emptySub}</div>
             <div class="empty-state-actions">
+              ${activeLoc ? `<button class="btn-s" onclick="clearInventoryLocFilter()">Clear Location</button>` : ''}
               ${activeBrand ? `<button class="btn-s" onclick="clearInventoryBrandFilter()">All Brands</button>` : ''}
               ${q ? `<button class="btn-s" onclick="document.getElementById('homeQ').value=''; renderSearch('');">Clear Search</button>` : ''}
               <button class="btn-p" onclick="nav('s-add-product')">
@@ -13952,7 +14047,17 @@
       data.forEach((p, i) => {
         const prodKey = getProductBatchKey(p);
         const batchInfo = getProductBatchesInfo(p);
-        const selBatch = batchInfo.selectedBatch;
+        let selBatch = batchInfo.selectedBatch;
+        if (activeLocKey && batchInfo.isMulti) {
+          const selLocKey = normalizeLocFilterValue(selBatch?.location).toUpperCase();
+          if (selLocKey !== activeLocKey) {
+            const matchedBatch = findMatchingActiveBatchForLocation(p, activeLocKey);
+            if (matchedBatch) {
+              selBatch = matchedBatch;
+              if (prodKey) SELECTED_PRODUCT_BATCHES[prodKey] = matchedBatch.batch_id;
+            }
+          }
+        }
         const selBatchId = selBatch ? selBatch.batch_id : 'B1';
         const displayLoc = (selBatch && selBatch.location) ? selBatch.location : (p.loc || '—');
         const displayMrp = selBatch ? Number(selBatch.mrp ?? p.mrp ?? 0) : Number(p.mrp || 0);
@@ -14007,6 +14112,11 @@
         div.style.position = 'relative';
         const cardBrand = normalizeBrandName(p.brand);
         const isBrandActive = Boolean(cardBrand && activeBrandKey && cardBrand.toLowerCase() === activeBrandKey);
+        const cleanDisplayLoc = normalizeLocFilterValue(displayLoc);
+        const isLocActive = Boolean(cleanDisplayLoc && activeLocKey && cleanDisplayLoc.toUpperCase() === activeLocKey);
+        const locPillHtml = cleanDisplayLoc
+          ? `<button type="button" class="loc-card-pill${isLocActive ? ' active' : ''}" data-loc="${escapeHtml(cleanDisplayLoc)}" aria-pressed="${isLocActive ? 'true' : 'false'}" onclick="event.stopPropagation(); toggleInventoryLocFilter(this.dataset.loc)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(cleanDisplayLoc)}${isLocActive ? ' <span aria-hidden="true">×</span>' : ''}</button>`
+          : `<span class="chip c-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>—</span>`;
         div.innerHTML = `
       ${totalInCartQty > 0 ? `<div id="cqt-${p._idx}" style="position:absolute; top:12px; right:12px; background:#fff; color:var(--or); border-radius:12px; padding:2px 8px; font-size:12px; font-weight:800; border:2px solid var(--or); box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:2">Qty: ${totalInCartQty}</div>` : ''}
       <div class="prod-top">
@@ -14015,7 +14125,7 @@
           <div style="font-size:11px; font-weight:800; color:var(--or); font-family:monospace; margin-top:1px">SKU: ${p.sku || p.barcode}</div>
           ${p._matchHighlight ? `<div class="psd-highlight" style="font-size:11px; font-weight:700; color:#0284c7; margin-top:2px; display:flex; align-items:center; gap:4px">${p._matchHighlight}</div>` : ''}
           <div class="prod-chips">
-            <span class="chip c-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${displayLoc}</span>
+            ${locPillHtml}
             <span class="chip ${sc}">${batchInfo.isMulti ? 'Total Stock' : 'Stock'}: ${effStock}</span>
             ${displayMrp > 0 ? `<span class="chip c-or">₹${displayMrp}</span>` : ''}
             ${!batchInfo.isMulti ? `<span class="chip" style="background:var(--bg2,#f4f4f5);color:var(--t3);font-weight:800">${escapeHtml(selBatchId)}</span><button type="button" class="chip" style="background:transparent;border:1px dashed var(--or-md);color:var(--or);cursor:pointer;font-weight:800" onclick="event.stopPropagation(); openAddBatchForProduct('${escapeHtml(prodKey).replace(/'/g, "\\'")}')">+ Batch</button>` : ''}
