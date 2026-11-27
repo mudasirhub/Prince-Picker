@@ -11499,6 +11499,9 @@
           if (window.ScrollChromeController && typeof window.ScrollChromeController.onModalStateChange === 'function') {
             window.ScrollChromeController.onModalStateChange();
           }
+          if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+            window.BackNavController.sync();
+          }
         },
         unlock: function (ownerId) {
           if (ownerId) {
@@ -11520,6 +11523,9 @@
           }
           if (window.ScrollChromeController && typeof window.ScrollChromeController.onModalStateChange === 'function') {
             window.ScrollChromeController.onModalStateChange();
+          }
+          if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+            window.BackNavController.sync();
           }
         },
         isLocked: function () { return lockStack.length > 0; },
@@ -11997,6 +12003,9 @@
         },
         onModalStateChange: function () {
           if (activeApi) activeApi.onModalStateChange();
+          if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+            window.BackNavController.sync();
+          }
         },
         detach: function () {
           if (activeCleanup) {
@@ -12012,12 +12021,613 @@
     })();
     window.ScrollChromeController = ScrollChromeController;
 
+    // ══════════════════════════════════════════
+    //  CENTRALIZED BACK NAVIGATION CONTROLLER
+    //  (Unified PWA History API + Capacitor Android)
+    // ══════════════════════════════════════════
+    const BackNavController = (function () {
+      const EXIT_WINDOW_MS = 2000;
+      const ROOT_SCREEN = 's-search';
+      const AUTH_SCREENS = new Set(['s-splash', 's-login']);
+
+      let initialized = false;
+      let capListenerRegistered = false;
+      let screenStack = [];
+      let overlayOrder = [];
+      let filterOrder = [];
+      let historyDepth = 0;
+      let ignorePopstateCount = 0;
+      let ignoreClearTimer = null;
+      let pendingResync = false;
+      let syncScheduled = false;
+      let lastExitTapAt = 0;
+      let exitResetTimer = null;
+      let allowAppExit = false;
+
+      function isElDisplayed(id) {
+        const el = document.getElementById(id);
+        return Boolean(el && el.style && el.style.display && el.style.display !== 'none');
+      }
+
+      function hasElClass(id, cls) {
+        const el = document.getElementById(id);
+        return Boolean(el && el.classList && el.classList.contains(cls));
+      }
+
+      function hideEl(id) {
+        const el = document.getElementById(id);
+        if (el && el.style) el.style.display = 'none';
+      }
+
+      function getOverlayDefs() {
+        return [
+          {
+            id: 'pdmFullscreenViewer',
+            z: 1100,
+            isOpen: () => (typeof PRODUCT_GALLERY !== 'undefined' && Boolean(PRODUCT_GALLERY.viewerOpen)) || isElDisplayed('pdmFullscreenViewer'),
+            close: () => { if (typeof closePdmFullscreen === 'function') closePdmFullscreen(); else hideEl('pdmFullscreenViewer'); }
+          },
+          {
+            id: 'pwaInstallPromptModal',
+            z: 999999,
+            isOpen: () => isElDisplayed('pwaInstallPromptModal'),
+            close: () => { if (window.PWAInstallManager && typeof window.PWAInstallManager.closePromptModal === 'function') window.PWAInstallManager.closePromptModal(); else hideEl('pwaInstallPromptModal'); }
+          },
+          {
+            id: 'installHelpModal',
+            z: 999999,
+            isOpen: () => isElDisplayed('installHelpModal'),
+            close: () => { if (window.PWAInstallManager && typeof window.PWAInstallManager.closeInstructions === 'function') window.PWAInstallManager.closeInstructions(); else hideEl('installHelpModal'); }
+          },
+          {
+            id: 'notifSheet',
+            z: 9999,
+            isOpen: () => hasElClass('notifSheet', 'open'),
+            close: () => { if (typeof closeNotificationCenter === 'function') closeNotificationCenter(); }
+          },
+          {
+            id: 'transferLogsModal',
+            z: 9000,
+            isOpen: () => isElDisplayed('transferLogsModal'),
+            close: () => { if (typeof closeTransferLogsModal === 'function') closeTransferLogsModal(); else hideEl('transferLogsModal'); }
+          },
+          {
+            id: 'transferResumeModal',
+            z: 9000,
+            isOpen: () => isElDisplayed('transferResumeModal'),
+            close: () => {
+              hideEl('transferResumeModal');
+              if (window.ScrollLockManager) window.ScrollLockManager.unlock('transferResumeModal');
+            }
+          },
+          {
+            id: 'auditResumeModal',
+            z: 460,
+            isOpen: () => isElDisplayed('auditResumeModal'),
+            close: () => {
+              hideEl('auditResumeModal');
+              if (window.ScrollLockManager) window.ScrollLockManager.unlock('auditResumeModal');
+            }
+          },
+          {
+            id: 'moreSheet',
+            z: 3000,
+            isOpen: () => hasElClass('moreSheet', 'open'),
+            close: () => { if (typeof closeMore === 'function') closeMore(); }
+          },
+          {
+            id: 'batchSelectModal',
+            z: 965,
+            isOpen: () => isElDisplayed('batchSelectModal'),
+            close: () => { if (typeof closeBatchSelectModal === 'function') closeBatchSelectModal(); else hideEl('batchSelectModal'); }
+          },
+          {
+            id: 'qrPreviewModal',
+            z: 960,
+            isOpen: () => isElDisplayed('qrPreviewModal'),
+            close: () => { if (typeof closeQrPreview === 'function') closeQrPreview(); else hideEl('qrPreviewModal'); }
+          },
+          {
+            id: 'manual-input-modal',
+            z: 600,
+            isOpen: () => isElDisplayed('manual-input-modal'),
+            close: () => { if (typeof closeManualEntryModal === 'function') closeManualEntryModal(); else hideEl('manual-input-modal'); }
+          },
+          {
+            id: 'scanner-modal',
+            z: 500,
+            isScanner: true,
+            isOpen: () => hasElClass('scanner-modal', 'on'),
+            close: () => { if (typeof closeScanner === 'function') closeScanner(); }
+          },
+          {
+            id: 'pdmAddBatchForm',
+            z: 951,
+            isOpen: () => isElDisplayed('prodDetailModal') && isElDisplayed('pdmAddBatchForm'),
+            close: () => { if (typeof togglePdmAddBatchForm === 'function') togglePdmAddBatchForm(false); else hideEl('pdmAddBatchForm'); }
+          },
+          {
+            id: 'prodDetailModal',
+            z: 950,
+            isOpen: () => isElDisplayed('prodDetailModal'),
+            close: () => { if (typeof closeProdDetail === 'function') closeProdDetail(); else hideEl('prodDetailModal'); }
+          },
+          {
+            id: 'customQrModal',
+            z: 460,
+            isOpen: () => isElDisplayed('customQrModal'),
+            close: () => { if (typeof closeCustomQrModal === 'function') closeCustomQrModal(); else hideEl('customQrModal'); }
+          },
+          {
+            id: 'auditStartModal',
+            z: 460,
+            isOpen: () => isElDisplayed('auditStartModal'),
+            close: () => { if (typeof closeAuditStartModal === 'function') closeAuditStartModal(); else hideEl('auditStartModal'); }
+          },
+          {
+            id: 'filterModal',
+            z: 400,
+            isOpen: () => isElDisplayed('filterModal'),
+            close: () => { if (typeof closeFilterModal === 'function') closeFilterModal(); else hideEl('filterModal'); }
+          }
+        ];
+      }
+
+      function refreshOverlayOrder() {
+        const defs = getOverlayDefs();
+        const openMap = new Map();
+        for (let i = 0; i < defs.length; i++) {
+          if (defs[i].isOpen()) openMap.set(defs[i].id, defs[i]);
+        }
+        overlayOrder = overlayOrder.filter(id => openMap.has(id));
+        const newlyOpened = [];
+        openMap.forEach((def, id) => {
+          if (!overlayOrder.includes(id)) newlyOpened.push(def);
+        });
+        newlyOpened.sort((a, b) => a.z - b.z);
+        for (let i = 0; i < newlyOpened.length; i++) {
+          overlayOrder.push(newlyOpened[i].id);
+        }
+        return openMap;
+      }
+
+      function getActiveScreenId() {
+        const el = document.querySelector('.S.on');
+        if (el && el.id) return el.id;
+        return screenStack.length > 0 ? screenStack[screenStack.length - 1] : ROOT_SCREEN;
+      }
+
+      function refreshFilterOrder(activeScreen) {
+        const hasLoc = typeof INVENTORY_LOC_FILTER !== 'undefined' && Boolean(INVENTORY_LOC_FILTER);
+        const hasBrand = typeof INVENTORY_BRAND_FILTER !== 'undefined' && Boolean(INVENTORY_BRAND_FILTER);
+        filterOrder = filterOrder.filter(k => (k === 'inv:loc' && hasLoc) || (k === 'inv:brand' && hasBrand));
+        if (activeScreen === ROOT_SCREEN) {
+          if (hasBrand && !filterOrder.includes('inv:brand')) filterOrder.push('inv:brand');
+          if (hasLoc && !filterOrder.includes('inv:loc')) filterOrder.push('inv:loc');
+        }
+      }
+
+      function getActiveSearchQuery() {
+        const homeInput = document.getElementById('homeQ');
+        return homeInput && typeof homeInput.value === 'string' ? homeInput.value.trim() : '';
+      }
+
+      function computeDesiredStack() {
+        const stack = [];
+        const activeScreen = getActiveScreenId();
+        if (!AUTH_SCREENS.has(activeScreen)) {
+          if (activeScreen !== ROOT_SCREEN && !screenStack.includes(activeScreen)) {
+            screenStack.push(activeScreen);
+          }
+          for (let i = 0; i < screenStack.length; i++) {
+            stack.push('screen:' + screenStack[i]);
+          }
+          if (activeScreen === ROOT_SCREEN) {
+            if (getActiveSearchQuery().length > 0) {
+              stack.push('inv:query');
+            }
+            refreshFilterOrder(activeScreen);
+            for (let i = 0; i < filterOrder.length; i++) {
+              stack.push(filterOrder[i]);
+            }
+          }
+        }
+        refreshOverlayOrder();
+        for (let i = 0; i < overlayOrder.length; i++) {
+          stack.push('overlay:' + overlayOrder[i]);
+        }
+        return stack;
+      }
+
+      function hasHistoryApi() {
+        return typeof window !== 'undefined' && window.history && typeof window.history.pushState === 'function';
+      }
+
+      function ensureBaseGuard() {
+        if (!hasHistoryApi()) return;
+        const st = window.history.state;
+        if (!st || (!st.ppBase && !st.ppGuard && !st.ppNav)) {
+          window.history.replaceState({ ppBase: true, depth: -1 }, '');
+          window.history.pushState({ ppGuard: true, depth: 0 }, '');
+          historyDepth = 0;
+        } else if (st.ppBase) {
+          window.history.pushState({ ppGuard: true, depth: 0 }, '');
+          historyDepth = 0;
+        } else if (st.ppGuard) {
+          historyDepth = 0;
+        } else if (st.ppNav && typeof st.depth === 'number') {
+          historyDepth = Math.max(0, st.depth);
+        }
+      }
+
+      function syncHistoryNow() {
+        syncScheduled = false;
+        if (!initialized || allowAppExit || !hasHistoryApi()) return;
+        if (ignorePopstateCount > 0) {
+          pendingResync = true;
+          return;
+        }
+
+        const desired = computeDesiredStack();
+        const targetDepth = desired.length;
+
+        if (historyDepth < 0) {
+          window.history.pushState({ ppGuard: true, depth: 0 }, '');
+          historyDepth = 0;
+        }
+
+        if (targetDepth > historyDepth) {
+          for (let k = historyDepth + 1; k <= targetDepth; k++) {
+            window.history.pushState({ ppNav: true, depth: k, layer: desired[k - 1] }, '');
+          }
+          historyDepth = targetDepth;
+        } else if (targetDepth < historyDepth) {
+          const delta = historyDepth - targetDepth;
+          historyDepth = targetDepth;
+          ignorePopstateCount += 1;
+          clearTimeout(ignoreClearTimer);
+          ignoreClearTimer = setTimeout(function () {
+            ignorePopstateCount = 0;
+            if (pendingResync) {
+              pendingResync = false;
+              syncHistoryNow();
+            }
+          }, 80);
+          if (delta === 1) window.history.back();
+          else window.history.go(-delta);
+        } else if (targetDepth > 0 && typeof window.history.replaceState === 'function') {
+          const topLayer = desired[targetDepth - 1];
+          if (!window.history.state || window.history.state.layer !== topLayer || window.history.state.depth !== targetDepth) {
+            window.history.replaceState({ ppNav: true, depth: targetDepth, layer: topLayer }, '');
+          }
+        }
+      }
+
+      function scheduleSync() {
+        if (!initialized || syncScheduled) return;
+        syncScheduled = true;
+        const schedule = (typeof queueMicrotask === 'function')
+          ? queueMicrotask
+          : (fn) => Promise.resolve().then(fn);
+        schedule(syncHistoryNow);
+      }
+
+      function resetExitArm() {
+        lastExitTapAt = 0;
+        if (exitResetTimer) {
+          clearTimeout(exitResetTimer);
+          exitResetTimer = null;
+        }
+      }
+
+      function getCapacitorAppPlugin() {
+        const cap = window.Capacitor;
+        if (!cap) return null;
+        const isNative = typeof cap.isNativePlatform === 'function' ? cap.isNativePlatform() : false;
+        if (!isNative) return null;
+        return (cap.Plugins && cap.Plugins.App) || cap.App || null;
+      }
+
+      function registerCapacitorListener() {
+        if (capListenerRegistered) return;
+        const appPlugin = getCapacitorAppPlugin();
+        if (appPlugin && typeof appPlugin.addListener === 'function') {
+          capListenerRegistered = true;
+          appPlugin.addListener('backButton', function () {
+            handleHardwareBack();
+          });
+        }
+      }
+
+      function leaveNonRootScreen(activeScreen) {
+        if (activeScreen === 's-picking') {
+          if (typeof confirmLeaveSession === 'function') confirmLeaveSession();
+          else if (typeof nav === 'function') nav(ROOT_SCREEN);
+          return;
+        }
+        if (activeScreen === 's-audit-active') {
+          if (typeof cancelActiveAudit === 'function') cancelActiveAudit();
+          else if (typeof nav === 'function') nav('s-audit');
+          return;
+        }
+        if (activeScreen === 's-transfer-active') {
+          if (typeof cancelActiveTransfer === 'function') cancelActiveTransfer();
+          else if (typeof nav === 'function') nav('s-transfer');
+          return;
+        }
+        if (activeScreen === 's-adhoc') {
+          if (typeof adhocState !== 'undefined' && adhocState && adhocState.timerInt) {
+            clearInterval(adhocState.timerInt);
+            adhocState.timerInt = null;
+          }
+          if (typeof stopInlineScanner === 'function') stopInlineScanner();
+        } else if (activeScreen === 's-drop') {
+          if (typeof stopDropInlineScanner === 'function') stopDropInlineScanner();
+        }
+
+        screenStack = screenStack.filter(s => s !== activeScreen);
+        const fallbackScreen = screenStack.length > 0 ? screenStack[screenStack.length - 1] : ROOT_SCREEN;
+        if (typeof nav === 'function') nav(fallbackScreen);
+        else if (typeof goTo === 'function') goTo(fallbackScreen);
+      }
+
+      function resolveOneBackStep(opts) {
+        const fromPopstate = Boolean(opts && opts.fromPopstate);
+        const poppedState = opts && opts.poppedState;
+
+        // Priority 1 & 2: Topmost open scanner, modal, dialog, bottom sheet, or fullscreen viewer
+        const openMap = refreshOverlayOrder();
+        if (overlayOrder.length > 0) {
+          resetExitArm();
+          let targetId = overlayOrder[overlayOrder.length - 1];
+          // If scanner-modal is open and no higher-z modal sits above it, close scanner first
+          const scannerDef = openMap.get('scanner-modal');
+          const topDef = openMap.get(targetId);
+          if (scannerDef && topDef && scannerDef.z > topDef.z) {
+            targetId = 'scanner-modal';
+          }
+          const def = openMap.get(targetId);
+          if (def && typeof def.close === 'function') {
+            def.close();
+          }
+          sync();
+          return { action: 'overlay', target: targetId };
+        }
+
+        const activeScreen = getActiveScreenId();
+
+        // Priority 3: Active Search Query or Pill Filter on Inventory (s-search)
+        if (activeScreen === ROOT_SCREEN) {
+          const homeInput = document.getElementById('homeQ');
+          const homeDropdown = document.getElementById('homeSearchDropdown');
+          const isDropdownOpen = Boolean(homeDropdown && homeDropdown.style && homeDropdown.style.display && homeDropdown.style.display !== 'none');
+
+          // Sub-step A: If search input is focused (or autocomplete open), blur/dismiss keyboard first
+          if (homeInput && (document.activeElement === homeInput || isDropdownOpen)) {
+            resetExitArm();
+            if (document.activeElement === homeInput && typeof homeInput.blur === 'function') {
+              homeInput.blur();
+            }
+            if (homeDropdown && homeDropdown.style) {
+              homeDropdown.style.display = 'none';
+            }
+            if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+              window.ScrollChromeController.sync(ROOT_SCREEN);
+            }
+            sync();
+            return { action: 'blur-search', target: 'homeQ' };
+          }
+
+          // Sub-step B: Clear active Location or Brand pill filter (most recent first)
+          refreshFilterOrder(activeScreen);
+          if (filterOrder.length > 0) {
+            resetExitArm();
+            const topFilter = filterOrder[filterOrder.length - 1];
+            if (topFilter === 'inv:loc' && typeof clearInventoryLocFilter === 'function') {
+              clearInventoryLocFilter();
+            } else if (topFilter === 'inv:brand' && typeof clearInventoryBrandFilter === 'function') {
+              clearInventoryBrandFilter();
+            }
+            sync();
+            return { action: 'clear-filter', target: topFilter };
+          }
+
+          // Sub-step C: Clear active search query and restore full list
+          if (homeInput && homeInput.value && homeInput.value.trim().length > 0) {
+            resetExitArm();
+            homeInput.value = '';
+            if (homeDropdown && homeDropdown.style) homeDropdown.style.display = 'none';
+            if (typeof renderSearch === 'function') renderSearch('');
+            if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+              window.ScrollChromeController.sync(ROOT_SCREEN);
+            }
+            sync();
+            return { action: 'clear-query', target: 'homeQ' };
+          }
+        }
+
+        // Priority 4: Non-default bottom tab or sub-screen active
+        if (!AUTH_SCREENS.has(activeScreen) && activeScreen !== ROOT_SCREEN) {
+          resetExitArm();
+          if (activeScreen === 's-products') {
+            const prodInput = document.getElementById('prodQ');
+            const prodDropdown = document.getElementById('prodSearchDropdown');
+            const isProdDdOpen = Boolean(prodDropdown && prodDropdown.style && prodDropdown.style.display && prodDropdown.style.display !== 'none');
+            if (prodInput && (document.activeElement === prodInput || isProdDdOpen)) {
+              if (document.activeElement === prodInput && typeof prodInput.blur === 'function') prodInput.blur();
+              if (prodDropdown && prodDropdown.style) prodDropdown.style.display = 'none';
+              sync();
+              return { action: 'blur-search', target: 'prodQ' };
+            }
+          }
+          leaveNonRootScreen(activeScreen);
+          sync();
+          return { action: 'navigate-back', target: activeScreen };
+        }
+
+        // Priority 5: Root State Reached -> Double-back within 2 seconds to exit
+        const now = Date.now();
+        if (lastExitTapAt > 0 && (now - lastExitTapAt) < EXIT_WINDOW_MS) {
+          resetExitArm();
+          const appPlugin = getCapacitorAppPlugin();
+          if (appPlugin && typeof appPlugin.exitApp === 'function') {
+            appPlugin.exitApp();
+            return { action: 'exit-native' };
+          }
+          if (hasHistoryApi()) {
+            allowAppExit = true;
+            if (fromPopstate) {
+              const stepsBack = (poppedState && poppedState.ppBase) ? 1 : Math.max(1, historyDepth + 2);
+              if (stepsBack === 1) window.history.back();
+              else window.history.go(-stepsBack);
+            } else {
+              window.history.go(-(Math.max(0, historyDepth) + 2));
+            }
+          }
+          return { action: 'exit-pwa' };
+        }
+
+        lastExitTapAt = now;
+        if (exitResetTimer) clearTimeout(exitResetTimer);
+        exitResetTimer = setTimeout(function () {
+          lastExitTapAt = 0;
+          exitResetTimer = null;
+        }, EXIT_WINDOW_MS);
+
+        if (typeof toast === 'function') {
+          toast('Press back again to exit');
+        }
+        if (fromPopstate && hasHistoryApi() && ((poppedState && poppedState.ppBase) || historyDepth < 0)) {
+          window.history.pushState({ ppGuard: true, depth: 0 }, '');
+          historyDepth = 0;
+        }
+        return { action: 'exit-arm' };
+      }
+
+      function onPopState(e) {
+        if (allowAppExit) return;
+        const st = e ? e.state : null;
+
+        if (ignorePopstateCount > 0) {
+          ignorePopstateCount -= 1;
+          if (ignorePopstateCount === 0 && ignoreClearTimer) {
+            clearTimeout(ignoreClearTimer);
+            ignoreClearTimer = null;
+          }
+          if (st && typeof st.depth === 'number') {
+            historyDepth = st.depth;
+          }
+          if (ignorePopstateCount === 0 && pendingResync) {
+            pendingResync = false;
+            sync();
+          }
+          return;
+        }
+
+        if (st && typeof st.depth === 'number') {
+          historyDepth = st.depth;
+        } else {
+          historyDepth = Math.max(-1, historyDepth - 1);
+        }
+
+        resolveOneBackStep({ fromPopstate: true, poppedState: st });
+      }
+
+      function handleHardwareBack() {
+        return resolveOneBackStep({ fromPopstate: false });
+      }
+
+      function onScreenChange(id) {
+        if (!id || AUTH_SCREENS.has(id)) {
+          screenStack = [];
+          sync();
+          return;
+        }
+        if (id === ROOT_SCREEN) {
+          screenStack = [];
+          sync();
+          return;
+        }
+        const existingIdx = screenStack.indexOf(id);
+        if (existingIdx >= 0) {
+          screenStack = screenStack.slice(0, existingIdx + 1);
+        } else {
+          screenStack.push(id);
+        }
+        resetExitArm();
+        sync();
+      }
+
+      function removeScreenFromStack(id) {
+        if (!id) return;
+        screenStack = screenStack.filter(s => s !== id);
+        sync();
+      }
+
+      function onFilterChange(type, value) {
+        const key = type === 'loc' ? 'inv:loc' : type === 'brand' ? 'inv:brand' : '';
+        if (!key) return;
+        filterOrder = filterOrder.filter(k => k !== key);
+        if (value) {
+          filterOrder.push(key);
+          resetExitArm();
+        }
+        sync();
+      }
+
+      function sync() {
+        if (!initialized) return;
+        scheduleSync();
+      }
+
+      function init() {
+        if (initialized) {
+          registerCapacitorListener();
+          return;
+        }
+        initialized = true;
+        ensureBaseGuard();
+        if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+          window.addEventListener('popstate', onPopState);
+        }
+        registerCapacitorListener();
+        sync();
+      }
+
+      return {
+        init,
+        sync,
+        syncNow: syncHistoryNow,
+        onScreenChange,
+        removeScreenFromStack,
+        onFilterChange,
+        handleHardwareBack,
+        resolveOneBackStep,
+        registerCapacitorListener,
+        getStateSnapshot: function () {
+          return {
+            initialized,
+            historyDepth,
+            screenStack: [...screenStack],
+            overlayOrder: [...overlayOrder],
+            filterOrder: [...filterOrder],
+            desiredStack: computeDesiredStack(),
+            exitArmed: lastExitTapAt > 0
+          };
+        }
+      };
+    })();
+    window.BackNavController = BackNavController;
+
     const DEFAULT_HOME_SCREEN = 's-search';
 
     // ══════════════════════════════════════════
     //  STARTUP
     // ══════════════════════════════════════════
     window.addEventListener('DOMContentLoaded', async function () {
+      if (window.BackNavController && typeof window.BackNavController.init === 'function') {
+        window.BackNavController.init();
+      }
       // ── Restore prefs ──
       try {
         const n = localStorage.getItem(LS_PICKER) || '';
@@ -13699,6 +14309,9 @@
 
       STATE.session = null;
       clearCartSilent();
+      if (window.BackNavController && typeof window.BackNavController.removeScreenFromStack === 'function') {
+        window.BackNavController.removeScreenFromStack('s-picking');
+      }
       renderSummary(sessLog);
       nav('s-summary');
     }
@@ -13780,6 +14393,9 @@
 
     function setInventoryLocFilter(rawLoc) {
       INVENTORY_LOC_FILTER = normalizeLocFilterValue(rawLoc);
+      if (window.BackNavController && typeof window.BackNavController.onFilterChange === 'function') {
+        window.BackNavController.onFilterChange('loc', INVENTORY_LOC_FILTER);
+      }
       const listEl = document.getElementById('searchList');
       if (listEl) listEl.scrollTop = 0;
       const q = document.getElementById('homeQ')?.value?.trim() || '';
@@ -13907,6 +14523,9 @@
     function setInventoryBrandFilter(rawBrand) {
       const norm = normalizeBrandName(rawBrand);
       INVENTORY_BRAND_FILTER = norm;
+      if (window.BackNavController && typeof window.BackNavController.onFilterChange === 'function') {
+        window.BackNavController.onFilterChange('brand', INVENTORY_BRAND_FILTER);
+      }
       const listEl = document.getElementById('searchList');
       if (listEl) listEl.scrollTop = 0;
       const q = document.getElementById('homeQ')?.value?.trim() || '';
@@ -13946,6 +14565,9 @@
       const cnt = document.getElementById('searchCnt');
       renderInventoryBrandStrip();
       renderInventoryLocChip();
+      if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+        window.BackNavController.sync();
+      }
       const activeBrand = INVENTORY_BRAND_FILTER;
       const activeBrandKey = activeBrand.toLowerCase();
       const activeLoc = INVENTORY_LOC_FILTER;
@@ -14145,7 +14767,15 @@
       });
     }
 
-    document.getElementById('homeQ').addEventListener('input', debounce(function () { renderSearch(this.value.trim()); }, 220));
+    const _homeQEl = document.getElementById('homeQ');
+    if (_homeQEl) {
+      _homeQEl.addEventListener('input', function () {
+        if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+          window.BackNavController.sync();
+        }
+      });
+      _homeQEl.addEventListener('input', debounce(function () { renderSearch(this.value.trim()); }, 220));
+    }
 
       // Attach high-performance autocomplete UI to search inputs
       if (window.PrinceSearchEngine && window.PrinceSearchEngine.attachSearchUI) {
@@ -14494,6 +15124,9 @@
         if (locIn) locIn.value = p.primary_location || p.location || p.loc || '';
         if (mergeHint) mergeHint.style.display = 'none';
         if (mergeChk) mergeChk.checked = false;
+      }
+      if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+        window.BackNavController.sync();
       }
     }
 
@@ -15020,6 +15653,9 @@
 
       initPdmFullscreenGestures();
       syncPdmFullscreenView();
+      if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+        window.BackNavController.sync();
+      }
     }
 
     function closePdmFullscreen() {
@@ -15036,6 +15672,9 @@
       resetPdmZoom();
       // Ensure modal gallery reflects active image
       renderPdmGalleryView();
+      if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+        window.BackNavController.sync();
+      }
     }
 
     function syncPdmFullscreenView() {
@@ -17007,6 +17646,9 @@
       }
       if (window.ScrollChromeController && typeof window.ScrollChromeController.attachToScreen === 'function') {
         window.ScrollChromeController.attachToScreen(id);
+      }
+      if (window.BackNavController && typeof window.BackNavController.onScreenChange === 'function') {
+        window.BackNavController.onScreenChange(id);
       }
     }
 
@@ -22367,6 +23009,7 @@
         currentAuditItems = data.currentAuditItems;
         currentAuditIndex = data.currentAuditIndex;
         document.getElementById('auditResumeModal').style.display = 'none';
+        if (window.ScrollLockManager) ScrollLockManager.unlock('auditResumeModal');
         nav('s-audit-active');
         if (!currentAuditLocation) {
           renderAuditLocationStep();
@@ -22381,6 +23024,7 @@
     function discardActiveAudit() {
       clearActiveAudit();
       document.getElementById('auditResumeModal').style.display = 'none';
+      if (window.ScrollLockManager) ScrollLockManager.unlock('auditResumeModal');
       nav('s-orders');
     }
 
@@ -22938,6 +23582,7 @@
         subEl.textContent = transferId;
         bodyEl.innerHTML = `<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">Transfer details not found for ${transferId}.</div>`;
         modal.style.display = 'flex';
+        if (window.ScrollChromeController) window.ScrollChromeController.onModalStateChange();
         return;
       }
 
@@ -23140,6 +23785,7 @@
     // ── Resume/Discard Draft ──
     function resumeActiveTransfer() {
       document.getElementById('transferResumeModal').style.display = 'none';
+      if (window.ScrollLockManager) ScrollLockManager.unlock('transferResumeModal');
       const stored = localStorage.getItem(LS_ACTIVE_TRANSFER);
       if (stored) {
         try {
@@ -23156,6 +23802,7 @@
 
     function discardActiveTransfer() {
       document.getElementById('transferResumeModal').style.display = 'none';
+      if (window.ScrollLockManager) ScrollLockManager.unlock('transferResumeModal');
       clearActiveTransfer();
       toast('Draft Transfer Discarded', 'ok');
 

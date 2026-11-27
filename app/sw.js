@@ -1,5 +1,5 @@
 'use strict';
-const CACHE_NAME = 'pa-picker-v22';
+const CACHE_NAME = 'pa-picker-v23';
 const IMAGE_CACHE_NAME = 'prince-picker-images-v1';
 
 const WORKER_IMAGE_HOSTS = [
