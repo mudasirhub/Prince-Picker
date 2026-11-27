@@ -1244,23 +1244,55 @@
   function attachSearchUI(inputEl, options = {}) {
     if (!inputEl) return null;
 
-    let dropdownEl = document.getElementById(options.dropdownId || 'princeSearchDropdown');
+    const dropdownId = options.dropdownId || 'princeSearchDropdown';
+    let dropdownEl = document.getElementById(dropdownId);
     if (!dropdownEl) {
       dropdownEl = document.createElement('div');
-      dropdownEl.id = options.dropdownId || 'princeSearchDropdown';
+      dropdownEl.id = dropdownId;
       dropdownEl.className = 'prince-search-dropdown';
       document.body.appendChild(dropdownEl);
+    }
+
+    const backdropId = dropdownId + 'Backdrop';
+    let backdropEl = document.getElementById(backdropId);
+    if (!backdropEl) {
+      backdropEl = document.createElement('div');
+      backdropEl.id = backdropId;
+      backdropEl.className = 'prince-search-backdrop';
+      backdropEl.style.display = 'none';
+      document.body.appendChild(backdropEl);
     }
 
     let activeIndex = -1;
     let currentResults = [];
     let debounceTimer = null;
 
+    function getAnchorRect() {
+      const containerEl = inputEl.closest('.search-row') || inputEl;
+      return containerEl.getBoundingClientRect();
+    }
+
     function positionDropdown() {
-      const rect = inputEl.getBoundingClientRect();
-      dropdownEl.style.top = `${rect.bottom + window.scrollY + 6}px`;
-      dropdownEl.style.left = `${Math.max(12, rect.left)}px`;
-      dropdownEl.style.width = `${Math.min(window.innerWidth - 24, rect.width)}px`;
+      const rect = getAnchorRect();
+      const searchAreaEl = inputEl.closest('.search-area') || inputEl.closest('.search-row') || inputEl;
+      const areaRect = searchAreaEl.getBoundingClientRect();
+      const leftPos = Math.max(12, Math.round(rect.left));
+      const widthVal = Math.min(window.innerWidth - 24, Math.max(240, Math.round(rect.width)));
+      const topPos = Math.round(rect.bottom + 6);
+
+      dropdownEl.style.position = 'fixed';
+      dropdownEl.style.top = `${topPos}px`;
+      dropdownEl.style.left = `${leftPos}px`;
+      dropdownEl.style.width = `${widthVal}px`;
+      dropdownEl.style.maxHeight = `${Math.max(200, Math.min(440, window.innerHeight - topPos - 16))}px`;
+
+      backdropEl.style.top = `${Math.max(0, Math.round(areaRect.bottom))}px`;
+    }
+
+    function hideDropdown() {
+      dropdownEl.style.display = 'none';
+      backdropEl.style.display = 'none';
+      activeIndex = -1;
     }
 
     function renderDropdown(results) {
@@ -1268,7 +1300,7 @@
       activeIndex = -1;
 
       if (!currentResults || currentResults.length === 0) {
-        dropdownEl.style.display = 'none';
+        hideDropdown();
         return;
       }
 
@@ -1277,7 +1309,7 @@
 
       const hdr = document.createElement('div');
       hdr.className = 'psd-header';
-      hdr.textContent = `Found ${currentResults.length} result${currentResults.length === 1 ? '' : 's'}`;
+      hdr.innerHTML = `<span>Found ${currentResults.length} result${currentResults.length === 1 ? '' : 's'}</span><span class="psd-kbd-legend pp-kbd">↑↓ Navigate · ↵ Add · ⇧↵ Details</span>`;
       dropdownEl.appendChild(hdr);
 
       const listContainer = document.createElement('div');
@@ -1323,8 +1355,18 @@
             <span class="psd-stock-badge ${isOut ? 'out' : isLow ? 'low' : 'ok'}">
               ${isOut ? '0 pcs' : `${effStock} pcs`}
             </span>
+            <button type="button" class="psd-quick-add-btn" aria-label="Quick add ${escapeHTML(p.name || 'product')} to cart" title="Add to Cart">+</button>
           </div>
         `;
+
+        const quickAddBtn = row.querySelector('.psd-quick-add-btn');
+        if (quickAddBtn) {
+          quickAddBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            quickAddItem(index);
+          });
+        }
 
         row.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1335,13 +1377,30 @@
       });
 
       dropdownEl.appendChild(listContainer);
+      backdropEl.style.display = 'block';
       dropdownEl.style.display = 'block';
+    }
+
+    function quickAddItem(index) {
+      if (index >= 0 && index < currentResults.length) {
+        const item = currentResults[index];
+        if (typeof options.onQuickAdd === 'function') {
+          options.onQuickAdd(item.product, item);
+        } else if (typeof window.quickAddProductToCart === 'function') {
+          window.quickAddProductToCart(item.product, item);
+        } else if (typeof window.addItemToCart === 'function') {
+          window.addItemToCart(item.product, 1, 'pick');
+          if (typeof window.toast === 'function') {
+            window.toast(`✓ Added ${item.product?.name || 'item'} to cart`, 'ok');
+          }
+        }
+      }
     }
 
     function selectItem(index) {
       if (index >= 0 && index < currentResults.length) {
         const item = currentResults[index];
-        dropdownEl.style.display = 'none';
+        hideDropdown();
         if (typeof options.onSelect === 'function') {
           options.onSelect(item.product, item);
         } else if (typeof window.openProdDetail === 'function') {
@@ -1365,7 +1424,7 @@
       clearTimeout(debounceTimer);
       const val = this.value.trim();
       if (!val) {
-        dropdownEl.style.display = 'none';
+        hideDropdown();
         return;
       }
       debounceTimer = setTimeout(() => {
@@ -1376,6 +1435,10 @@
 
     // Keyboard navigation
     inputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' && dropdownEl.style.display === 'none' && this.value.trim()) {
+        const results = instance.search(this.value.trim());
+        renderDropdown(results);
+      }
       if (dropdownEl.style.display === 'none') return;
 
       if (e.key === 'ArrowDown') {
@@ -1389,17 +1452,27 @@
       } else if (e.key === 'Enter') {
         if (activeIndex >= 0 && activeIndex < currentResults.length) {
           e.preventDefault();
-          selectItem(activeIndex);
+          e.stopPropagation();
+          if (e.shiftKey) {
+            selectItem(activeIndex);
+          } else {
+            quickAddItem(activeIndex);
+          }
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        dropdownEl.style.display = 'none';
+        e.stopPropagation();
+        hideDropdown();
       }
+    });
+
+    backdropEl.addEventListener('click', function () {
+      hideDropdown();
     });
 
     document.addEventListener('click', function (e) {
       if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
-        dropdownEl.style.display = 'none';
+        hideDropdown();
       }
     });
 
@@ -1409,10 +1482,14 @@
       }
     });
 
-    return {
-      hide: () => { dropdownEl.style.display = 'none'; },
+    const api = {
+      hide: hideDropdown,
+      isOpen: () => dropdownEl.style.display === 'block',
+      position: positionDropdown,
       render: renderDropdown
     };
+    inputEl._princeSearchUI = api;
+    return api;
   }
 
   // ──────────────────────────────────────────────

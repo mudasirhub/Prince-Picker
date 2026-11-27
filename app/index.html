@@ -780,13 +780,13 @@
    DESIGN TOKENS
 ══════════════════════════════════════════ */
     :root {
-      --or: #c84a0d;
+      --or: #C84B11;
       --or2: #ff7133;
       --or-lt: #fdf0e8;
       --or-md: #f9dcc9;
       --or-dk: #b84510;
-      --bg: #f2ede8;
-      --bg2: #eae4de;
+      --bg: #F8F6F4;
+      --bg2: #efeae5;
       --card: #ffffff;
       --t1: #1a1a1a;
       --t2: #555560;
@@ -6873,13 +6873,14 @@
       opacity: 1;
       pointer-events: auto;
       will-change: transform, opacity;
-      transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease;
+      transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
     }
 
     .scroll-upper-bar.sa-bar-hidden {
       transform: translateY(-100%);
       opacity: 0;
       pointer-events: none;
+      transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1), opacity 180ms ease;
     }
 
     .scroll-upper-bar.sa-bar-hidden * {
@@ -6898,6 +6899,7 @@
       flex: 1;
       min-height: 0;
       overflow-y: auto !important;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch !important;
       overscroll-behavior-y: contain !important;
     }
@@ -6959,17 +6961,431 @@
       opacity: 1 !important;
       pointer-events: auto !important;
       will-change: transform, opacity;
-      transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease !important;
+      transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease !important;
     }
 
     .bn.sa-bar-hidden {
       transform: translateY(100%) !important;
       opacity: 0 !important;
       pointer-events: none !important;
+      transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1), opacity 180ms ease !important;
     }
 
     .bn.sa-bar-hidden * {
       pointer-events: none !important;
+    }
+
+    /* ══════ SEARCH INPUT CLEAR BUTTON, KBD HINTS & UPGRADED DROPDOWN ══════ */
+    .sf-clear-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      min-height: 34px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(148, 147, 158, 0.18);
+      color: var(--t2);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 3;
+      transition: background 150ms ease-out, color 150ms ease-out, transform 120ms ease;
+    }
+    .sf-clear-btn.visible {
+      display: flex;
+    }
+    .sf-clear-btn:hover {
+      background: rgba(200, 75, 17, 0.14);
+      color: var(--or);
+    }
+    .sf-clear-btn:active {
+      transform: translateY(-50%) scale(0.92);
+    }
+    .sf input, #homeQ, #prodQ, #qrQ, #logQ {
+      padding-right: 44px !important;
+    }
+
+    .pp-kbd {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--t3);
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--bd);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+      letter-spacing: 0.2px;
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+    [data-theme="dark"] .pp-kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: var(--t3);
+    }
+    .sf-kbd-hint {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .prince-search-backdrop {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      background: rgba(15, 23, 42, 0.34);
+      backdrop-filter: blur(2.5px);
+      -webkit-backdrop-filter: blur(2.5px);
+      z-index: 998;
+      display: none;
+      animation: fadeIn 140ms ease-out;
+    }
+    .prince-search-dropdown {
+      position: fixed !important;
+      z-index: 999 !important;
+      border-radius: 16px;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.22);
+      transition: opacity 150ms ease-out;
+    }
+    .psd-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .psd-kbd-legend {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .psd-item {
+      gap: 10px;
+      align-items: center;
+    }
+    .psd-name {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      white-space: normal !important;
+      text-overflow: unset !important;
+      line-height: 1.32;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .psd-sku {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .psd-meta {
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .psd-item-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .psd-quick-add-btn {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      min-height: 34px;
+      border-radius: 10px;
+      border: none;
+      background: #C84B11;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(200, 75, 17, 0.28);
+      transition: transform 120ms ease, background 150ms ease-out;
+      position: relative;
+    }
+    .psd-quick-add-btn:hover {
+      background: #b84510;
+    }
+    .psd-quick-add-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* ══════ INLINE INVENTORY CARD STEPPER (- / qty / +) ══════ */
+    .card-cart-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: auto;
+      height: 44px;
+      background: var(--gr-bg, #dcfce7);
+      border: 1.5px solid var(--gr-bd, #bbf7d0);
+      border-radius: 12px;
+      padding: 3px;
+      box-sizing: border-box;
+    }
+    .ccs-btn {
+      width: 44px;
+      height: 100%;
+      min-width: 44px;
+      border: none;
+      border-radius: 9px;
+      background: var(--gr, #16a34a);
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 100ms ease, opacity 150ms ease-out;
+    }
+    .ccs-btn:hover {
+      opacity: 0.92;
+    }
+    .ccs-btn:active {
+      transform: scale(0.94);
+    }
+    .ccs-qty {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--gr, #16a34a);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 4px;
+    }
+
+    /* ══════ SHEET DRAG HANDLE & SHARED MODAL CHROME ══════ */
+    .sheet-drag-handle {
+      width: 36px;
+      height: 4.5px;
+      border-radius: 999px;
+      background: var(--bd2, #d1d5db);
+      margin: 8px auto 4px;
+      flex-shrink: 0;
+    }
+
+    @keyframes ppSheetSlideUp {
+      from {
+        opacity: 0.7;
+        transform: translateY(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes ppModalPopIn {
+      from {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Overlay Screens (#s-add-product & #s-log-detail) */
+    .S.overlay-screen {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 940;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0;
+    }
+    .S.underlay {
+      display: flex !important;
+      z-index: 1 !important;
+      pointer-events: none;
+    }
+    .ap-sheet-dialog,
+    .ld-sheet-dialog {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      max-height: 92dvh;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.24);
+    }
+    .ap-sheet-dialog .tb,
+    .ld-sheet-dialog .tb {
+      position: relative !important;
+      top: auto !important;
+      border-radius: 0;
+      background: var(--card) !important;
+    }
+    .ap-sheet-dialog .sc,
+    .ld-sheet-dialog .sc {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    /* Order card detail trigger & selected highlight */
+    .oc-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .oc-detail-btn {
+      min-height: 34px;
+      padding: 5px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--bd);
+      background: var(--bg);
+      color: var(--t2);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 150ms ease-out;
+    }
+    .oc-detail-btn:hover {
+      border-color: var(--or);
+      color: var(--or);
+      background: var(--or-lt);
+    }
+    .order-card.selected {
+      border: 1.5px solid var(--or) !important;
+      box-shadow: 0 6px 20px rgba(200, 75, 17, 0.14) !important;
+    }
+
+    /* Orders Detail & Cart Summary Split Panes */
+    .split-shell {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+    }
+    .split-left {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+    .orders-detail-pane {
+      display: none;
+    }
+    .orders-detail-pane.mobile-open {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 955;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .odp-card {
+      background: var(--card);
+      width: 100%;
+      max-width: 520px;
+      max-height: 88dvh;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.24);
+      animation: ppSheetSlideUp 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .odp-head {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--bd);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .odp-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .odp-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--bd);
+    }
+    .odp-footer {
+      padding: 12px 18px;
+      padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--bd);
+      background: var(--card);
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Desktop Top Navigation Bar (hidden on mobile < 768px) */
+    .desktop-top-nav {
+      display: none;
+    }
+    .cart-pane-breakdown {
+      display: none;
+    }
+    .cart-print-btn {
+      display: none;
+    }
+    .scanner-dialog-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+    .desktop-usb-scan-wrap {
+      display: none;
     }
 
     /* Ensure >= 44px touch target & 16px input font size (prevent mobile auto-zoom) */
@@ -6992,17 +7408,17 @@
       justify-content: center;
     }
     /* Expand tappable hit-area >= 44px on compact inline pills without inflating card height */
-    .brand-card-pill, .loc-card-pill, .batch-pill, .res-brand-clear {
+    .brand-card-pill, .loc-card-pill, .batch-pill, .res-brand-clear, .psd-quick-add-btn, .oc-detail-btn {
       position: relative;
       min-height: 32px;
     }
-    .brand-card-pill::after, .loc-card-pill::after, .batch-pill::after, .res-brand-clear::after {
+    .brand-card-pill::after, .loc-card-pill::after, .batch-pill::after, .res-brand-clear::after, .psd-quick-add-btn::after, .oc-detail-btn::after {
       content: '';
       position: absolute;
       inset: -6px -4px;
     }
     /* Prevent long SKUs, product names, and wide tables from causing horizontal overflow on 360px screens */
-    .prod-card, .pr-card, .prod-info, .pr-info, .pick-info, .nc-refill-main, .pdm-loc-col {
+    .prod-card, .pr-card, .prod-info, .pr-info, .pick-info, .nc-refill-main, .pdm-loc-col, .order-card, .log-card {
       min-width: 0;
       max-width: 100%;
     }
@@ -7010,39 +7426,743 @@
       overflow-wrap: anywhere;
       word-break: break-word;
     }
-    .prod-sku-line {
+    .prod-sku-line, .pick-sku {
       overflow-wrap: anywhere;
       word-break: break-all;
+    }
+    .batch-pills-row {
+      max-width: 100%;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .batch-pills-row::-webkit-scrollbar {
+      display: none;
     }
     .nc-refill-main {
       min-width: 0 !important;
     }
+
+    /* ══════ MOBILE-ONLY CALIBRATION (< 768px) ══════ */
+    @media (max-width: 767.98px) {
+      .pp-kbd {
+        display: none !important;
+      }
+      .sf input {
+        height: 46px !important;
+      }
+      .sf-clear-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        right: 2px;
+        background: transparent;
+      }
+      .bn {
+        padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(60px + max(8px, env(safe-area-inset-bottom, 0px))) !important;
+      }
+      .pr-img, .prod-img, .prod-thumb, .pick-thumb {
+        width: 56px !important;
+        height: 56px !important;
+        min-width: 56px !important;
+      }
+      .pr-img img, .prod-img img, .pick-thumb img {
+        width: 56px !important;
+        height: 56px !important;
+      }
+      .inv-brand-pill {
+        min-height: 36px;
+        position: relative;
+      }
+      .inv-brand-pill::after {
+        content: '';
+        position: absolute;
+        inset: -4px 0;
+      }
+      .psd-quick-add-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+      }
+      .psd-quick-add-btn::after {
+        inset: -5px;
+      }
+      .pdm-sheet-container,
+      .bsm-sheet-panel,
+      .fm-sheet,
+      .cqm-sheet-panel,
+      .ap-sheet-dialog,
+      .ld-sheet-dialog,
+      .ios-sheet-container {
+        border-radius: 20px 20px 0 0 !important;
+        animation: ppSheetSlideUp 260ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .S.overlay-screen > .ap-sheet-dialog > .tb,
+      .S.overlay-screen > .ld-sheet-dialog > .tb {
+        display: flex !important;
+        height: 50px !important;
+        padding-top: 0 !important;
+      }
+      #notifPanel {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 88dvh !important;
+        max-height: 88dvh !important;
+        border-radius: 20px 20px 0 0 !important;
+        margin-top: auto !important;
+        margin-bottom: 0 !important;
+        padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #notifSheet {
+        padding: 0 !important;
+        align-items: flex-end !important;
+      }
+      .nc-sort-select {
+        font-size: 16px !important;
+        min-height: 44px;
+      }
+    }
+
+    /* ══════ PC / TABLET & DESKTOP WORKSTATION (>= 768px) ══════ */
     @media (min-width: 768px) {
+      .pp-kbd {
+        display: inline-flex;
+      }
+      .bn {
+        display: none !important;
+      }
+
+      /* Sticky Blurred Persistent Desktop Top Navigation Bar */
+      body:not(.auth-screen) .desktop-top-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        z-index: 800;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--bd);
+        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04);
+      }
+      [data-theme="dark"] body:not(.auth-screen) .desktop-top-nav {
+        background: rgba(31, 31, 35, 0.88);
+      }
+      .dtn-inner {
+        max-width: 1280px;
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        box-sizing: border-box;
+      }
+      .dtn-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .dtn-brand img {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        object-fit: cover;
+        box-shadow: 0 2px 8px rgba(200, 75, 17, 0.25);
+      }
+      .dtn-brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+      }
+      .dtn-brand-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--t1);
+        letter-spacing: -0.3px;
+      }
+      .dtn-brand-sub {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--or);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .dtn-tabs {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--bg);
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid var(--bd);
+      }
+      .dtn-tab {
+        height: 34px;
+        padding: 0 12px;
+        border: none;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--t2);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        position: relative;
+        transition: background 150ms ease-out, color 150ms ease-out, box-shadow 150ms ease-out;
+        white-space: nowrap;
+      }
+      .dtn-tab:hover {
+        color: var(--or);
+        background: rgba(200, 75, 17, 0.06);
+      }
+      .dtn-tab.on {
+        background: var(--card);
+        color: var(--or);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .dtn-cart-badge {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: var(--or);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .dtn-utils {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .dtn-util-btn {
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid var(--bd);
+        background: var(--card);
+        color: var(--t1);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: border-color 150ms ease-out, background 150ms ease-out, color 150ms ease-out;
+        white-space: nowrap;
+      }
+      .dtn-util-btn:hover {
+        border-color: var(--or);
+        color: var(--or);
+        background: var(--or-lt);
+      }
+      .dtn-util-btn.primary {
+        background: var(--or);
+        border-color: var(--or);
+        color: #fff;
+      }
+      .dtn-util-btn.primary:hover {
+        background: var(--or-dk);
+        color: #fff;
+      }
+      .dtn-util-btn.primary .pp-kbd {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: #fff;
+      }
+
+      /* Offset active screens below persistent 60px top nav */
+      body:not(.auth-screen) .S:not(#s-splash):not(#s-login):not(.overlay-screen) {
+        padding-top: 60px;
+      }
+      /* Hide redundant per-tab mobile headers on main desktop tabs */
+      #s-orders > .tb,
+      #s-search > .tb,
+      #s-cart > .tb {
+        display: none !important;
+      }
+      .S:not(.overlay-screen) > .tb {
+        max-width: 1280px;
+        width: 100%;
+        margin: 0 auto;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border-bottom: 1px solid var(--bd);
+      }
+
+      /* Centered 1280px container across all screens */
       .S .sc,
       .S .sa-sc,
       .S .scroll-upper-bar,
-      .S .ap-save-bar,
       .S .step-scroll,
       .S .step-btns,
-      .S .cart-total-bar {
-        max-width: 820px;
+      .S .cart-total-bar,
+      .S .logs-tab-bar,
+      .S .logs-footer,
+      .S .stat-grid,
+      .S .tl-hdr {
+        max-width: 1280px;
         width: 100%;
         margin-left: auto;
         margin-right: auto;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
         box-sizing: border-box;
       }
-      .S .scroll-upper-bar {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-      }
+
+      /* Disable scroll auto-hide completely on >= 768px */
+      .S .scroll-upper-bar,
       .S .scroll-upper-bar.sa-bar-hidden {
-        transform: translateX(-50%) translateY(-100%);
+        position: sticky !important;
+        top: 0 !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 40;
+        padding-top: 12px;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      .S .scroll-upper-bar.sa-bar-hidden * {
+        pointer-events: auto !important;
+      }
+      #s-search .search-area,
+      #s-products .search-area,
+      #s-qr .search-area {
+        border-radius: 16px;
+        border: 1px solid var(--bd);
+        box-shadow: var(--sh);
+        padding: 10px 14px !important;
+        margin: 0 24px;
+      }
+      #s-search .inv-brand-strip,
+      #s-search .res-hdr,
+      #s-products .db-stats {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+      }
+      #ordersList.sa-sc,
+      #searchList.sa-sc,
+      #mapBody.sa-sc,
+      #logsBody.sa-sc,
+      #cartList.sa-sc,
+      #dropBody.sa-sc,
+      #prodList.sa-sc,
+      #qrProdList.sa-sc,
+      .sa-sc.sa-has-bn {
+        padding-top: 16px !important;
+        padding-bottom: 28px !important;
+      }
+      .sa-bottom-pad-for-bn {
+        padding-bottom: 16px !important;
+      }
+
+      /* Compact desktop form controls & 64x64 thumbnails */
+      input, textarea, select {
+        font-size: 14px !important;
+      }
+      .sf input, #homeQ, #prodQ, #qrQ, #logQ {
+        height: 38px !important;
+        min-height: 38px !important;
+        font-size: 14px !important;
+        border-radius: 11px !important;
+      }
+      .bc-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        border-radius: 11px !important;
+      }
+      .btn-p, .btn-s {
+        height: 40px !important;
+        min-height: 40px !important;
+        font-size: 14px !important;
+        border-radius: 11px !important;
+      }
+      .ap-input {
+        height: 38px;
+        font-size: 14px !important;
+        border-radius: 10px;
+      }
+      .fc, .fm-pill, .ap-brand-pill, .inv-brand-pill, .ctab, .logs-tab, .nc-tab {
+        min-height: 34px;
+      }
+      .pr-img, .prod-img, .prod-thumb, .pick-thumb {
+        width: 64px !important;
+        height: 64px !important;
+        min-width: 64px !important;
+      }
+      .pr-img img, .prod-img img, .pick-thumb img {
+        width: 64px !important;
+        height: 64px !important;
+      }
+
+      /* 2-Column Grid on Tablet (768px - 1023px) */
+      #searchList,
+      #prodList {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+        align-content: start !important;
+      }
+      #ordersList {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+        align-content: start !important;
+      }
+      #ordersList .day-lbl,
+      #searchList .empty-state-card,
+      #prodList .empty-state-card,
+      #ordersList .empty-state-card {
+        grid-column: 1 / -1;
+        margin: 4px 0;
+      }
+      .prod-card,
+      .pr-card,
+      .order-card {
+        margin-top: 0 !important;
+        padding: 14px 16px !important;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .pr-card {
+        flex-direction: row;
+        align-items: center;
+      }
+      .prod-card .btn-cart,
+      .prod-card .card-cart-stepper {
+        margin-top: auto;
+        height: 38px !important;
+      }
+      .card-cart-stepper .ccs-btn {
+        width: 36px;
+        min-width: 36px;
+      }
+
+      /* Centered Modal Dialogs (max-width: 520px) on Desktop (>= 768px) */
+      .sheet-drag-handle,
+      .more-handle,
+      .nc-sheet-handle {
+        display: none !important;
+      }
+      #prodDetailModal,
+      #batchSelectModal,
+      #filterModal,
+      #customQrModal,
+      #moreSheet,
+      #scanner-modal,
+      .S.overlay-screen {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 24px !important;
+        background: rgba(15, 23, 42, 0.5) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+      }
+      .pdm-sheet-container,
+      .bsm-sheet-panel,
+      .fm-sheet,
+      .cqm-sheet-panel,
+      #morePanel,
+      .ap-sheet-dialog,
+      .ld-sheet-dialog,
+      .scanner-dialog-shell {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        max-width: 520px !important;
+        max-height: 88dvh !important;
+        height: auto !important;
+        border-radius: 20px !important;
+        margin: auto !important;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28) !important;
+        animation: ppModalPopIn 150ms ease-out !important;
+        transform: none !important;
+        overflow: hidden;
+      }
+      #prodDetailModal .pdm-sheet-container {
+        height: 88dvh !important;
+      }
+      #scanner-modal .scanner-dialog-shell {
+        background: #0b0e14;
+        height: 82dvh !important;
+      }
+      .desktop-usb-scan-wrap {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .desktop-usb-scan-wrap input {
+        flex: 1;
+        height: 38px !important;
+        min-height: 38px !important;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        padding: 0 12px;
+        font-size: 13px !important;
+        outline: none;
+      }
+      .desktop-usb-scan-wrap input:focus {
+        border-color: var(--or);
+        background: rgba(255, 255, 255, 0.14);
+      }
+      #moreSheet.open #morePanel {
+        transform: scale(1) !important;
+      }
+      .orders-detail-pane.mobile-open {
+        align-items: center;
+        padding: 24px;
+      }
+      .orders-detail-pane.mobile-open .odp-card {
+        border-radius: 20px;
+        max-width: 520px;
+        max-height: 85dvh;
+        animation: ppModalPopIn 150ms ease-out;
+      }
+
+      /* Desktop Hover States & Micro-interactions (150ms ease-out) */
+      .prod-card,
+      .pr-card,
+      .order-card,
+      .pick-row,
+      .map-card,
+      .log-card,
+      .inv-brand-pill,
+      .brand-card-pill,
+      .loc-card-pill,
+      .batch-pill,
+      .btn-p,
+      .btn-s,
+      .btn-cart {
+        transition: transform 150ms ease-out, box-shadow 150ms ease-out, border-color 150ms ease-out, background 150ms ease-out, color 150ms ease-out;
+      }
+      .prod-card:hover,
+      .pr-card:hover,
+      .order-card:hover,
+      .pick-row:hover,
+      .map-card:hover,
+      .log-card:hover {
+        border-color: rgba(200, 75, 17, 0.38) !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08) !important;
+        cursor: pointer;
+      }
+      .inv-brand-pill:hover,
+      .brand-card-pill:hover,
+      .loc-card-pill:hover,
+      .batch-pill:hover {
+        border-color: #C84B11;
+        color: #C84B11;
+        background: var(--or-lt);
+      }
+      .inv-brand-pill.active:hover,
+      .brand-card-pill.active:hover,
+      .loc-card-pill.active:hover {
+        background: #b84510;
+        color: #ffffff;
+      }
+      .btn-s:hover {
+        border-color: var(--or);
+        color: var(--or);
+      }
+      .btn-p:hover,
+      .btn-cart:hover {
+        filter: brightness(1.05);
+      }
+
+      /* Custom Slim Scrollbars on Desktop */
+      .sc::-webkit-scrollbar,
+      .sa-sc::-webkit-scrollbar,
+      .prince-search-dropdown::-webkit-scrollbar,
+      .pdm-scroll-body::-webkit-scrollbar,
+      .odp-body::-webkit-scrollbar,
+      .nc-list-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .sc::-webkit-scrollbar-track,
+      .sa-sc::-webkit-scrollbar-track,
+      .prince-search-dropdown::-webkit-scrollbar-track,
+      .pdm-scroll-body::-webkit-scrollbar-track,
+      .odp-body::-webkit-scrollbar-track,
+      .nc-list-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .sc::-webkit-scrollbar-thumb,
+      .sa-sc::-webkit-scrollbar-thumb,
+      .prince-search-dropdown::-webkit-scrollbar-thumb,
+      .pdm-scroll-body::-webkit-scrollbar-thumb,
+      .odp-body::-webkit-scrollbar-thumb,
+      .nc-list-container::-webkit-scrollbar-thumb {
+        background: rgba(148, 147, 158, 0.35);
+        border-radius: 999px;
+      }
+      .sc, .sa-sc, .prince-search-dropdown, .pdm-scroll-body, .odp-body, .nc-list-container {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 147, 158, 0.35) transparent;
       }
     }
-    @media (max-width: 767.98px) {
-      .sf input {
-        height: 46px !important;
+
+    /* ══════ LARGE DESKTOP (>= 1024px): 3-COL INVENTORY & 65/35 SPLIT PANES ══════ */
+    @media (min-width: 1024px) {
+      #searchList,
+      #prodList {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+      }
+
+      /* Asymmetric 2-Column Split View (65% Left / 35% Right) for Cart & Orders */
+      #s-orders .split-shell,
+      #s-cart .split-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 65fr) minmax(320px, 35fr);
+        gap: 24px;
+        max-width: 1280px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 16px 24px 24px;
+        flex: 1;
+        min-height: 0;
+        align-items: stretch;
+        box-sizing: border-box;
+      }
+      #s-orders .split-left,
+      #s-cart .split-left {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #s-orders .split-left .scroll-upper-bar,
+      #s-cart .split-left .scroll-upper-bar {
+        padding-top: 0 !important;
+      }
+      #s-orders #ordersList.sa-sc,
+      #s-cart #cartList.sa-sc {
+        padding-left: 0 !important;
+        padding-right: 6px !important;
+      }
+      #ordersList {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+      }
+
+      /* Right Sticky 35% Detail / Checkout / Receipt Panel on Orders */
+      #s-orders .orders-detail-pane {
+        display: flex !important;
+        position: sticky !important;
+        top: 0;
+        inset: auto !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+        height: 100%;
+        max-height: calc(100dvh - 100px);
+      }
+      #s-orders .orders-detail-pane .odp-card {
+        border-radius: 16px !important;
+        max-width: none !important;
+        max-height: 100% !important;
+        height: 100%;
+        border: 1px solid var(--bd);
+        box-shadow: var(--sh) !important;
+        animation: none !important;
+      }
+      #s-orders .orders-detail-pane .odp-close-mobile {
+        display: none;
+      }
+
+      /* Right Sticky 35% Summary / Checkout / Receipt Panel on Cart */
+      #cartSlideWrap {
+        display: none !important;
+      }
+      #s-cart .cart-summary-pane {
+        position: sticky;
+        top: 0;
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--sh);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        max-width: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      #s-cart .cart-total-bar {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 14px;
+        padding: 0 !important;
+        border-top: none !important;
+        background: transparent !important;
+      }
+      #s-cart .cart-pane-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--bg);
+        border: 1px solid var(--bd);
+        font-size: 13px;
+      }
+      #s-cart .cpb-row {
+        display: flex;
+        justify-content: space-between;
+        color: var(--t2);
+        font-weight: 600;
+      }
+      #s-cart .cpb-row strong {
+        color: var(--t1);
+        font-weight: 800;
+      }
+      #s-cart .cart-pane-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #s-cart .cart-print-btn {
+        display: inline-flex;
+      }
+    }
+
+    /* ══════ REDUCED MOTION ACCESSIBILITY ══════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
       }
     }
 
@@ -7374,7 +8494,95 @@
   </script>
 </head>
 
-<body>
+<body class="auth-screen">
+
+  <!-- ══════ PERSISTENT DESKTOP TOP NAVIGATION BAR (>= 768px) ══════ -->
+  <header id="desktopTopNav" class="desktop-top-nav" aria-label="Primary navigation">
+    <div class="dtn-inner">
+      <div class="dtn-brand" onclick="nav('s-search')" title="Go to Inventory">
+        <img src="./picker-logo.png" alt="Prince Picker">
+        <div class="dtn-brand-text">
+          <span class="dtn-brand-title">Prince Picker</span>
+          <span class="dtn-brand-sub" id="desktopPickerName">Workstation</span>
+        </div>
+      </div>
+
+      <nav class="dtn-tabs" aria-label="Main Tabs">
+        <button type="button" class="dtn-tab" data-nav="s-orders" onclick="nav('s-orders')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+          <span>Orders</span>
+          <kbd class="pp-kbd">Alt+1</kbd>
+        </button>
+        <button type="button" class="dtn-tab" data-nav="s-cart" onclick="nav('s-cart')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
+          <span>Cart</span>
+          <span class="dtn-cart-badge" id="desktopCartBadge">0</span>
+          <kbd class="pp-kbd">Alt+2</kbd>
+        </button>
+        <button type="button" class="dtn-tab" data-nav="s-adhoc" onclick="startAdhocScan()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+            <line x1="7" y1="8" x2="7" y2="16" />
+            <line x1="14" y1="8" x2="14" y2="16" />
+          </svg>
+          <span>Scan</span>
+          <kbd class="pp-kbd">Alt+3</kbd>
+        </button>
+        <button type="button" class="dtn-tab on" data-nav="s-search" onclick="nav('s-search')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect x="2" y="3" width="20" height="5" rx="1" />
+            <rect x="2" y="10" width="20" height="5" rx="1" />
+            <rect x="2" y="17" width="20" height="5" rx="1" />
+          </svg>
+          <span>Inventory</span>
+          <kbd class="pp-kbd">Alt+4</kbd>
+        </button>
+        <button type="button" class="dtn-tab" data-nav="more" onclick="openMore()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="5" r="1.5" />
+            <circle cx="19" cy="5" r="1.5" />
+            <circle cx="5" cy="5" r="1.5" />
+          </svg>
+          <span>More</span>
+          <kbd class="pp-kbd">Alt+5</kbd>
+        </button>
+      </nav>
+
+      <div class="dtn-utils">
+        <button type="button" class="dtn-util-btn" onclick="toggleQuickBarcodeScanner()" title="Toggle Barcode Scanner (F2 / Alt+B)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+            <line x1="7" y1="8" x2="7" y2="16" />
+            <line x1="14" y1="8" x2="14" y2="16" />
+          </svg>
+          <span>Barcode</span>
+          <kbd class="pp-kbd">F2</kbd>
+        </button>
+        <button type="button" class="dtn-util-btn primary" onclick="openNewProductDialog()" title="Add New Product (Alt+N)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>New Product</span>
+          <kbd class="pp-kbd">Alt+N</kbd>
+        </button>
+        <button type="button" class="ib notification-bell" onclick="openNotificationCenter()" title="Notifications" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notification-badge"></span>
+        </button>
+      </div>
+    </div>
+  </header>
 
   <!-- ══════ SPLASH ══════ -->
   <div class="S on" id="s-splash">
@@ -7543,25 +8751,74 @@
         </svg>
       </button>
     </div>
-    <div class="sa-stage">
-      <div class="scroll-upper-bar">
-        <div class="orders-strip">
-          <span class="orders-strip-lbl" id="orderCount">Loading...</span>
-          <div class="orders-strip-right">
-            <span class="chip c-gr" id="orderOnline" style="display:none"><span
-                style="width:6px;height:6px;background:var(--gr);border-radius:50%;display:inline-block"></span>Server</span>
-            <span class="chip c-yl" id="orderOffline" style="display:none">Offline</span>
+    <div class="split-shell">
+      <div class="split-left">
+        <div class="sa-stage">
+          <div class="scroll-upper-bar">
+            <div class="orders-strip">
+              <span class="orders-strip-lbl" id="orderCount">Loading...</span>
+              <div class="orders-strip-right">
+                <button type="button" class="oc-detail-btn" onclick="refreshOrders()" title="Refresh Orders" style="min-height:28px;padding:3px 10px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polyline points="1 4 1 10 7 10" />
+                    <path d="M3.51 15a9 9 0 1 0 .49-4" />
+                  </svg>
+                  Refresh
+                </button>
+                <span class="chip c-gr" id="orderOnline" style="display:none"><span
+                    style="width:6px;height:6px;background:var(--gr);border-radius:50%;display:inline-block"></span>Server</span>
+                <span class="chip c-yl" id="orderOffline" style="display:none">Offline</span>
+              </div>
+            </div>
+          </div>
+          <div id="ptr-indicator" class="sa-ptr"
+            style="height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: height 0.15s ease, opacity 0.15s ease; opacity: 0; font-size: 13px; font-weight: 700; color: var(--or)">
+            <div class="spinner"
+              style="width: 16px; height: 16px; border-color: rgba(0,0,0,.1); border-top-color: var(--or); margin-right: 8px;">
+            </div>
+            <span>Pull to refresh...</span>
+          </div>
+          <div class="sc sa-sc sa-has-bn" style="padding:12px 16px" id="ordersList"></div>
+        </div>
+      </div>
+
+      <aside id="ordersDetailPane" class="orders-detail-pane" onclick="if(event.target===this) closeOrderDetailSheet()">
+        <div class="odp-card">
+          <div class="sheet-drag-handle"></div>
+          <div class="odp-head">
+            <div style="min-width:0;flex:1">
+              <div style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--or)">Order Summary</div>
+              <div id="odpTitle" style="font-size:17px;font-weight:800;color:var(--t1);overflow-wrap:anywhere">Select an order</div>
+              <div id="odpSub" style="font-size:12px;color:var(--t3);margin-top:2px">Click any order to inspect items or print receipt</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span id="odpStatusChip" class="chip c-bl" style="display:none">—</span>
+              <button type="button" class="nc-btn-close odp-close-mobile" onclick="closeOrderDetailSheet()" aria-label="Close Order Details" style="width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;">✕</button>
+            </div>
+          </div>
+          <div class="odp-body" id="odpBody">
+            <div style="text-align:center;padding:36px 16px;color:var(--t3);font-size:13px;font-weight:600">
+              Select an order from the list to view line items, bin locations, and print picking slips.
+            </div>
+          </div>
+          <div class="odp-footer" id="odpFooter" style="display:none">
+            <button type="button" class="btn-s" style="flex:1" onclick="printSelectedOrderReceipt()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Print Receipt
+            </button>
+            <button type="button" class="btn-p" id="odpPrimaryBtn" style="flex:1.4" onclick="startSelectedOrderPicking()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              Start Picking
+            </button>
           </div>
         </div>
-      </div>
-      <div id="ptr-indicator" class="sa-ptr"
-        style="height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: height 0.15s ease, opacity 0.15s ease; opacity: 0; font-size: 13px; font-weight: 700; color: var(--or)">
-        <div class="spinner"
-          style="width: 16px; height: 16px; border-color: rgba(0,0,0,.1); border-top-color: var(--or); margin-right: 8px;">
-        </div>
-        <span>Pull to refresh...</span>
-      </div>
-      <div class="sc sa-sc sa-has-bn" style="padding:12px 16px" id="ordersList"></div>
+      </aside>
     </div>
     <div class="bn">
       <button class="bnt on" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -7693,8 +8950,10 @@
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input id="homeQ" placeholder="Search product, barcode, location..." autocomplete="off" spellcheck="false">
+              <kbd class="sf-kbd-hint pp-kbd" id="homeQKbdHint">/</kbd>
+              <button type="button" class="sf-clear-btn" id="homeQClearBtn" aria-label="Clear search" onclick="clearHomeSearch()">×</button>
             </div>
-            <button class="bc-btn" onclick="openScanner(onBarcodeSearch,'Scan product barcode')">
+            <button class="bc-btn" onclick="openScanner(onBarcodeSearch,'Scan product barcode')" title="Scan Barcode (F2 / Alt+B)" aria-label="Scan barcode">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
                 stroke-linecap="round">
                 <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
@@ -7971,22 +9230,25 @@
   </div>
 
   <!-- ══════ SCREEN 8: LOG DETAIL ══════ -->
-  <div class="S" id="s-log-detail">
-    <div class="tb">
-      <button class="ib" onclick="nav('s-logs')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5">
-          <polyline points="15 18 9 12 15 6" />
-        </svg></button>
-      <div style="flex:1">
-        <div class="tb-title left" id="detailTitle" style="font-size:15px">Details</div>
-        <div class="tb-sub">Prince Picker</div>
+  <div class="S overlay-screen" id="s-log-detail" onclick="if(event.target===this) nav('s-logs')">
+    <div class="ld-sheet-dialog">
+      <div class="sheet-drag-handle"></div>
+      <div class="tb">
+        <button class="ib" onclick="nav('s-logs')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6" />
+          </svg></button>
+        <div style="flex:1">
+          <div class="tb-title left" id="detailTitle" style="font-size:15px">Details</div>
+          <div class="tb-sub">Prince Picker</div>
+        </div>
       </div>
+      <div class="stat-grid" id="detailStats"></div>
+      <div class="tl-hdr">
+        <div class="tl-title">Picking Timeline</div><span class="chip c-gr" id="detailStatus">Completed</span>
+      </div>
+      <div class="sc" style="padding:0 16px 20px" id="detailTimeline"></div>
     </div>
-    <div class="stat-grid" id="detailStats"></div>
-    <div class="tl-hdr">
-      <div class="tl-title">Picking Timeline</div><span class="chip c-gr" id="detailStatus">Completed</span>
-    </div>
-    <div class="sc" style="padding:0 16px 20px" id="detailTimeline"></div>
   </div>
 
 
@@ -8003,39 +9265,64 @@
         </svg>
       </button>
     </div>
-    <div class="sa-stage">
-      <div class="scroll-upper-bar">
-        <div class="cart-tab-bar">
-          <button class="ctab on" onclick="cartTab(this,'loc')">By Location</button>
-          <button class="ctab" onclick="cartTab(this,'name')">By Name</button>
-          <button class="ctab" id="cartPendingTab" onclick="cartTab(this,'low')">Low Stock <span class="ctab-badge"
-              id="cartLowBadge">0</span></button>
+    <div class="split-shell">
+      <div class="split-left">
+        <div class="sa-stage">
+          <div class="scroll-upper-bar">
+            <div class="cart-tab-bar">
+              <button class="ctab on" onclick="cartTab(this,'loc')">By Location</button>
+              <button class="ctab" onclick="cartTab(this,'name')">By Name</button>
+              <button class="ctab" id="cartPendingTab" onclick="cartTab(this,'low')">Low Stock <span class="ctab-badge"
+                  id="cartLowBadge">0</span></button>
+            </div>
+          </div>
+          <div class="sc sa-sc" style="padding:12px 16px" id="cartList"></div>
         </div>
       </div>
-      <div class="sc sa-sc" style="padding:12px 16px" id="cartList"></div>
-    </div>
-    <div class="cart-total-bar">
-      <div class="ctb-left">
-        <div class="ctb-label">Total Items</div>
-        <div class="ctb-val" id="cartTotalVal">0 items · 0 units</div>
-      </div>
-      <button class="btn-p" style="width:auto;padding:0 20px;height:46px" onclick="startFreePickSession()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-        Start Picking
-      </button>
-    </div>
-    <div class="slide-wrap sa-bottom-pad-for-bn" id="cartSlideWrap">
-      <div class="slide-track" id="slideTrack">
-        <div class="slide-fill" id="slideFill"></div>
-        <div class="slide-thumb" id="slideThumb">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+      <aside class="cart-summary-pane">
+        <div class="cart-total-bar">
+          <div class="ctb-left">
+            <div class="ctb-label">Cart Summary</div>
+            <div class="ctb-val" id="cartTotalVal">0 items · 0 units</div>
+          </div>
+          <div class="cart-pane-breakdown" id="cartPaneBreakdown">
+            <div class="cpb-row"><span>Pick Items</span><strong id="cpbPickCount">0</strong></div>
+            <div class="cpb-row"><span>Drop Items</span><strong id="cpbDropCount">0</strong></div>
+            <div class="cpb-row"><span>Estimated MRP Total</span><strong id="cpbMrpTotal">₹0</strong></div>
+          </div>
+          <div class="cart-pane-actions">
+            <button class="btn-p" style="width:auto;padding:0 20px;height:46px" onclick="startFreePickSession()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              <span>Start Picking</span>
+              <kbd class="pp-kbd" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3);color:#fff">Ctrl+↵</kbd>
+            </button>
+            <button type="button" class="btn-s cart-print-btn" onclick="printCartReceipt()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Print Pick Slip
+            </button>
+            <button type="button" class="btn-s cart-print-btn" onclick="clearCart()" style="color:var(--rd)">
+              Clear Cart
+            </button>
+          </div>
         </div>
-        <div class="slide-lbl" id="slideLbl">Slide to Start Picking</div>
-      </div>
+        <div class="slide-wrap sa-bottom-pad-for-bn" id="cartSlideWrap">
+          <div class="slide-track" id="slideTrack">
+            <div class="slide-fill" id="slideFill"></div>
+            <div class="slide-thumb" id="slideThumb">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </div>
+            <div class="slide-lbl" id="slideLbl">Slide to Start Picking</div>
+          </div>
+        </div>
+      </aside>
     </div>
     <div class="bn">
       <button class="bnt" onclick="nav('s-orders')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -8254,6 +9541,8 @@
               </svg>
               <input id="prodQ" class="prod-search-input" placeholder="Name, brand, barcode, location..."
                 autocomplete="off">
+              <kbd class="sf-kbd-hint pp-kbd" id="prodQKbdHint">/</kbd>
+              <button type="button" class="sf-clear-btn" id="prodQClearBtn" aria-label="Clear products search" onclick="clearProdSearch()">×</button>
             </div>
             <button class="bc-btn" style="width:46px;height:46px"
               onclick="openScanner(onProdListScan,'Scan to find product')">
@@ -8341,21 +9630,23 @@
   </div>
 
   <!-- ══════ SCREEN: ADD / EDIT PRODUCT ══════ -->
-  <div class="S" id="s-add-product">
-    <div class="tb">
-      <button class="ib" onclick="nav('s-products')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5">
-          <polyline points="15 18 9 12 15 6" />
-        </svg></button>
-      <div class="tb-title left" id="apTitle">Add Product</div>
-      <button class="ib or" id="apDupBtn" onclick="dupProduct()" title="Duplicate last">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" />
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-        </svg>
-      </button>
-    </div>
-    <div class="sc">
+  <div class="S overlay-screen" id="s-add-product" onclick="if(event.target===this) closeAddProductModal()">
+    <div class="ap-sheet-dialog">
+      <div class="sheet-drag-handle"></div>
+      <div class="tb">
+        <button class="ib" onclick="closeAddProductModal()" title="Close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6" />
+          </svg></button>
+        <div class="tb-title left" id="apTitle">Add Product</div>
+        <button class="ib or" id="apDupBtn" onclick="dupProduct()" title="Duplicate last">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        </button>
+      </div>
+      <div class="sc">
       <div class="ap-form" id="apForm">
 
         <!-- 1. Product Name -->
@@ -9425,16 +10716,18 @@
         <div style="height:8px"></div>
       </div>
     </div>
-    <div class="ap-save-bar">
-      <button class="btn-s" style="flex:1;height:48px;font-size:14px" onclick="resetAPForm()">Clear</button>
-      <button class="btn-p" style="flex:2.5;height:48px" id="apSaveBtn" onclick="saveProduct()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-          <polyline points="17 21 17 13 7 13 7 21" />
-          <polyline points="7 3 7 8 15 8" />
-        </svg>
-        Save Product
-      </button>
+      <div class="ap-save-bar">
+        <button class="btn-s" style="flex:1;height:48px;font-size:14px" onclick="resetAPForm()">Clear</button>
+        <button class="btn-p" style="flex:2.5;height:48px" id="apSaveBtn" onclick="saveProduct()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <span>Save Product</span>
+          <kbd class="pp-kbd" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3);color:#fff">Ctrl+↵</kbd>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -9443,7 +10736,8 @@
   <div id="filterModal" style="display:none;position:fixed;inset:0;z-index:400;flex-direction:column">
     <div class="fm-bg" style="position:absolute;inset:0;background:rgba(0,0,0,.45)" onclick="closeFilterModal()"></div>
     <div class="fm-sheet"
-      style="position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;max-height:82vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
+      style="position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;max-height:82dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
+      <div class="sheet-drag-handle"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;flex-shrink:0">
         <div style="font-size:16px;font-weight:800;color:var(--t1)">Filter Products</div>
         <button onclick="closeFilterModal()"
@@ -9531,6 +10825,7 @@
 
     <!-- Bottom Sheet Container -->
     <div class="pdm-sheet-container">
+      <div class="sheet-drag-handle"></div>
       <!-- 1. Header Navigation Bar -->
       <div class="pdm-top-nav">
         <button type="button" class="pdm-nav-btn" onclick="closeProdDetail()" title="Back">
@@ -9836,14 +11131,15 @@
   <div id="batchSelectModal"
     style="display:none;position:fixed;inset:0;z-index:965;flex-direction:column;align-items:center;justify-content:flex-end">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.5)" onclick="closeBatchSelectModal()"></div>
-    <div style="position:relative;width:100%;max-width:480px;background:var(--card);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,0.22);z-index:2">
+    <div class="bsm-sheet-panel" style="position:relative;width:100%;max-width:480px;background:var(--card);border-radius:20px 20px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,0.22);z-index:2">
+      <div class="sheet-drag-handle" style="margin:0 auto 10px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="font-size:11px;font-weight:800;color:var(--or);letter-spacing:0.6px;text-transform:uppercase">Select Batch / MRP</div>
         <button type="button" onclick="closeBatchSelectModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);color:var(--t2);font-size:16px;font-weight:700;cursor:pointer">✕</button>
       </div>
       <div id="batchSelectProdName" style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:2px">—</div>
       <div id="batchSelectProdSku" style="font-size:12px;color:var(--t3);font-family:monospace;margin-bottom:12px">—</div>
-      <div id="batchSelectList" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto"></div>
+      <div id="batchSelectList" style="display:flex;flex-direction:column;gap:8px;max-height:50dvh;overflow-y:auto"></div>
     </div>
   </div>
 
@@ -10019,8 +11315,9 @@
   <!-- ══ CUSTOM QR MODAL ══ -->
   <div id="customQrModal" style="display:none;position:fixed;inset:0;z-index:460;flex-direction:column">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.5)" onclick="closeCustomQrModal()"></div>
-    <div
-      style="position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;padding:20px 16px;display:flex;flex-direction:column;gap:12px;padding-bottom:env(safe-area-inset-bottom)">
+    <div class="cqm-sheet-panel"
+      style="position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;padding:12px 16px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:max(20px,env(safe-area-inset-bottom))">
+      <div class="sheet-drag-handle" style="margin:0 auto 2px"></div>
       <div style="font-size:16px;font-weight:800;color:var(--t1)">Custom QR Code</div>
       <div>
         <div
@@ -10057,7 +11354,7 @@
     style="display:none;position:fixed;inset:0;z-index:960;align-items:center;justify-content:center">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.7)" onclick="closeQrPreview()"></div>
     <div
-      style="position:relative;background:var(--card);border-radius:20px;padding:20px;max-width:380px;width:92%;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column">
+      style="position:relative;background:var(--card);border-radius:20px;padding:20px;max-width:380px;width:92%;max-height:88dvh;overflow-y:auto;display:flex;flex-direction:column">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div style="font-size:15px;font-weight:800;color:var(--t1)">Print Preview</div>
         <span id="qrPreviewTypeBadge"
@@ -10604,8 +11901,9 @@
     </div>
   </div>
 
-  <!-- ══════ SCANNER ══════ -->
-  <div id="scanner-modal">
+  <!-- ══ SCANNER ══════ -->
+  <div id="scanner-modal" onclick="if(event.target===this) closeScanner()">
+    <div class="scanner-dialog-shell">
     <div class="scan-topbar">
       <div class="scan-topbar-title" id="scanTitle">Scan Barcode</div>
       <div style="display:flex;align-items:center;gap:8px;margin-right:12px">
@@ -10646,6 +11944,11 @@
       <div class="scan-hint" id="scanHint">Align barcode within frame</div>
     </div>
     <div class="scan-bottom">
+      <div class="desktop-usb-scan-wrap">
+        <input type="text" id="desktopUsbBarcodeIn" placeholder="Scan with USB barcode gun or type SKU + Enter..." autocomplete="off"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();submitDesktopUsbBarcode();}">
+        <button type="button" class="btn-scan-ok" style="display:inline-flex;flex:0 0 auto;height:38px;padding:0 14px" onclick="submitDesktopUsbBarcode()">Go</button>
+      </div>
       <div class="scan-status">
         <div class="scan-status-icon" id="scanStatusIcon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2">
@@ -10685,6 +11988,7 @@
       </div>
       <div class="scan-demo" id="scanDemo"></div>
     </div>
+    </div>
   </div>
 
   <!-- ══════ MANUAL BARCODE KEY INPUT MODAL ══════ -->
@@ -10693,7 +11997,7 @@
     <div style="position:absolute;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);"
       onclick="closeManualEntryModal()"></div>
     <div
-      style="position:relative;background:var(--card);border-radius:24px;width:100%;max-width:400px;box-shadow:var(--sh3);border:1.5px solid var(--bd2);overflow:hidden;animation:fadeUp .2s ease both;display:flex;flex-direction:column;max-height:90vh;">
+      style="position:relative;background:var(--card);border-radius:24px;width:100%;max-width:400px;box-shadow:var(--sh3);border:1.5px solid var(--bd2);overflow:hidden;animation:fadeUp .2s ease both;display:flex;flex-direction:column;max-height:90dvh;">
       <!-- Header -->
       <div
         style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd);background:var(--card)">
@@ -10933,7 +12237,7 @@
     </div>
   <!-- ══ TRANSFER LOGS DETAIL MODAL ══ -->
   <div id="transferLogsModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:16px;">
-    <div style="background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:440px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3);">
+    <div style="background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:440px;max-height:85dvh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--bd);padding-bottom:12px;">
         <div>
           <div id="tlmTitle" style="font-size:18px;font-weight:800;color:var(--t1);">Transfer Logs</div>
@@ -11606,9 +12910,14 @@
     //  SCROLL-AWARE CHROME CONTROLLER (GPU-ACCELERATED)
     // ══════════════════════════════════════════
     const ScrollChromeController = (function () {
-      const SCROLL_DELTA_THRESHOLD = 8;
+      const SCROLL_DOWN_THRESHOLD = 8;
+      const SCROLL_UP_THRESHOLD = 4;
       const TOP_HIDE_OFFSET = 25;
-      const TOP_REVEAL_OFFSET = 10;
+      const TOP_REVEAL_OFFSET = 16;
+
+      function isDesktopViewport() {
+        return typeof window !== 'undefined' && window.innerWidth >= 768;
+      }
 
       const SCREEN_CONFIGS = {
         's-search': { searchInputId: 'homeQ' },
@@ -11652,6 +12961,7 @@
           const el = document.getElementById(classModals[i]);
           if (el && (el.classList.contains('on') || el.classList.contains('open'))) return true;
         }
+        if (document.getElementById('ordersDetailPane')?.classList.contains('mobile-open')) return true;
         const displayModals = [
           'filterModal', 'prodDetailModal', 'batchSelectModal', 'customQrModal', 'qrPreviewModal',
           'manual-input-modal', 'auditStartModal', 'auditResumeModal',
@@ -11666,6 +12976,9 @@
       }
 
       function computeVisibility(state) {
+        if (state.isDesktop) {
+          return { hideUpper: false, hideLower: false };
+        }
         const hasUpper = !!state.hasUpper;
         const hasLower = !!state.hasLower;
 
@@ -11765,13 +13078,29 @@
           contentSyncRaf: null,
           prevHideUpper: null,
           prevHideLower: null,
-          boundScrollEl: null
+          boundScrollEl: null,
+          wasDesktop: isDesktopViewport()
         };
+
+        function clearBarInlineTransforms() {
+          if (refs.upperBar) {
+            refs.upperBar.style.transform = '';
+            refs.upperBar.classList.remove('sa-bar-hidden');
+          }
+          if (lowerBar) {
+            lowerBar.style.transform = '';
+            lowerBar.classList.remove('sa-bar-hidden');
+          }
+        }
 
         function updateUpperBarPadding() {
           const { upperBar, scrollEl } = refs;
           if (!upperBar) return;
           const stage = upperBar.closest('.sa-stage') || screenEl;
+          if (isDesktopViewport()) {
+            if (stage) stage.style.setProperty('--sa-top-pad', '0px');
+            return;
+          }
           const h = Math.ceil(upperBar.getBoundingClientRect().height);
           if (h > 0 && stage) {
             stage.style.setProperty('--sa-top-pad', h + 'px');
@@ -11783,19 +13112,21 @@
 
         function applyVisibility(force) {
           const { upperBar, searchInput, scrollEl } = refs;
+          const isDesktop = isDesktopViewport();
           const metrics = getScrollMetrics(scrollEl);
           const isScrollable = metrics.maxScroll > 2;
           const hasActiveQuery = !!(searchInput && searchInput.value.trim().length > 0);
           const modalLocked = isModalOrScannerOpen();
 
-          if (!isScrollable) {
+          if (isDesktop || !isScrollable) {
             state.barsHiddenByScroll = false;
             state.anchorY = 0;
-          } else if (state.anchorY > metrics.maxScroll) {
-            state.anchorY = metrics.scrollTop;
+          } else {
+            state.anchorY = Math.max(0, Math.min(state.anchorY, metrics.maxScroll));
           }
 
           const vis = computeVisibility({
+            isDesktop: isDesktop,
             hasUpper: !!upperBar,
             hasLower: !!lowerBar,
             modalLocked: modalLocked,
@@ -11818,10 +13149,15 @@
 
         function processScrollFrame() {
           state.rafId = null;
+          if (isDesktopViewport()) {
+            state.barsHiddenByScroll = false;
+            state.anchorY = 0;
+            applyVisibility(false);
+            return;
+          }
           const { scrollEl } = refs;
           const metrics = getScrollMetrics(scrollEl);
-          const scrollTop = metrics.scrollTop;
-          const maxScroll = metrics.maxScroll;
+          const maxScroll = Math.max(0, metrics.scrollHeight - metrics.clientHeight);
           const isScrollable = maxScroll > 2;
 
           if (!isScrollable) {
@@ -11836,64 +13172,52 @@
             return;
           }
 
-          // Protect against negative iOS rubber-band overscroll
-          if (scrollTop < 0) {
+          // Clamp currentScrollY to [0, scrollHeight - clientHeight] so bottom bounce never eats upward gestures
+          const clampedY = Math.max(0, Math.min(metrics.scrollTop, maxScroll));
+
+          // Reveal immediately near top of page (scrollTop <= 16px)
+          if (clampedY <= TOP_REVEAL_OFFSET) {
             state.barsHiddenByScroll = false;
-            state.anchorY = 0;
+            state.anchorY = clampedY;
             applyVisibility(false);
             return;
           }
 
-          // Reveal immediately near top of page
-          if (scrollTop <= TOP_REVEAL_OFFSET) {
-            state.barsHiddenByScroll = false;
-            state.anchorY = scrollTop;
-            applyVisibility(false);
-            return;
-          }
-
-          // Ignore max-bottom rubber-band overscroll
-          if (scrollTop > maxScroll) {
-            return;
-          }
-
-          const deltaY = scrollTop - state.anchorY;
-          if (Math.abs(deltaY) <= SCROLL_DELTA_THRESHOLD) {
-            return;
-          }
-
-          if (deltaY > SCROLL_DELTA_THRESHOLD) {
-            state.anchorY = scrollTop;
-            if (scrollTop > TOP_HIDE_OFFSET) {
+          const deltaY = clampedY - state.anchorY;
+          if (deltaY > SCROLL_DOWN_THRESHOLD) {
+            state.anchorY = clampedY;
+            if (clampedY > TOP_HIDE_OFFSET) {
               state.barsHiddenByScroll = true;
               applyVisibility(false);
             }
-          } else if (deltaY < -SCROLL_DELTA_THRESHOLD) {
-            // Ignore bottom rubber-band bounce settling back from maxScroll
-            if (state.anchorY > maxScroll || scrollTop >= maxScroll - 2) {
-              state.anchorY = scrollTop;
-              return;
-            }
-            state.anchorY = scrollTop;
+          } else if (deltaY < -SCROLL_UP_THRESHOLD) {
+            state.anchorY = clampedY;
             state.barsHiddenByScroll = false;
             applyVisibility(false);
           }
         }
 
         function onScrollEvent(e) {
+          if (isDesktopViewport()) return;
           // Ignore window scroll if inner element is actively scrolling, and vice versa
           if (e && e.target === document && refs.scrollEl) {
             const innerMax = refs.scrollEl.scrollHeight - refs.scrollEl.clientHeight;
             if (innerMax > 2) return;
           }
           if (state.rafId !== null) return;
-          state.rafId = window.requestAnimationFrame(processScrollFrame);
+          let ranSync = false;
+          const rafHandle = window.requestAnimationFrame(function () {
+            ranSync = true;
+            processScrollFrame();
+          });
+          if (!ranSync) state.rafId = rafHandle != null ? rafHandle : 1;
         }
 
         function onSearchFocus() {
           state.isInputFocused = true;
           state.barsHiddenByScroll = false;
-          state.anchorY = getScrollMetrics(refs.scrollEl).scrollTop;
+          const metrics = getScrollMetrics(refs.scrollEl);
+          state.anchorY = Math.max(0, Math.min(metrics.scrollTop, metrics.maxScroll));
           applyVisibility(false);
         }
 
@@ -11901,10 +13225,10 @@
           state.isInputFocused = false;
           const hasQuery = !!(refs.searchInput && refs.searchInput.value.trim().length > 0);
           if (!hasQuery && !state.barcodeLocked) {
-            // Search cleared & blurred: restore default scroll auto-hide cleanly
             state.barsHiddenByScroll = false;
           }
-          state.anchorY = getScrollMetrics(refs.scrollEl).scrollTop;
+          const metrics = getScrollMetrics(refs.scrollEl);
+          state.anchorY = Math.max(0, Math.min(metrics.scrollTop, metrics.maxScroll));
           applyVisibility(false);
         }
 
@@ -11912,7 +13236,8 @@
           const hasQuery = !!(refs.searchInput && refs.searchInput.value.trim().length > 0);
           if (!hasQuery && !state.isInputFocused) {
             state.barsHiddenByScroll = false;
-            state.anchorY = getScrollMetrics(refs.scrollEl).scrollTop;
+            const metrics = getScrollMetrics(refs.scrollEl);
+            state.anchorY = Math.max(0, Math.min(metrics.scrollTop, metrics.maxScroll));
           }
           applyVisibility(false);
         }
@@ -11936,13 +13261,45 @@
           }
         }
 
+        function resetChromeTransforms() {
+          state.anchorY = 0;
+          state.barsHiddenByScroll = false;
+          state.prevHideUpper = false;
+          state.prevHideLower = false;
+          clearBarInlineTransforms();
+          updateUpperBarPadding();
+          applyVisibility(true);
+        }
+
         function onResize() {
+          const nowDesktop = isDesktopViewport();
+          if (nowDesktop !== state.wasDesktop) {
+            state.wasDesktop = nowDesktop;
+            resetChromeTransforms();
+            return;
+          }
           updateUpperBarPadding();
           applyVisibility(false);
         }
 
         let resizeObserver = null;
         let mutationObserver = null;
+        let bpMediaQuery = null;
+        function onBreakpointChange() {
+          state.wasDesktop = isDesktopViewport();
+          resetChromeTransforms();
+          if (window.PrinceSearchEngine) {
+            const hInput = document.getElementById('homeQ');
+            const pInput = document.getElementById('prodQ');
+            if (hInput && hInput._princeSearchUI && hInput._princeSearchUI.isOpen()) hInput._princeSearchUI.position();
+            if (pInput && pInput._princeSearchUI && pInput._princeSearchUI.isOpen()) pInput._princeSearchUI.position();
+          }
+        }
+        if (typeof window.matchMedia === 'function') {
+          bpMediaQuery = window.matchMedia('(min-width: 768px)');
+          if (bpMediaQuery.addEventListener) bpMediaQuery.addEventListener('change', onBreakpointChange);
+          else if (bpMediaQuery.addListener) bpMediaQuery.addListener(onBreakpointChange);
+        }
 
         function bindDynamicTargets() {
           if (state.boundScrollEl && state.boundScrollEl !== refs.scrollEl) {
@@ -11957,10 +13314,13 @@
           if (refs.scrollEl && typeof MutationObserver === 'function') {
             mutationObserver = new MutationObserver(function () {
               if (state.contentSyncRaf !== null) return;
-              state.contentSyncRaf = window.requestAnimationFrame(function () {
+              let ranSync = false;
+              const rafHandle = window.requestAnimationFrame(function () {
+                ranSync = true;
                 state.contentSyncRaf = null;
                 applyVisibility(false);
               });
+              if (!ranSync) state.contentSyncRaf = rafHandle != null ? rafHandle : 1;
             });
             mutationObserver.observe(refs.scrollEl, { childList: true });
           }
@@ -11993,11 +13353,8 @@
 
         bindDynamicTargets();
 
-        // Initial resting state on screen activation
-        state.barsHiddenByScroll = false;
-        state.anchorY = Math.max(0, getScrollMetrics(refs.scrollEl).scrollTop);
-        updateUpperBarPadding();
-        applyVisibility(true);
+        // Initial resting state on screen activation (always reset lastScrollY / anchorY = 0 & clear inline transforms)
+        resetChromeTransforms();
         window.requestAnimationFrame(function () {
           updateUpperBarPadding();
           applyVisibility(false);
@@ -12010,12 +13367,14 @@
             refs = nextRefs;
             if (scrollChanged) {
               state.barsHiddenByScroll = false;
-              state.anchorY = Math.max(0, getScrollMetrics(refs.scrollEl).scrollTop);
+              state.anchorY = 0;
+              clearBarInlineTransforms();
               bindDynamicTargets();
             }
             updateUpperBarPadding();
             applyVisibility(false);
           },
+          reset: resetChromeTransforms,
           onModalStateChange: function () {
             if (isModalOrScannerOpen() && state.barcodeTimer) {
               clearTimeout(state.barcodeTimer);
@@ -12024,7 +13383,8 @@
             }
             if (!isModalOrScannerOpen()) {
               state.barcodeLocked = false;
-              state.anchorY = Math.max(0, getScrollMetrics(refs.scrollEl).scrollTop);
+              const metrics = getScrollMetrics(refs.scrollEl);
+              state.anchorY = Math.max(0, Math.min(metrics.scrollTop, metrics.maxScroll));
             }
             applyVisibility(false);
           }
@@ -12036,6 +13396,10 @@
           if (state.barcodeTimer) clearTimeout(state.barcodeTimer);
           window.removeEventListener('scroll', onScrollEvent);
           window.removeEventListener('resize', onResize);
+          if (bpMediaQuery) {
+            if (bpMediaQuery.removeEventListener) bpMediaQuery.removeEventListener('change', onBreakpointChange);
+            else if (bpMediaQuery.removeListener) bpMediaQuery.removeListener(onBreakpointChange);
+          }
           if (state.boundScrollEl) {
             state.boundScrollEl.removeEventListener('scroll', onScrollEvent);
           }
@@ -12053,9 +13417,7 @@
           }
           if (resizeObserver) resizeObserver.disconnect();
           if (mutationObserver) mutationObserver.disconnect();
-          // Restore bar visibility classes cleanly on leave
-          if (refs.upperBar) refs.upperBar.classList.remove('sa-bar-hidden');
-          if (lowerBar) lowerBar.classList.remove('sa-bar-hidden');
+          clearBarInlineTransforms();
         };
 
         return activeApi;
@@ -12068,6 +13430,9 @@
         sync: function (screenId) {
           if (screenId && screenId !== activeScreenId) return;
           if (activeApi) activeApi.sync();
+        },
+        reset: function () {
+          if (activeApi && typeof activeApi.reset === 'function') activeApi.reset();
         },
         onModalStateChange: function () {
           if (activeApi) activeApi.onModalStateChange();
@@ -12231,6 +13596,12 @@
             z: 460,
             isOpen: () => isElDisplayed('auditStartModal'),
             close: () => { if (typeof closeAuditStartModal === 'function') closeAuditStartModal(); else hideEl('auditStartModal'); }
+          },
+          {
+            id: 'ordersDetailPane',
+            z: 955,
+            isOpen: () => hasElClass('ordersDetailPane', 'mobile-open'),
+            close: () => { if (typeof closeOrderDetailSheet === 'function') closeOrderDetailSheet(); }
           },
           {
             id: 'filterModal',
@@ -12476,8 +13847,12 @@
             if (document.activeElement === homeInput && typeof homeInput.blur === 'function') {
               homeInput.blur();
             }
-            if (homeDropdown && homeDropdown.style) {
-              homeDropdown.style.display = 'none';
+            if (homeInput._princeSearchUI && typeof homeInput._princeSearchUI.hide === 'function') {
+              homeInput._princeSearchUI.hide();
+            } else {
+              if (homeDropdown && homeDropdown.style) homeDropdown.style.display = 'none';
+              const bd = document.getElementById('homeSearchDropdownBackdrop');
+              if (bd && bd.style) bd.style.display = 'none';
             }
             if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
               window.ScrollChromeController.sync(ROOT_SCREEN);
@@ -12686,6 +14061,210 @@
       };
     })();
     window.BackNavController = BackNavController;
+
+    // ══════════════════════════════════════════
+    //  PC KEYBOARD SHORTCUT CONTROLLER
+    // ══════════════════════════════════════════
+    const KeyboardShortcutController = (function () {
+      let bound = false;
+
+      function getActiveScreenId() {
+        const active = document.querySelector('.S.on');
+        return active ? active.id : '';
+      }
+
+      function isEditableTarget(el) {
+        if (!el) return false;
+        const tag = (el.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+        return Boolean(el.isContentEditable);
+      }
+
+      function focusInventorySearch() {
+        const activeId = getActiveScreenId();
+        let targetInput = activeId === 's-products'
+          ? document.getElementById('prodQ')
+          : document.getElementById('homeQ');
+        if (!targetInput || (activeId !== 's-search' && activeId !== 's-products')) {
+          if (typeof nav === 'function') nav('s-search');
+          targetInput = document.getElementById('homeQ');
+        }
+        if (targetInput) {
+          setTimeout(() => {
+            try {
+              targetInput.focus();
+              if (typeof targetInput.select === 'function') targetInput.select();
+            } catch (err) {}
+          }, 20);
+        }
+      }
+
+      function handleEscape() {
+        // 1. Topmost overlay / modal / scanner / detail sheet
+        const modalChecks = [
+          { test: () => document.getElementById('pdmFullscreenViewer')?.style.display && document.getElementById('pdmFullscreenViewer').style.display !== 'none', close: () => typeof closePdmFullscreen === 'function' && closePdmFullscreen() },
+          { test: () => document.getElementById('scanner-modal')?.classList.contains('on'), close: () => typeof closeScanner === 'function' && closeScanner() },
+          { test: () => document.getElementById('pdmModal')?.style.display && document.getElementById('pdmModal').style.display !== 'none', close: () => typeof closeProductModal === 'function' && closeProductModal() },
+          { test: () => document.getElementById('filterModal')?.classList.contains('on'), close: () => typeof closeFilterModal === 'function' && closeFilterModal() },
+          { test: () => document.getElementById('manual-input-modal')?.style.display && document.getElementById('manual-input-modal').style.display !== 'none', close: () => typeof closeManualEntryModal === 'function' && closeManualEntryModal() },
+          { test: () => document.getElementById('moreSheet')?.classList.contains('on'), close: () => typeof closeMore === 'function' && closeMore() },
+          { test: () => document.getElementById('notifSheet')?.classList.contains('on'), close: () => typeof closeNotifications === 'function' && closeNotifications() },
+          { test: () => document.getElementById('ordersDetailPane')?.classList.contains('mobile-open'), close: () => typeof closeOrderDetailSheet === 'function' && closeOrderDetailSheet() },
+          { test: () => document.getElementById('s-add-product')?.classList.contains('on'), close: () => typeof closeAddProductModal === 'function' && closeAddProductModal() },
+          { test: () => document.getElementById('s-log-detail')?.classList.contains('on'), close: () => typeof nav === 'function' && nav('s-logs') }
+        ];
+        for (const item of modalChecks) {
+          if (item.test()) {
+            item.close();
+            return true;
+          }
+        }
+
+        // 2. Search dropdown open or search input focused -> close dropdown & blur
+        const activeId = getActiveScreenId();
+        const searchId = activeId === 's-products' ? 'prodQ' : 'homeQ';
+        const ddId = activeId === 's-products' ? 'prodSearchDropdown' : 'homeSearchDropdown';
+        const inputEl = document.getElementById(searchId);
+        const ddEl = document.getElementById(ddId);
+        const ddOpen = Boolean(ddEl && ddEl.style && ddEl.style.display && ddEl.style.display !== 'none');
+        if (inputEl && (ddOpen || document.activeElement === inputEl)) {
+          if (inputEl._princeSearchUI && typeof inputEl._princeSearchUI.hide === 'function') {
+            inputEl._princeSearchUI.hide();
+          } else {
+            if (ddEl && ddEl.style) ddEl.style.display = 'none';
+            const bd = document.getElementById(ddId + 'Backdrop');
+            if (bd && bd.style) bd.style.display = 'none';
+          }
+          if (document.activeElement === inputEl && typeof inputEl.blur === 'function') {
+            inputEl.blur();
+          }
+          return true;
+        }
+
+        // 3. Clear active search query
+        if (inputEl && inputEl.value && inputEl.value.trim().length > 0) {
+          if (searchId === 'prodQ' && typeof clearProdSearch === 'function') {
+            clearProdSearch();
+          } else if (typeof clearHomeSearch === 'function') {
+            clearHomeSearch();
+          } else {
+            inputEl.value = '';
+          }
+          return true;
+        }
+
+        // 4. Clear active Brand / Location pill filters
+        if (typeof INVENTORY_LOC_FILTER !== 'undefined' && INVENTORY_LOC_FILTER && typeof clearInventoryLocFilter === 'function') {
+          clearInventoryLocFilter();
+          return true;
+        }
+        if (typeof INVENTORY_BRAND_FILTER !== 'undefined' && INVENTORY_BRAND_FILTER && typeof clearInventoryBrandFilter === 'function') {
+          clearInventoryBrandFilter();
+          return true;
+        }
+
+        return false;
+      }
+
+      function handleCtrlEnter() {
+        const pdmAddForm = document.getElementById('pdmAddBatchForm');
+        const pdmModal = document.getElementById('pdmModal');
+        if (pdmModal && pdmModal.style.display && pdmModal.style.display !== 'none' &&
+            pdmAddForm && pdmAddForm.style.display && pdmAddForm.style.display !== 'none') {
+          if (typeof submitPdmAddBatch === 'function') submitPdmAddBatch();
+          return true;
+        }
+        if (document.getElementById('s-add-product')?.classList.contains('on')) {
+          if (typeof saveProduct === 'function') saveProduct();
+          return true;
+        }
+        if (document.getElementById('filterModal')?.classList.contains('on')) {
+          if (typeof applyFilters === 'function') applyFilters();
+          return true;
+        }
+        if (document.getElementById('manual-input-modal')?.style.display &&
+            document.getElementById('manual-input-modal').style.display !== 'none') {
+          if (typeof submitManualEntry === 'function') submitManualEntry();
+          return true;
+        }
+        if (getActiveScreenId() === 's-cart') {
+          if (typeof startFreePickSession === 'function') startFreePickSession();
+          return true;
+        }
+        return false;
+      }
+
+      function onKeyDown(e) {
+        if (!e) return;
+        const activeId = getActiveScreenId();
+        if (activeId === 's-splash' || activeId === 's-login') return;
+
+        const key = String(e.key || '');
+        const lower = key.toLowerCase();
+        const mod = e.ctrlKey || e.metaKey;
+        const editable = isEditableTarget(e.target);
+
+        if (key === 'Escape') {
+          if (handleEscape()) {
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if (mod && lower === 'k') {
+          e.preventDefault();
+          focusInventorySearch();
+          return;
+        }
+
+        if (key === '/' && !mod && !e.altKey && !editable) {
+          e.preventDefault();
+          focusInventorySearch();
+          return;
+        }
+
+        if (mod && key === 'Enter') {
+          if (handleCtrlEnter()) {
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if (key === 'F2' && !mod && !e.altKey) {
+          e.preventDefault();
+          if (typeof toggleQuickBarcodeScanner === 'function') toggleQuickBarcodeScanner();
+          return;
+        }
+
+        if (e.altKey && !mod) {
+          if (key === '1') { e.preventDefault(); if (typeof nav === 'function') nav('s-orders'); return; }
+          if (key === '2') { e.preventDefault(); if (typeof nav === 'function') nav('s-cart'); return; }
+          if (key === '3') { e.preventDefault(); if (typeof startAdhocScan === 'function') startAdhocScan(); return; }
+          if (key === '4') { e.preventDefault(); if (typeof nav === 'function') nav('s-search'); return; }
+          if (key === '5') { e.preventDefault(); if (typeof openMore === 'function') openMore(); return; }
+          if (lower === 'b') {
+            e.preventDefault();
+            if (typeof toggleQuickBarcodeScanner === 'function') toggleQuickBarcodeScanner();
+            return;
+          }
+          if (lower === 'n') {
+            e.preventDefault();
+            if (typeof openNewProductDialog === 'function') openNewProductDialog();
+            return;
+          }
+        }
+      }
+
+      function init() {
+        if (bound || typeof document === 'undefined') return;
+        bound = true;
+        document.addEventListener('keydown', onKeyDown);
+      }
+
+      return { init, onKeyDown, handleEscape, handleCtrlEnter, focusInventorySearch };
+    })();
+    window.KeyboardShortcutController = KeyboardShortcutController;
+    KeyboardShortcutController.init();
 
     const DEFAULT_HOME_SCREEN = 's-search';
 
@@ -13670,6 +15249,8 @@
     // ══════════════════════════════════════════
     //  ORDERS SCREEN
     // ══════════════════════════════════════════
+    let SELECTED_ORDER_ID = null;
+
     function renderOrders() {
       const el = document.getElementById('ordersList');
       const cnt = document.getElementById('orderCount');
@@ -13683,6 +15264,7 @@
       if (offEl) offEl.style.display = !isOnline ? 'inline-flex' : 'none';
 
       if (!STATE.orders.length) {
+        SELECTED_ORDER_ID = null;
         el.innerHTML = `
           <div class="empty-state-card">
             <div class="empty-state-icon">📋</div>
@@ -13693,7 +15275,7 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                 Demo Data
               </button>
-              <button class="btn-s" onclick="nav('s-add-product')">
+              <button class="btn-s" onclick="openNewProductDialog()">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 New Product
               </button>
@@ -13701,6 +15283,7 @@
           </div>
         `;
         cnt.textContent = '0 orders';
+        if (typeof renderOrderDetailPane === 'function') renderOrderDetailPane(null);
         return;
       }
 
@@ -13710,6 +15293,11 @@
       const done = STATE.orders.filter(o => o.status === 'done');
       cnt.textContent = `${pending.length} pending · ${mine.length} mine · ${others.length} taken`;
 
+      if (!SELECTED_ORDER_ID || !STATE.orders.some(o => o.order_id === SELECTED_ORDER_ID)) {
+        const firstOrder = mine[0] || pending[0] || others[0] || done[0] || null;
+        SELECTED_ORDER_ID = firstOrder ? firstOrder.order_id : null;
+      }
+
       let html = '';
       if (mine.length) html += `<div class="day-lbl" style="padding-top:0">MY ACTIVE ORDERS</div>` + mine.map(o => renderOrderCard(o, true)).join('');
       if (pending.length) html += `<div class="day-lbl" ${mine.length ? '' : 'style="padding-top:0"'}>AVAILABLE (${pending.length})</div>` + pending.map(o => renderOrderCard(o, false)).join('');
@@ -13717,6 +15305,23 @@
       if (done.length) html += `<div class="day-lbl">COMPLETED</div>` + done.map(o => renderOrderCard(o, false)).join('');
       if (!html) html = hintCard('✅', 'All orders completed!', 'Nothing left to pick right now');
       el.innerHTML = html;
+      if (typeof renderOrderDetailPane === 'function') renderOrderDetailPane(SELECTED_ORDER_ID);
+    }
+
+    function onOrderCardClick(orderId) {
+      const o = STATE.orders.find(x => x.order_id === orderId);
+      if (!o) return;
+      const isDesktopSplit = typeof window !== 'undefined' && window.innerWidth >= 1024;
+      if (isDesktopSplit) {
+        SELECTED_ORDER_ID = orderId;
+        renderOrders();
+        return;
+      }
+      if (o.status === 'pending' || (o.status === 'assigned' && o.picker === STATE.pickerName)) {
+        claimOrder(orderId);
+      } else {
+        openOrderDetailSheet(orderId);
+      }
     }
 
     function renderOrderCard(o, isMine, isLocked) {
@@ -13733,9 +15338,13 @@
 
       const safeOrderId = escapeHtml(o.order_id);
       const safeOrderIdArg = safeOrderId.replace(/'/g, "\\'");
-      const clickable = (o.status === 'pending' || isMine) ? `onclick="claimOrder('${safeOrderIdArg}')"` : '';
+      const isSelected = SELECTED_ORDER_ID === o.order_id;
+      const canPick = o.status === 'pending' || isMine;
+      const clickable = `onclick="onOrderCardClick('${safeOrderIdArg}')"`;
+      const dblClick = canPick ? `ondblclick="claimOrder('${safeOrderIdArg}')"` : '';
+      const actionLabel = isMine ? 'Resume Pick' : (o.status === 'pending' ? 'Start Pick' : '');
       return `
-  <div class="order-card" ${clickable} style="${isLocked ? 'opacity:.55;cursor:not-allowed;' : ''}">
+  <div class="order-card${isSelected ? ' selected' : ''}" ${clickable} ${dblClick} style="${isLocked ? 'opacity:.72;' : ''}">
     <div class="oc-top">
       <div><div class="oc-id">Order #${safeOrderId}</div><div class="oc-sub">${total} item${total !== 1 ? 's' : ''}</div></div>
       ${statusChip}
@@ -13745,7 +15354,183 @@
       <div class="oc-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${picked}/${total} picked</div>
       <div class="oc-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(locStr.slice(0, 30))}</div>
     </div>
+    <div class="oc-actions-row">
+      <button type="button" class="btn-s" style="height:34px;padding:0 12px;font-size:12px" onclick="event.stopPropagation(); openOrderDetailSheet('${safeOrderIdArg}')">Details</button>
+      ${actionLabel ? `<button type="button" class="btn-p" style="height:34px;padding:0 12px;font-size:12px" onclick="event.stopPropagation(); claimOrder('${safeOrderIdArg}')">${actionLabel}</button>` : ''}
+    </div>
   </div>`;
+    }
+
+    function renderOrderDetailPane(orderId) {
+      const titleEl = document.getElementById('odpTitle');
+      const subEl = document.getElementById('odpSub');
+      const statusEl = document.getElementById('odpStatusChip');
+      const bodyEl = document.getElementById('odpBody');
+      const footerEl = document.getElementById('odpFooter');
+      const primaryBtn = document.getElementById('odpPrimaryBtn');
+      if (!titleEl || !bodyEl) return;
+
+      const o = orderId ? STATE.orders.find(x => x.order_id === orderId) : null;
+      if (!o) {
+        titleEl.textContent = 'Select an order';
+        if (subEl) subEl.textContent = 'Click any order to inspect items or print receipt';
+        if (statusEl) statusEl.style.display = 'none';
+        if (footerEl) footerEl.style.display = 'none';
+        bodyEl.innerHTML = `<div style="text-align:center;padding:36px 16px;color:var(--t3);font-size:13px;font-weight:600">Select an order from the list to view line items, bin locations, and print picking slips.</div>`;
+        return;
+      }
+
+      const items = Array.isArray(o.items) ? o.items : [];
+      const totalUnits = items.reduce((s, it) => s + (Number(it.qty) || 1), 0);
+      const pickedCount = items.filter(it => it.status === 'picked').length;
+      const isMine = o.status === 'assigned' && o.picker === STATE.pickerName;
+
+      titleEl.textContent = `Order #${o.order_id}`;
+      if (subEl) {
+        subEl.textContent = `${items.length} line${items.length !== 1 ? 's' : ''} · ${totalUnits} unit${totalUnits !== 1 ? 's' : ''} · ${pickedCount}/${items.length} picked`;
+      }
+      if (statusEl) {
+        statusEl.style.display = 'inline-flex';
+        if (o.status === 'done') {
+          statusEl.className = 'chip c-gr';
+          statusEl.textContent = 'DONE';
+        } else if (isMine) {
+          statusEl.className = 'chip c-or';
+          statusEl.textContent = 'IN PROGRESS';
+        } else if (o.status === 'assigned') {
+          statusEl.className = 'chip c-rd';
+          statusEl.textContent = `TAKEN · ${o.picker || '?'}`;
+        } else {
+          statusEl.className = 'chip c-bl';
+          statusEl.textContent = 'AVAILABLE';
+        }
+      }
+
+      if (!items.length) {
+        bodyEl.innerHTML = `<div style="text-align:center;padding:28px 16px;color:var(--t3);font-size:13px">No line items recorded for this order.</div>`;
+      } else {
+        bodyEl.innerHTML = items.map(it => {
+          const p = (STATE.barcodeIndex && STATE.barcodeIndex.get(it.barcode)) || {};
+          const name = p.name || it.name || it.barcode || 'Unnamed Item';
+          const loc = it.loc || p.loc || 'N/A';
+          const mrpVal = Number(it.unit_mrp ?? it.mrp ?? p.mrp ?? 0);
+          const qtyVal = Number(it.qty) || 1;
+          const statusCls = it.status === 'picked' ? 'c-gr' : (it.status === 'skipped' ? 'c-rd' : 'c-bl');
+          const statusLbl = (it.status || 'pending').toUpperCase();
+          return `
+            <div class="odp-item-row">
+              <div class="odp-item-main">
+                <div class="odp-item-name">${escapeHtml(name)}</div>
+                <div class="odp-item-meta">${escapeHtml(it.barcode || '')} · Bin ${escapeHtml(loc)}${mrpVal > 0 ? ' · ₹' + mrpVal : ''}</div>
+              </div>
+              <div class="odp-item-right">
+                <span class="chip ${statusCls}" style="font-size:10px;padding:2px 7px">${escapeHtml(statusLbl)}</span>
+                <div class="odp-item-qty">×${qtyVal}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (footerEl) footerEl.style.display = 'flex';
+      if (primaryBtn) {
+        const canPick = o.status === 'pending' || isMine;
+        primaryBtn.style.display = canPick ? 'inline-flex' : 'none';
+        primaryBtn.textContent = isMine ? 'Resume Picking' : 'Start Picking';
+      }
+    }
+
+    function openOrderDetailSheet(orderId) {
+      if (!orderId) return;
+      SELECTED_ORDER_ID = orderId;
+      renderOrders();
+      const pane = document.getElementById('ordersDetailPane');
+      if (pane && window.innerWidth < 1024) {
+        pane.classList.add('mobile-open');
+        if (window.ScrollLockManager && typeof window.ScrollLockManager.lock === 'function') {
+          window.ScrollLockManager.lock('ordersDetailPane');
+        }
+        if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+          window.BackNavController.sync();
+        }
+      }
+    }
+
+    function closeOrderDetailSheet() {
+      const pane = document.getElementById('ordersDetailPane');
+      if (!pane) return;
+      if (pane.classList.contains('mobile-open')) {
+        pane.classList.remove('mobile-open');
+        if (window.ScrollLockManager && typeof window.ScrollLockManager.unlock === 'function') {
+          window.ScrollLockManager.unlock('ordersDetailPane');
+        }
+        if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+          window.BackNavController.sync();
+        }
+        if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+          window.ScrollChromeController.sync('s-orders');
+        }
+      }
+    }
+
+    function startSelectedOrderPicking() {
+      if (!SELECTED_ORDER_ID) return;
+      const oid = SELECTED_ORDER_ID;
+      closeOrderDetailSheet();
+      claimOrder(oid);
+    }
+
+    function printReceiptHtml(title, rowsHtml, subtitle) {
+      const safeTitle = escapeHtml(title || 'Prince Picker Slip');
+      const safeSub = escapeHtml(subtitle || new Date().toLocaleString());
+      const docHtml = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:18px;color:#111;max-width:420px;margin:0 auto}h1{font-size:18px;margin:0 0 4px}.sub{font-size:12px;color:#555;margin-bottom:14px;border-bottom:1px dashed #ccc;padding-bottom:8px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:6px 4px;border-bottom:1px solid #eee}th:last-child,td:last-child{text-align:right}</style></head><body><h1>${safeTitle}</h1><div class="sub">${safeSub}</div><table><thead><tr><th>Item / Bin</th><th>Batch</th><th>Qty</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+      try {
+        let frame = document.getElementById('ppPrintFrame');
+        if (!frame) {
+          frame = document.createElement('iframe');
+          frame.id = 'ppPrintFrame';
+          frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+          document.body.appendChild(frame);
+        }
+        const fdoc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+        if (!fdoc) { toast('Print preview unavailable', 'err'); return; }
+        fdoc.open();
+        fdoc.write(docHtml);
+        fdoc.close();
+        setTimeout(() => {
+          try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+          } catch (e) { toast('Unable to open print dialog', 'err'); }
+        }, 120);
+      } catch (e) {
+        toast('Unable to prepare print slip', 'err');
+      }
+    }
+
+    function printSelectedOrderReceipt() {
+      const o = SELECTED_ORDER_ID ? STATE.orders.find(x => x.order_id === SELECTED_ORDER_ID) : null;
+      if (!o) { toast('Select an order first', 'err'); return; }
+      const rows = (o.items || []).map(it => {
+        const p = (STATE.barcodeIndex && STATE.barcodeIndex.get(it.barcode)) || {};
+        const name = escapeHtml(p.name || it.name || it.barcode || 'Item');
+        const loc = escapeHtml(it.loc || p.loc || 'N/A');
+        const batch = escapeHtml(it.batch_id || 'B1');
+        return `<tr><td><strong>${name}</strong><br><small>${escapeHtml(it.barcode || '')} · ${loc}</small></td><td>${batch}</td><td>×${Number(it.qty) || 1}</td></tr>`;
+      }).join('');
+      printReceiptHtml(`Order #${o.order_id}`, rows, `Picker: ${STATE.pickerName || 'Counter'} · ${(o.items || []).length} items`);
+    }
+
+    function printCartReceipt() {
+      if (!CART.items.length) { toast('Cart is empty', 'err'); return; }
+      const rows = CART.items.map(c => {
+        const name = escapeHtml(c.name || c.barcode || 'Item');
+        const loc = escapeHtml(c.loc || 'N/A');
+        const batch = escapeHtml(c.batch_id || 'B1');
+        const mrp = Number(c.unit_mrp ?? c.mrp ?? 0);
+        return `<tr><td><strong>${name}</strong><br><small>${escapeHtml(c.barcode || '')} · ${loc}${mrp > 0 ? ' · ₹' + mrp : ''}</small></td><td>${batch}${c.mode === 'drop' ? ' (Drop)' : ''}</td><td>×${Number(c.qty) || 1}</td></tr>`;
+      }).join('');
+      printReceiptHtml('Prince Picker — Cart Pick Slip', rows, `Picker: ${STATE.pickerName || 'Counter'} · ${CART.items.length} lines`);
     }
 
     async function claimOrder(orderId) {
@@ -14785,13 +16570,10 @@
         let cartBtnHtml = '';
         if (inCartBatchItem) {
           cartBtnHtml = `
-            <div style="display:flex; gap:8px; margin-top:auto; height:44px" onclick="event.stopPropagation()">
-              <button class="btn-cart in-cart" style="flex:1; height:100%; border-radius:12px" ondblclick="removeFromCart(${p._idx}, '${safeBatchArg}', 'pick')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> In Cart${batchInfo.isMulti ? ` (${escapeHtml(selBatchId)} · ${inCartBatchItem.qty})` : ''}
-              </button>
-              <button class="btn-cart in-cart" style="flex:0 0 60px; height:100%; font-size:26px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:12px" onclick="adjustSearchCartQty(${p._idx}, 1, '${safeBatchArg}')">
-                +
-              </button>
+            <div class="card-cart-stepper" onclick="event.stopPropagation()">
+              <button type="button" class="ccs-btn" onclick="adjustSearchCartQty(${p._idx}, -1, '${safeBatchArg}')" aria-label="Decrease quantity">−</button>
+              <span class="ccs-qty">${inCartBatchItem.qty} in Cart${batchInfo.isMulti ? ` (${escapeHtml(selBatchId)})` : ''}</span>
+              <button type="button" class="ccs-btn" onclick="adjustSearchCartQty(${p._idx}, 1, '${safeBatchArg}')" aria-label="Increase quantity">+</button>
             </div>
           `;
         } else {
@@ -14839,14 +16621,68 @@
       });
     }
 
+    function syncSearchClearUI(inputId, clearBtnId, kbdHintId) {
+      const inp = document.getElementById(inputId);
+      const clr = document.getElementById(clearBtnId);
+      const kbd = document.getElementById(kbdHintId);
+      const hasVal = Boolean(inp && inp.value && inp.value.length > 0);
+      if (clr) clr.classList.toggle('visible', hasVal);
+      if (kbd) kbd.style.display = hasVal ? 'none' : '';
+    }
+
+    function clearHomeSearch() {
+      const inp = document.getElementById('homeQ');
+      if (inp) {
+        inp.value = '';
+        if (inp._princeSearchUI && typeof inp._princeSearchUI.hide === 'function') {
+          inp._princeSearchUI.hide();
+        }
+        inp.focus();
+      }
+      syncSearchClearUI('homeQ', 'homeQClearBtn', 'homeQKbdHint');
+      renderSearch('');
+      if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+        window.ScrollChromeController.sync('s-search');
+      }
+      if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
+        window.BackNavController.sync();
+      }
+    }
+
+    function clearProdSearch() {
+      const inp = document.getElementById('prodQ');
+      if (inp) {
+        inp.value = '';
+        if (inp._princeSearchUI && typeof inp._princeSearchUI.hide === 'function') {
+          inp._princeSearchUI.hide();
+        }
+        inp.focus();
+      }
+      syncSearchClearUI('prodQ', 'prodQClearBtn', 'prodQKbdHint');
+      renderProductsList('');
+      if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+        window.ScrollChromeController.sync('s-products');
+      }
+    }
+
+    function quickAddProductToCart(prod) {
+      if (!prod) return;
+      const bInfo = getProductBatchesInfo(prod);
+      const batch = bInfo.selectedBatch;
+      addItemToCart(prod, 1, 'pick', batch);
+      toast(`✓ Added ${prod.name || 'item'} (${batch?.batch_id || 'B1'} · ₹${Number(batch?.mrp ?? prod.mrp ?? 0)}) to cart`, 'ok');
+    }
+
     const _homeQEl = document.getElementById('homeQ');
     if (_homeQEl) {
       _homeQEl.addEventListener('input', function () {
+        syncSearchClearUI('homeQ', 'homeQClearBtn', 'homeQKbdHint');
         if (window.BackNavController && typeof window.BackNavController.sync === 'function') {
           window.BackNavController.sync();
         }
       });
       _homeQEl.addEventListener('input', debounce(function () { renderSearch(this.value.trim()); }, 220));
+      syncSearchClearUI('homeQ', 'homeQClearBtn', 'homeQKbdHint');
     }
 
       // Attach high-performance autocomplete UI to search inputs
@@ -14857,6 +16693,9 @@
             dropdownId: 'homeSearchDropdown',
             onSelect: function (prod) {
               openProdDetail(prod);
+            },
+            onQuickAdd: function (prod) {
+              quickAddProductToCart(prod);
             }
           });
         }
@@ -14866,6 +16705,9 @@
             dropdownId: 'prodSearchDropdown',
             onSelect: function (prod) {
               openProdDetail(prod);
+            },
+            onQuickAdd: function (prod) {
+              quickAddProductToCart(prod);
             }
           });
         }
@@ -17111,6 +18953,13 @@
       document.getElementById('scanOkBtn').style.display = 'none';
       document.getElementById('scanDemo').textContent = '';
       document.getElementById('scanner-modal').classList.add('on');
+      const usbIn = document.getElementById('desktopUsbBarcodeIn');
+      if (usbIn) {
+        usbIn.value = '';
+        if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+          setTimeout(() => { try { usbIn.focus(); } catch (e) {} }, 60);
+        }
+      }
 
       // Demo hint for in-session scanning
       if (STATE.session) {
@@ -17689,11 +19538,85 @@
     // ══════════════════════════════════════════
     //  HELPERS
     // ══════════════════════════════════════════
+    let _lastMainScreenId = 's-search';
+
+    function openNewProductDialog() {
+      if (typeof resetAPForm === 'function') resetAPForm();
+      nav('s-add-product');
+    }
+
+    function closeAddProductModal() {
+      const target = (_lastMainScreenId && _lastMainScreenId !== 's-add-product' && _lastMainScreenId !== 's-log-detail')
+        ? _lastMainScreenId
+        : 's-search';
+      nav(target);
+    }
+
+    function toggleQuickBarcodeScanner() {
+      const modal = document.getElementById('scanner-modal');
+      if (modal && modal.classList.contains('on')) {
+        if (window.innerWidth >= 768) {
+          const usbIn = document.getElementById('desktopUsbBarcodeIn');
+          if (usbIn && document.activeElement !== usbIn) {
+            usbIn.focus();
+            usbIn.select();
+            return;
+          }
+        }
+        closeScanner();
+        return;
+      }
+      openScanner(function (val) {
+        nav('s-search');
+        onBarcodeSearch(val);
+      }, 'Scan Barcode / USB Input');
+    }
+
+    function submitDesktopUsbBarcode() {
+      const usbIn = document.getElementById('desktopUsbBarcodeIn');
+      const raw = usbIn ? usbIn.value.trim() : '';
+      if (!raw) {
+        toast('Enter or scan a barcode first', 'err');
+        return;
+      }
+      if (usbIn) usbIn.value = '';
+      const val = typeof extractQrMeta === 'function' ? extractQrMeta(raw) : raw;
+      SCAN.lastVal = val;
+      const scanValEl = document.getElementById('scanVal');
+      if (scanValEl) { scanValEl.textContent = val; scanValEl.className = 'scan-val'; }
+      if (typeof confirmScan === 'function') {
+        confirmScan();
+      } else {
+        const cb = SCAN.callback;
+        closeScanner();
+        if (typeof cb === 'function') cb(val);
+        else if (typeof onBarcodeSearch === 'function') onBarcodeSearch(val);
+      }
+    }
+
     function goTo(id) {
       if (id !== 's-drop' && typeof stopDropInlineScanner === 'function') {
         stopDropInlineScanner();
       }
-      document.querySelectorAll('.S').forEach(function (s) { s.classList.remove('on'); });
+      if (id !== 's-orders' && typeof closeOrderDetailSheet === 'function') {
+        closeOrderDetailSheet();
+      }
+      const isOverlayScreen = id === 's-add-product' || id === 's-log-detail';
+      const isAuth = id === 's-splash' || id === 's-login';
+      if (!isOverlayScreen && !isAuth) {
+        _lastMainScreenId = id;
+      }
+      if (typeof document !== 'undefined' && document.body && document.body.classList) {
+        document.body.classList.toggle('auth-screen', isAuth);
+      }
+
+      document.querySelectorAll('.S').forEach(function (s) {
+        s.classList.remove('on');
+        s.classList.remove('underlay');
+      });
+      if (isOverlayScreen && _lastMainScreenId) {
+        document.getElementById(_lastMainScreenId)?.classList.add('underlay');
+      }
       document.getElementById(id)?.classList.add('on');
 
       if (id === 's-drop') {
@@ -17714,6 +19637,12 @@
           }
         }, 100);
       }
+
+      const dpn = document.getElementById('desktopPickerName');
+      if (dpn) {
+        dpn.textContent = (typeof STATE !== 'undefined' && STATE.pickerName) ? STATE.pickerName : 'Workstation';
+      }
+
       // Update active nav tab
       var TAB_MAP = {
         's-orders': 's-orders', 's-picking': 's-orders', 's-summary': 's-orders',
@@ -17741,8 +19670,20 @@
           if (btn.getAttribute('onclick') === 'openMore()') btn.classList.add('on');
         });
       }
-      if (window.ScrollChromeController && typeof window.ScrollChromeController.attachToScreen === 'function') {
-        window.ScrollChromeController.attachToScreen(id);
+
+      var desktopActive = activeNav || (id === 's-adhoc' ? 's-adhoc' : (inMore ? 'more' : ''));
+      document.querySelectorAll('#desktopTopNav .dtn-tab').forEach(function (btn) {
+        var target = btn.getAttribute('data-nav') || '';
+        btn.classList.toggle('on', desktopActive !== '' && target === desktopActive);
+      });
+
+      if (window.ScrollChromeController) {
+        if (typeof window.ScrollChromeController.reset === 'function') {
+          window.ScrollChromeController.reset();
+        }
+        if (typeof window.ScrollChromeController.attachToScreen === 'function') {
+          window.ScrollChromeController.attachToScreen(id);
+        }
       }
       if (window.BackNavController && typeof window.BackNavController.onScreenChange === 'function') {
         window.BackNavController.onScreenChange(id);
@@ -18104,14 +20045,38 @@
       const total = CART.items.reduce((s, c) => s + c.qty, 0);
       const badge = document.getElementById('cartBadge');
       if (badge) { badge.textContent = total; badge.style.display = total > 0 ? 'block' : 'none'; }
+      const dBadge = document.getElementById('desktopCartBadge');
+      if (dBadge) { dBadge.textContent = total; dBadge.style.display = total > 0 ? 'inline-flex' : 'none'; }
+      if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+        document.querySelectorAll('.bn .bnt[onclick*="\'s-cart\'"]').forEach(btn => {
+          btn.style.position = 'relative';
+          let mb = btn.querySelector('.bnt-cart-badge');
+          if (!mb) {
+            mb = document.createElement('span');
+            mb.className = 'bnt-cart-badge';
+            mb.style.cssText = 'position:absolute;top:2px;right:calc(50% - 18px);min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--or,#C84B11);color:#fff;font-size:10px;font-weight:800;line-height:16px;text-align:center;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.22)';
+            btn.appendChild(mb);
+          }
+          mb.textContent = total > 99 ? '99+' : String(total);
+          mb.style.display = total > 0 ? 'inline-block' : 'none';
+        });
+      }
       updateCartTotal();
     }
 
     function updateCartTotal() {
       const units = CART.items.reduce((s, c) => s + c.qty, 0);
+      const pickUnits = CART.items.filter(c => c.mode !== 'drop').reduce((s, c) => s + (Number(c.qty) || 0), 0);
+      const dropUnits = CART.items.filter(c => c.mode === 'drop').reduce((s, c) => s + (Number(c.qty) || 0), 0);
       const totalVal = CART.items.reduce((s, c) => s + ((Number(c.unit_mrp ?? c.mrp ?? 0)) * (Number(c.qty) || 0)), 0);
       const el = document.getElementById('cartTotalVal');
       if (el) el.textContent = `${CART.items.length} items · ${units} units${totalVal > 0 ? ' · ₹' + totalVal : ''}`;
+      const pEl = document.getElementById('cpbPickCount');
+      if (pEl) pEl.textContent = pickUnits;
+      const dEl = document.getElementById('cpbDropCount');
+      if (dEl) dEl.textContent = dropUnits;
+      const mEl = document.getElementById('cpbMrpTotal');
+      if (mEl) mEl.textContent = '₹' + totalVal;
     }
 
     let cartTabMode = 'loc';
@@ -21319,7 +23284,10 @@
       _productsInputsWired = true;
 
       const pq = document.getElementById('prodQ');
-      if (pq) pq.addEventListener('input', debounce(function () { renderProductsList(this.value.trim()); }, 250));
+      if (pq) pq.addEventListener('input', debounce(function () {
+        if (typeof syncSearchClearUI === 'function') syncSearchClearUI(this);
+        renderProductsList(this.value.trim());
+      }, 250));
 
       // Wire fallback file import
       const impIn = document.getElementById('prodImportIn');
