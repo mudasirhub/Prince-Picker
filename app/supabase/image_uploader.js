@@ -36,7 +36,7 @@
         if (session && session.access_token) return session.access_token;
       }
     } catch (e) { }
-    return (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey) || 'anon-jwt-token-prince-picker';
+    return (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey) || '';
   }
 
   async function detectMimeFromBlob(blob) {

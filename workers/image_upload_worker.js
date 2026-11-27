@@ -30,9 +30,77 @@ const EXT_TO_MIME = {
   jpeg: 'image/jpeg',
   png: 'image/png',
   gif: 'image/gif',
-  svg: 'image/svg+xml',
   avif: 'image/avif',
 };
+
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://princepicker.mudasirkhan.in',
+  'https://localhost',
+  'http://localhost',
+  'http://127.0.0.1',
+  'capacitor://localhost',
+  'ionic://localhost',
+];
+
+function isAllowedMutatingOrigin(request, env) {
+  const origin = request.headers.get('Origin');
+  if (!origin) return true; // Non-browser / Capacitor native HTTP clients
+  const extra = env?.ALLOWED_ORIGINS
+    ? String(env.ALLOWED_ORIGINS).split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  const allowed = [...DEFAULT_ALLOWED_ORIGINS, ...extra];
+  return allowed.some(prefix => origin === prefix || origin.startsWith(prefix + ':'));
+}
+
+function timingSafeEqualStr(a, b) {
+  const sa = String(a || '');
+  const sb = String(b || '');
+  if (sa.length !== sb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < sa.length; i++) {
+    diff |= sa.charCodeAt(i) ^ sb.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+function decodeBase64UrlToBytes(b64u) {
+  const pad = '='.repeat((4 - (b64u.length % 4)) % 4);
+  const b64 = (b64u + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function verifyJwtHS256(token, secret) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 3) return { ok: false, reason: 'Malformed JWT' };
+  const [hdrB64, payB64, sigB64] = parts;
+  let payload;
+  try {
+    const payJson = new TextDecoder().decode(decodeBase64UrlToBytes(payB64));
+    payload = JSON.parse(payJson);
+  } catch (_) {
+    return { ok: false, reason: 'Invalid JWT payload' };
+  }
+  if (payload && typeof payload.exp === 'number' && payload.exp * 1000 < Date.now()) {
+    return { ok: false, reason: 'Token expired' };
+  }
+  if (secret && typeof crypto !== 'undefined' && crypto.subtle) {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+    const sigBytes = decodeBase64UrlToBytes(sigB64);
+    const dataBytes = new TextEncoder().encode(`${hdrB64}.${payB64}`);
+    const valid = await crypto.subtle.verify('HMAC', key, sigBytes, dataBytes);
+    if (!valid) return { ok: false, reason: 'Invalid JWT signature' };
+  }
+  return { ok: true, payload };
+}
 
 function jsonResponse(payload, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
@@ -209,6 +277,8 @@ async function handlePublicGetOrHead(request, env, url) {
     'Content-Type': contentType,
     'Cache-Control': 'public, max-age=31536000, immutable',
     'Accept-Ranges': 'bytes',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "sandbox; default-src 'none'",
   });
 
   if (object.size !== undefined && object.size !== null) {
@@ -224,15 +294,39 @@ async function handlePublicGetOrHead(request, env, url) {
   return new Response(object.body, { status: 200, headers });
 }
 
-function validateBearerAuth(request) {
+async function validateBearerAuth(request, env) {
   const authHeader = request.headers.get('Authorization') || '';
   if (!authHeader || !/^bearer\s+/i.test(authHeader)) {
     return { ok: false, error: 'Unauthorized: Missing or invalid Authorization Bearer Token' };
   }
   const token = authHeader.replace(/^bearer\s+/i, '').trim();
-  if (!token || token.length < 10) {
+  if (!token || token.length < 10 || token === 'anon-jwt-token-prince-picker' || token === 'null' || token === 'undefined') {
     return { ok: false, error: 'Unauthorized: Malformed Access Token' };
   }
+
+  const configuredToken = env?.WORKER_AUTH_TOKEN ? String(env.WORKER_AUTH_TOKEN).trim() : '';
+  const jwtSecret = env?.SUPABASE_JWT_SECRET ? String(env.SUPABASE_JWT_SECRET).trim() : '';
+
+  if (configuredToken && timingSafeEqualStr(token, configuredToken)) {
+    return { ok: true, token };
+  }
+
+  if (token.split('.').length === 3) {
+    const jwtRes = await verifyJwtHS256(token, jwtSecret);
+    if (!jwtRes.ok) {
+      return { ok: false, error: `Unauthorized: ${jwtRes.reason}` };
+    }
+    const expectedRef = env?.SUPABASE_PROJECT_REF ? String(env.SUPABASE_PROJECT_REF).trim() : 'jzwpbiqiplsuuukbxhnq';
+    if (jwtRes.payload && jwtRes.payload.ref && jwtRes.payload.ref !== expectedRef) {
+      return { ok: false, error: 'Unauthorized: Invalid project token' };
+    }
+    return { ok: true, token };
+  }
+
+  if (configuredToken || jwtSecret || env?.REQUIRE_STRICT_AUTH === 'true') {
+    return { ok: false, error: 'Unauthorized: Invalid Access Token' };
+  }
+
   return { ok: true, token };
 }
 
@@ -268,6 +362,15 @@ function checkRateLimit(request) {
   const clientIP = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
   const nowMs = Date.now();
   const windowMs = 60 * 1000;
+
+  if (rateLimitMap.size > 500) {
+    for (const [ip, times] of rateLimitMap.entries()) {
+      const fresh = times.filter(t => nowMs - t < windowMs);
+      if (fresh.length === 0) rateLimitMap.delete(ip);
+      else rateLimitMap.set(ip, fresh);
+    }
+  }
+
   const ipRecords = rateLimitMap.get(clientIP) || [];
   const validRecords = ipRecords.filter(t => nowMs - t < windowMs);
 
@@ -394,10 +497,16 @@ export default {
         const preflightHeaders = new Headers(CORS_HEADERS);
         const reqHeaders = request.headers.get('Access-Control-Request-Headers');
         if (reqHeaders) {
-          preflightHeaders.set(
-            'Access-Control-Allow-Headers',
-            `${CORS_HEADERS['Access-Control-Allow-Headers']}, ${reqHeaders}`
-          );
+          const safeReqHeaders = reqHeaders
+            .split(',')
+            .map(h => h.trim())
+            .filter(h => /^[a-zA-Z0-9-]+$/.test(h));
+          if (safeReqHeaders.length > 0) {
+            preflightHeaders.set(
+              'Access-Control-Allow-Headers',
+              `${CORS_HEADERS['Access-Control-Allow-Headers']}, ${safeReqHeaders.join(', ')}`
+            );
+          }
         }
         return new Response(null, { status: 204, headers: preflightHeaders });
       }
@@ -408,8 +517,11 @@ export default {
         return await handlePublicGetOrHead(request, env, url);
       }
 
-      // Mutating routes require Bearer Token authentication
-      const authCheck = validateBearerAuth(request);
+      // Mutating routes require allowed Origin (when browser Origin is present) and Bearer Token authentication
+      if (!isAllowedMutatingOrigin(request, env)) {
+        return jsonResponse({ error: 'Forbidden: Disallowed origin' }, 403);
+      }
+      const authCheck = await validateBearerAuth(request, env);
       if (!authCheck.ok) {
         return jsonResponse({ error: authCheck.error }, 401);
       }

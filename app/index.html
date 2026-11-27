@@ -319,6 +319,8 @@
 
     /* ══════ COMPREHENSIVE MOBILE-FIRST NATIVE APP STYLING ══════ */
     html, body {
+      max-width: 100%;
+      overflow-x: hidden;
       overscroll-behavior-y: none;
       -webkit-tap-highlight-color: transparent !important;
     }
@@ -326,7 +328,7 @@
       -webkit-tap-highlight-color: transparent !important;
     }
     input, textarea, select {
-      font-size: 16px; /* Prevents auto-zoom on iOS */
+      font-size: 16px !important; /* Prevents auto-zoom on iOS/Android WebView */
     }
     button, a, .ib, .bnt, .chip, .ctab, .more-item, .stat-card {
       user-select: none !important;
@@ -358,10 +360,10 @@
       min-width: 0 !important;
     }
     .ib {
-      width: 40px !important;
-      height: 40px !important;
-      min-width: 40px !important;
-      min-height: 40px !important;
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
       border-radius: 12px !important;
       display: flex !important;
       align-items: center !important;
@@ -401,7 +403,7 @@
       border-top: 1px solid var(--bd) !important;
       box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.04) !important;
       box-sizing: border-box !important;
-      overflow-x: hidden !important;
+      overflow: visible !important;
     }
     .bnt {
       flex: 1 1 0 !important;
@@ -1600,15 +1602,17 @@
     }
 
     .ap-custom-brand-input {
-      height: 42px !important;
+      height: 44px !important;
+      min-height: 44px !important;
       border-radius: 12px !important;
-      font-size: 13px !important;
+      font-size: 16px !important;
       flex: 1;
       min-width: 0;
     }
 
     .ap-custom-brand-btn {
-      height: 42px;
+      height: 44px;
+      min-height: 44px;
       padding: 0 14px;
       border-radius: 12px;
       border: 1.5px solid #C84B11;
@@ -1630,7 +1634,7 @@
     /* ══ TOAST ══ */
     #toast {
       position: fixed;
-      bottom: 80px;
+      bottom: calc(80px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%) translateY(10px);
       background: #1a1a1a;
@@ -1639,7 +1643,7 @@
       border-radius: 30px;
       font-size: 13px;
       font-weight: 600;
-      z-index: 9999;
+      z-index: 1000000;
       opacity: 0;
       transition: all .22s;
       white-space: nowrap;
@@ -4867,6 +4871,7 @@
     .ap-save-bar {
       flex-shrink: 0;
       padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
       background: var(--card);
       border-top: 1px solid var(--bd);
       display: flex;
@@ -6972,6 +6977,69 @@
       font-size: 16px !important;
       min-height: 44px !important;
     }
+    .fc, .fm-pill, .ap-brand-pill, .inv-brand-pill, .ctab, .logs-tab, .nc-tab,
+    .pdm-icon-action-btn, .nc-btn-close, .pdm-fullscreen-close {
+      min-height: 44px;
+    }
+    .pdm-icon-action-btn, .nc-btn-close, .pdm-fullscreen-close {
+      min-width: 44px;
+    }
+    .pqb, .pick-del {
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Expand tappable hit-area >= 44px on compact inline pills without inflating card height */
+    .brand-card-pill, .loc-card-pill, .batch-pill, .res-brand-clear {
+      position: relative;
+      min-height: 32px;
+    }
+    .brand-card-pill::after, .loc-card-pill::after, .batch-pill::after, .res-brand-clear::after {
+      content: '';
+      position: absolute;
+      inset: -6px -4px;
+    }
+    /* Prevent long SKUs, product names, and wide tables from causing horizontal overflow on 360px screens */
+    .prod-card, .pr-card, .prod-info, .pr-info, .pick-info, .nc-refill-main, .pdm-loc-col {
+      min-width: 0;
+      max-width: 100%;
+    }
+    .prod-name, .pr-name, .pick-name, .nc-refill-title, .pdm-loc-name {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .prod-sku-line {
+      overflow-wrap: anywhere;
+      word-break: break-all;
+    }
+    .nc-refill-main {
+      min-width: 0 !important;
+    }
+    @media (min-width: 768px) {
+      .S .sc,
+      .S .sa-sc,
+      .S .scroll-upper-bar,
+      .S .ap-save-bar,
+      .S .step-scroll,
+      .S .step-btns,
+      .S .cart-total-bar {
+        max-width: 820px;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+      }
+      .S .scroll-upper-bar {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+      }
+      .S .scroll-upper-bar.sa-bar-hidden {
+        transform: translateX(-50%) translateY(-100%);
+      }
+    }
     @media (max-width: 767.98px) {
       .sf input {
         height: 46px !important;
@@ -7333,7 +7401,7 @@
       <div class="login-body">
         <div class="login-icon"
           style="background:transparent;width:84px;height:84px;margin-bottom:14px;box-shadow:none">
-          <img src="../picker%20logo.png" alt="Prince Logo"
+          <img src="./picker-logo.png" alt="Prince Logo"
             style="width:100%;height:100%;object-fit:cover;border-radius:18px;box-shadow:0 8px 24px rgba(255,106,0,0.38)">
         </div>
         <div class="login-title">Who's picking?</div>
@@ -13660,20 +13728,22 @@
       let statusChip;
       if (o.status === 'done') statusChip = `<span class="chip c-gr">DONE</span>`;
       else if (isMine) statusChip = `<span class="chip c-or">IN PROGRESS</span>`;
-      else if (o.status === 'assigned' && !isMine) statusChip = `<span class="chip c-rd">TAKEN · ${o.picker || '?'}</span>`;
+      else if (o.status === 'assigned' && !isMine) statusChip = `<span class="chip c-rd">TAKEN · ${escapeHtml(o.picker || '?')}</span>`;
       else statusChip = `<span class="chip c-bl">AVAILABLE</span>`;
 
-      const clickable = (o.status === 'pending' || isMine) ? `onclick="claimOrder('${o.order_id}')"` : '';
+      const safeOrderId = escapeHtml(o.order_id);
+      const safeOrderIdArg = safeOrderId.replace(/'/g, "\\'");
+      const clickable = (o.status === 'pending' || isMine) ? `onclick="claimOrder('${safeOrderIdArg}')"` : '';
       return `
   <div class="order-card" ${clickable} style="${isLocked ? 'opacity:.55;cursor:not-allowed;' : ''}">
     <div class="oc-top">
-      <div><div class="oc-id">Order #${o.order_id}</div><div class="oc-sub">${total} item${total !== 1 ? 's' : ''}</div></div>
+      <div><div class="oc-id">Order #${safeOrderId}</div><div class="oc-sub">${total} item${total !== 1 ? 's' : ''}</div></div>
       ${statusChip}
     </div>
     <div class="oc-div"></div>
     <div class="oc-stats">
       <div class="oc-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${picked}/${total} picked</div>
-      <div class="oc-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${locStr.slice(0, 30)}</div>
+      <div class="oc-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(locStr.slice(0, 30))}</div>
     </div>
   </div>`;
     }
@@ -14006,7 +14076,7 @@
            <button class="qcb" onclick="adjustConfirmQty(1)">+</button>
          </div>
          <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;text-align:left;letter-spacing:0.5px">ITEM COMMENT / NOTE</div>
-         <input type="text" id="confirmNoteVal" class="ap-input" style="margin:0 0 4px;height:40px;background:var(--bg);border-color:var(--bd);width:100%" placeholder="e.g. damaged box, near expiry" value="${ci.note || ''}">
+         <input type="text" id="confirmNoteVal" class="ap-input" style="margin:0 0 4px;height:40px;background:var(--bg);border-color:var(--bd);width:100%" placeholder="e.g. damaged box, near expiry" value="${escapeHtml(ci.note || '')}">
       </div>
     `;
         btns.innerHTML = `
@@ -14029,11 +14099,11 @@
         <div style="display:flex;gap:12px;margin-bottom:20px">
           <div style="flex:1;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--rd-bd)">
             <div style="font-size:10px;font-weight:800;color:var(--rd);letter-spacing:1px;margin-bottom:4px">SCANNED</div>
-            <div style="font-size:14px;font-weight:700;color:var(--t1);word-break:break-all">${scanState.wrongVal}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--t1);word-break:break-all">${escapeHtml(scanState.wrongVal || '')}</div>
           </div>
           <div style="flex:1;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--gr-bd)">
             <div style="font-size:10px;font-weight:800;color:var(--gr);letter-spacing:1px;margin-bottom:4px">EXPECTED</div>
-            <div style="font-size:14px;font-weight:700;color:var(--t1);word-break:break-all">${scanState.wrongExpected}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--t1);word-break:break-all">${escapeHtml(scanState.wrongExpected || '')}</div>
           </div>
         </div>
         
@@ -14057,8 +14127,8 @@
         area.innerHTML = `
       <div class="snc rd-border">
         <div class="snc-lbl rd">Skip Reason</div>
-        <div class="snc-big" style="font-size:18px">${prod?.name || ci.barcode}</div>
-        <div class="snc-sub">${ci.loc || prod?.loc || ''}</div>
+        <div class="snc-big" style="font-size:18px">${escapeHtml(prod?.name || ci.barcode)}</div>
+        <div class="snc-sub">${escapeHtml(ci.loc || prod?.loc || '')}</div>
       </div>
       <div class="reason-grid" style="margin-bottom:12px">
         <button class="reason-btn" onclick="selReason(this,'Bin Empty')">📦 Bin Empty</button>
@@ -14067,7 +14137,7 @@
         <button class="reason-btn" onclick="selReason(this,'Other')">💬 Other</button>
       </div>
       <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;text-align:left;letter-spacing:0.5px">SKIP COMMENT / NOTE</div>
-      <input type="text" id="skipNoteVal" class="ap-input" style="margin:0 0 4px;height:40px;background:var(--bg);border-color:var(--bd);width:100%" placeholder="e.g. wet box, only 2 units found" value="${ci.note || ''}">`;
+      <input type="text" id="skipNoteVal" class="ap-input" style="margin:0 0 4px;height:40px;background:var(--bg);border-color:var(--bd);width:100%" placeholder="e.g. wet box, only 2 units found" value="${escapeHtml(ci.note || '')}">`;
         btns.innerHTML = `
       <button class="btn-s" style="flex:1" onclick="setPickStep('navigate')">Cancel</button>
       <button class="btn-danger" style="flex:1.5" onclick="confirmSkip()">
@@ -14091,7 +14161,7 @@
         playSound('scan_success');
         speak("Location verified. Scan product.");
         const el = document.getElementById('locResult');
-        if (el) el.innerHTML = `<div class="scan-ok"><div class="scan-ok-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="scan-ok-lbl">✓ Location Match</div><div class="scan-ok-val">${val}</div></div></div>`;
+        if (el) el.innerHTML = `<div class="scan-ok"><div class="scan-ok-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="scan-ok-lbl">✓ Location Match</div><div class="scan-ok-val">${escapeHtml(val)}</div></div></div>`;
         setTimeout(() => setPickStep('scan_prod'), 750);
       } else {
         playSound('scan_error');
@@ -14113,11 +14183,11 @@
       if (match) {
         scanState.prod = val;
         speak("Product verified. Confirm quantity.");
-        el.innerHTML = `<div class="scan-ok"><div class="scan-ok-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="scan-ok-lbl">✓ Product Match</div><div class="scan-ok-val">${ci.product?.name || val}</div></div></div>`;
+        el.innerHTML = `<div class="scan-ok"><div class="scan-ok-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="scan-ok-lbl">✓ Product Match</div><div class="scan-ok-val">${escapeHtml(ci.product?.name || val)}</div></div></div>`;
         setTimeout(() => setPickStep('confirm_qty'), 750);
       } else {
         speak("Incorrect product barcode.");
-        el.innerHTML = `<div class="scan-err"><div class="scan-err-title">⚠ Wrong Product</div><div class="scan-err-sub">Scanned: <strong>${val}</strong><br>Expected: <strong>${ci.barcode}</strong></div></div>`;
+        el.innerHTML = `<div class="scan-err"><div class="scan-err-title">⚠ Wrong Product</div><div class="scan-err-sub">Scanned: <strong>${escapeHtml(val)}</strong><br>Expected: <strong>${escapeHtml(ci.barcode)}</strong></div></div>`;
         toast('Wrong product barcode', 'err');
       }
     }
@@ -14331,11 +14401,13 @@
     }
 
     function hl(str, q) {
-      if (!q) return str;
-      let r = '', si = 0, qi = 0, ls = str.toLowerCase(), lq = q.toLowerCase();
-      while (si < str.length) {
-        if (qi < lq.length && ls[si] === lq[qi]) { r += `<mark>${str[si]}</mark>`; qi++; }
-        else r += str[si];
+      const safeStr = String(str || '');
+      if (!q) return escapeHtml(safeStr);
+      let r = '', si = 0, qi = 0, ls = safeStr.toLowerCase(), lq = String(q).toLowerCase();
+      while (si < safeStr.length) {
+        const ch = escapeHtml(safeStr[si]);
+        if (qi < lq.length && ls[si] === lq[qi]) { r += `<mark>${ch}</mark>`; qi++; }
+        else r += ch;
         si++;
       }
       return r;
@@ -14746,9 +14818,9 @@
       ${totalInCartQty > 0 ? `<div id="cqt-${p._idx}" style="position:absolute; top:12px; right:12px; background:#fff; color:var(--or); border-radius:12px; padding:2px 8px; font-size:12px; font-weight:800; border:2px solid var(--or); box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:2">Qty: ${totalInCartQty}</div>` : ''}
       <div class="prod-top">
         <div class="prod-info">
-          <div class="prod-name" style="padding-right: 50px;">${q ? hl(p.name, q) : p.name}</div>
-          <div style="font-size:11px; font-weight:800; color:var(--or); font-family:monospace; margin-top:1px">SKU: ${p.sku || p.barcode}</div>
-          ${p._matchHighlight ? `<div class="psd-highlight" style="font-size:11px; font-weight:700; color:#0284c7; margin-top:2px; display:flex; align-items:center; gap:4px">${p._matchHighlight}</div>` : ''}
+          <div class="prod-name" style="padding-right: 50px;">${q ? hl(p.name, q) : escapeHtml(p.name || '—')}</div>
+          <div class="prod-sku-line" style="font-size:11px; font-weight:800; color:var(--or); font-family:monospace; margin-top:1px">SKU: ${escapeHtml(p.sku || p.barcode)}</div>
+          ${p._matchHighlight ? `<div class="psd-highlight" style="font-size:11px; font-weight:700; color:#0284c7; margin-top:2px; display:flex; align-items:center; gap:4px">${escapeHtml(p._matchHighlight)}</div>` : ''}
           <div class="prod-chips">
             ${locPillHtml}
             <span class="chip ${sc}">${batchInfo.isMulti ? 'Total Stock' : 'Stock'}: ${effStock}</span>
@@ -14756,7 +14828,7 @@
             ${!batchInfo.isMulti ? `<span class="chip" style="background:var(--bg2,#f4f4f5);color:var(--t3);font-weight:800">${escapeHtml(selBatchId)}</span><button type="button" class="chip" style="background:transparent;border:1px dashed var(--or-md);color:var(--or);cursor:pointer;font-weight:800" onclick="event.stopPropagation(); openAddBatchForProduct('${escapeHtml(prodKey).replace(/'/g, "\\'")}')">+ Batch</button>` : ''}
             ${cardBrand ? `<button type="button" class="brand-card-pill${isBrandActive ? ' active' : ''}" data-brand="${escapeHtml(cardBrand)}" aria-pressed="${isBrandActive ? 'true' : 'false'}" onclick="event.stopPropagation(); toggleInventoryBrandFilter(this.dataset.brand)">${escapeHtml(cardBrand)}${isBrandActive ? ' <span aria-hidden="true">×</span>' : ''}</button>` : ''}
           </div>
-          <div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:6px">${p.barcode}</div>
+          <div class="prod-sku-line" style="font-size:10px;color:var(--t3);font-weight:600;margin-top:6px">${escapeHtml(p.barcode || '')}</div>
         </div>
         ${renderProductImgHtml(p, 'pr-img')}
       </div>
@@ -15163,8 +15235,10 @@
       const mergeSameMrp = Boolean(document.getElementById('pdmBatchMergeChk')?.checked);
 
       if (!batchId && !mergeSameMrp) { toast('Enter a Batch ID', 'err'); return; }
-      if (mrp === '' || Number(mrp) < 0 || isNaN(Number(mrp))) { toast('Enter valid MRP', 'err'); return; }
-      if (qty === '' || Number(qty) <= 0 || isNaN(Number(qty))) { toast('Enter stock quantity > 0', 'err'); return; }
+      if (batchId.length > 64) { toast('Batch ID too long (max 64 chars)', 'err'); return; }
+      if (loc.length > 64) { toast('Location code too long (max 64 chars)', 'err'); return; }
+      if (mrp === '' || Number(mrp) < 0 || Number(mrp) > 10000000 || isNaN(Number(mrp))) { toast('Enter valid MRP (0 - 1,00,00,000)', 'err'); return; }
+      if (qty === '' || Number(qty) <= 0 || Number(qty) > 100000 || isNaN(Number(qty))) { toast('Enter stock quantity (1 - 1,00,000)', 'err'); return; }
 
       const btn = document.getElementById('pdmBatchSaveBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
@@ -15253,11 +15327,12 @@
           const tot = sQty + wQty;
           const skuName = `${item.sku || item.barcode || ''} ${item.name || ''}`.trim();
           const dotClass = idx % 2 === 0 ? 'orange' : 'blue';
+          const safeSkuName = escapeHtml(skuName);
           return `
             <div class="pdm-intact-row">
-              <div class="pdm-td-prod" title="${skuName}">
+              <div class="pdm-td-prod" title="${safeSkuName}">
                 <span class="pdm-dot-indicator ${dotClass}"></span>
-                <span>${skuName}</span>
+                <span>${safeSkuName}</span>
               </div>
               <div class="pdm-td-shop">${sQty} pcs</div>
               <div class="pdm-td-wh">${wQty} pcs</div>
@@ -16291,9 +16366,13 @@
           const refillQty = Math.max(1, shopThresh - shopQty);
           const prodImgHtml = product ? renderProductImgHtml(product, '') : `<div style="font-size:24px;">📦</div>`;
           const barcodeVal = product ? (product.barcode || product.sku) : 'TEST-WR';
+          const safeNotifIdArg = escapeHtml(n.id).replace(/'/g, "\\'");
+          const safeBcArg = escapeHtml(barcodeVal).replace(/'/g, "\\'");
+          const safeWhArg = escapeHtml(whLoc).replace(/'/g, "\\'");
+          const safeShopArg = escapeHtml(shopLoc).replace(/'/g, "\\'");
 
           html += `
-            <div class="nc-card-refill" onclick="handleNotificationTap('${n.id}')">
+            <div class="nc-card-refill" onclick="handleNotificationTap('${safeNotifIdArg}')">
               <div class="nc-refill-img-wrap">
                 <div class="nc-refill-warn-badge">⚠️</div>
                 ${prodImgHtml}
@@ -16304,30 +16383,30 @@
                   <span class="nc-dot">•</span>
                   <span class="nc-text-alert">Low Stock Alert</span>
                 </div>
-                <div class="nc-refill-title">${pName} at SHOP (${shopLoc}) is low!</div>
+                <div class="nc-refill-title">${escapeHtml(pName)} at SHOP (${escapeHtml(shopLoc)}) is low!</div>
                 <div class="nc-refill-sub">Only <strong style="color:#d32f2f;">${shopQty} pcs</strong> left (threshold ${shopThresh}).</div>
-                <div class="nc-refill-avail">🏬 <strong>${whQty} pcs</strong> available in WAREHOUSE (${whLoc}).</div>
+                <div class="nc-refill-avail">🏬 <strong>${whQty} pcs</strong> available in WAREHOUSE (${escapeHtml(whLoc)}).</div>
                 <div class="nc-refill-tags">
-                  <span class="nc-tag">SKU: ${skuStr}</span>
-                  <span class="nc-tag blue">${brandStr}</span>
-                  <span class="nc-tag purple">${catStr}</span>
+                  <span class="nc-tag">SKU: ${escapeHtml(skuStr)}</span>
+                  <span class="nc-tag blue">${escapeHtml(brandStr)}</span>
+                  <span class="nc-tag purple">${escapeHtml(catStr)}</span>
                 </div>
               </div>
               <div class="nc-refill-action-box">
                 <div class="nc-compare-card">
                   <div class="nc-cmp-item">
-                    <div class="nc-cmp-lbl">SHOP (${shopLoc})</div>
+                    <div class="nc-cmp-lbl">SHOP (${escapeHtml(shopLoc)})</div>
                     <div class="nc-cmp-val" style="color:#d32f2f;">${shopQty} pcs</div>
                     <div class="nc-cmp-sub">≤ ${shopThresh} (threshold)</div>
                   </div>
                   <div style="font-size:16px;color:#ff6b00;font-weight:800;">➔</div>
                   <div class="nc-cmp-item">
-                    <div class="nc-cmp-lbl">WAREHOUSE (${whLoc})</div>
+                    <div class="nc-cmp-lbl">WAREHOUSE (${escapeHtml(whLoc)})</div>
                     <div class="nc-cmp-val" style="color:#00ab55;">${whQty} pcs</div>
                     <div class="nc-cmp-sub">Available</div>
                   </div>
                 </div>
-                <button class="nc-btn-action" onclick="event.stopPropagation(); createSmartRefillTransfer('${barcodeVal}','${whLoc}','${shopLoc}',${refillQty}); closeNotificationCenter();">
+                <button class="nc-btn-action" onclick="event.stopPropagation(); createSmartRefillTransfer('${safeBcArg}','${safeWhArg}','${safeShopArg}',${refillQty}); closeNotificationCenter();">
                   🛒 Add to Cart ${refillQty} pcs ➔
                 </button>
               </div>
@@ -16351,16 +16430,17 @@
             badgeText = 'SYSTEM';
           }
 
+          const safeNotifIdArg = escapeHtml(n.id).replace(/'/g, "\\'");
           html += `
-            <div class="nc-card-std" onclick="handleNotificationTap('${n.id}')">
+            <div class="nc-card-std" onclick="handleNotificationTap('${safeNotifIdArg}')">
               <div class="nc-std-icon ${iconClass}">${icon}</div>
               <div class="nc-std-content">
                 <div class="nc-std-header">
                   <span class="nc-std-badge ${badgeClass}">${badgeText}</span>
-                  <span class="nc-std-title">${n.title}</span>
+                  <span class="nc-std-title">${escapeHtml(n.title)}</span>
                 </div>
-                <div class="nc-std-msg">${n.message}</div>
-                <div class="nc-std-time">🕒 ${timeStr}</div>
+                <div class="nc-std-msg">${escapeHtml(n.message)}</div>
+                <div class="nc-std-time">🕒 ${escapeHtml(timeStr)}</div>
               </div>
               <div style="font-size:16px;color:#ccc;font-weight:700;">➔</div>
             </div>
@@ -16514,10 +16594,15 @@
       let bc = `<span class="bc-seg ${mapPath.length === 0 ? 'active' : ''}" onclick="renderMap([])">${storageLabel}</span>`;
       if (mapPath[0]) {
         const rackCode = mapPath[0] === 'MISC' ? `${storageLabel} Misc` : `Rack ${prefix}${mapPath[0]}`;
-        bc += `<span class="bc-sep">›</span><span class="bc-seg ${mapPath.length === 1 ? 'active' : ''}" onclick="renderMap(['${mapPath[0]}'])">${rackCode}</span>`;
+        const safeR0 = escapeHtml(String(mapPath[0]).replace(/['"\\]/g, ''));
+        bc += `<span class="bc-sep">›</span><span class="bc-seg ${mapPath.length === 1 ? 'active' : ''}" onclick="renderMap(['${safeR0}'])">${escapeHtml(rackCode)}</span>`;
       }
-      if (mapPath[1]) bc += `<span class="bc-sep">›</span><span class="bc-seg ${mapPath.length === 2 ? 'active' : ''}" onclick="renderMap(['${mapPath[0]}','${mapPath[1]}'])">L${mapPath[1]}</span>`;
-      if (mapPath[2]) bc += `<span class="bc-sep">›</span><span class="bc-seg active">B${mapPath[2]}</span>`;
+      if (mapPath[1]) {
+        const safeR0 = escapeHtml(String(mapPath[0]).replace(/['"\\]/g, ''));
+        const safeL1 = escapeHtml(String(mapPath[1]).replace(/['"\\]/g, ''));
+        bc += `<span class="bc-sep">›</span><span class="bc-seg ${mapPath.length === 2 ? 'active' : ''}" onclick="renderMap(['${safeR0}','${safeL1}'])">L${escapeHtml(mapPath[1])}</span>`;
+      }
+      if (mapPath[2]) bc += `<span class="bc-sep">›</span><span class="bc-seg active">B${escapeHtml(mapPath[2])}</span>`;
       if (bcEl) bcEl.innerHTML = bc;
 
       const backBtn = document.getElementById('mapBackBtn');
@@ -16557,9 +16642,10 @@
             const rackName = r === 'MISC' ? 'Misc Shelf' : `Rack ${prefix}${r}`;
             const icon = mapTab === 'warehouse' ? '🏭' : '🏪';
 
-            return `<div class="map-card" onclick="renderMap(['${r}'])" style="animation-delay:${i * 20}ms">
+            const safeR = escapeHtml(String(r).replace(/['"\\]/g, ''));
+            return `<div class="map-card" onclick="renderMap(['${safeR}'])" style="animation-delay:${i * 20}ms">
               <div class="mc-icon">${icon}</div>
-              <div class="mc-label" style="font-size:14px">${rackName}</div>
+              <div class="mc-label" style="font-size:14px">${escapeHtml(rackName)}</div>
               <div class="mc-sub">${levCount} level${levCount!==1?'s':''} · ${prodCount} SKUs</div>
             </div>`;
           }).join('')}</div>`;
@@ -16581,9 +16667,11 @@
             const bins = Object.keys(map[r][lv]).length;
             const prods = Object.values(map[r][lv]).flat().length;
             const levelCode = r === 'MISC' ? `L${lv}` : `${prefix}${r}L${lv}`;
-            return `<div class="map-card" onclick="renderMap(['${r}','${lv}'])" style="animation-delay:${i * 20}ms">
+            const safeR = escapeHtml(String(r).replace(/['"\\]/g, ''));
+            const safeLv = escapeHtml(String(lv).replace(/['"\\]/g, ''));
+            return `<div class="map-card" onclick="renderMap(['${safeR}','${safeLv}'])" style="animation-delay:${i * 20}ms">
               <div class="mc-icon">📦</div>
-              <div class="mc-label">${levelCode}</div>
+              <div class="mc-label">${escapeHtml(levelCode)}</div>
               <div class="mc-sub">${bins} bin${bins!==1?'s':''} · ${prods} SKUs</div>
             </div>`;
           }).join('')}</div>`;
@@ -16602,9 +16690,12 @@
             const prods = map[r][l][bn] || [];
             const totStock = prods.reduce((s, p) => s + (p.qty != null ? Number(p.qty) : getEffectiveInventory(p.barcode || p.sku, p.loc)), 0);
             const fullBinCode = r === 'MISC' ? `L${l}B${bn}` : `${prefix}${r}L${l}B${bn}`;
-            return `<div class="map-card" onclick="renderMap(['${r}','${l}','${bn}'])" style="animation-delay:${i * 20}ms">
+            const safeR = escapeHtml(String(r).replace(/['"\\]/g, ''));
+            const safeL = escapeHtml(String(l).replace(/['"\\]/g, ''));
+            const safeBn = escapeHtml(String(bn).replace(/['"\\]/g, ''));
+            return `<div class="map-card" onclick="renderMap(['${safeR}','${safeL}','${safeBn}'])" style="animation-delay:${i * 20}ms">
               <div class="mc-icon">🔲</div>
-              <div class="mc-label" style="font-size:13px">${fullBinCode}</div>
+              <div class="mc-label" style="font-size:13px">${escapeHtml(fullBinCode)}</div>
               <div class="mc-sub">${prods.length} product${prods.length !== 1 ? 's' : ''} · ${totStock} units</div>
             </div>`;
           }).join('')}</div>`;
@@ -16631,10 +16722,10 @@
         row.style.cursor = 'pointer';
         row.onclick = function () { openProdDetail(p.id || p.barcode); };
         row.innerHTML = renderProductImgHtml(p, 'pr-img', 'margin-right:0;flex-shrink:0') +
-          '<div style="flex:1;min-width:0;padding:0 10px"><div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px">' + p.name + '</div>' +
-          '<div style="font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px">' +
-            '<span>' + p.barcode + '</span>' +
-            '<span style="background:' + (isWh ? 'rgba(236,91,19,0.15)' : 'rgba(34,197,94,0.15)') + ';color:' + (isWh ? 'var(--or)' : 'var(--gr)') + ';padding:1px 5px;border-radius:4px;font-size:9px;font-weight:700">' + (isWh ? 'Warehouse ' : 'Shop ') + locText + '</span>' +
+          '<div style="flex:1;min-width:0;padding:0 10px"><div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px;overflow-wrap:anywhere">' + escapeHtml(p.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+            '<span style="word-break:break-all">' + escapeHtml(p.barcode) + '</span>' +
+            '<span style="background:' + (isWh ? 'rgba(236,91,19,0.15)' : 'rgba(34,197,94,0.15)') + ';color:' + (isWh ? 'var(--or)' : 'var(--gr)') + ';padding:1px 5px;border-radius:4px;font-size:9px;font-weight:700">' + (isWh ? 'Warehouse ' : 'Shop ') + escapeHtml(locText) + '</span>' +
           '</div></div>' +
           '<div style="text-align:right;flex-shrink:0"><div style="font-size:20px;font-weight:800;color:' + (qty > 5 ? 'var(--gr)' : qty > 0 ? 'var(--yl)' : 'var(--rd)') + '">' + qty + '</div>' +
           '<div style="font-size:10px;color:var(--t3);font-weight:600">units</div></div>';
@@ -16669,9 +16760,9 @@
           return `
             <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
               <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:700;color:var(--t1);text-overflow:ellipsis;white-space:nowrap;overflow:hidden">${it.product?.name || it.barcode}</div>
-                <div style="font-size:11px;color:var(--t3);margin-top:2px">Location: ${it.loc || it.product?.loc || '—'} · Qty: ${it.picked || 0}/${it.qty}${it.batch_id ? ` · <strong>${escapeHtml(it.batch_id)} (₹${Number(it.unit_mrp ?? it.product?.mrp ?? 0)})</strong>` : ''}</div>
-                ${it.note ? `<div style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${it.note}</div>` : ''}
+                <div style="font-size:13px;font-weight:700;color:var(--t1);text-overflow:ellipsis;white-space:nowrap;overflow:hidden">${escapeHtml(it.product?.name || it.barcode)}</div>
+                <div style="font-size:11px;color:var(--t3);margin-top:2px">Location: ${escapeHtml(it.loc || it.product?.loc || '—')} · Qty: ${it.picked || 0}/${it.qty}${it.batch_id ? ` · <strong>${escapeHtml(it.batch_id)} (₹${Number(it.unit_mrp ?? it.product?.mrp ?? 0)})</strong>` : ''}</div>
+                ${it.note ? `<div style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${escapeHtml(it.note)}</div>` : ''}
               </div>
               <span class="chip ${isPick ? 'c-gr' : 'c-rd'}" style="font-size:10px;font-weight:800;margin-left:auto">${isPick ? 'PICKED' : 'SKIPPED'}</span>
             </div>`;
@@ -16813,7 +16904,7 @@
       el.innerHTML = `
         <div class="dash-hero">
           <div class="dash-kicker">Personal Analytics</div>
-          <div class="dash-title">${STATE.pickerName || 'Picker'}'s Shift</div>
+          <div class="dash-title">${escapeHtml(STATE.pickerName || 'Picker')}'s Shift</div>
           <div class="dash-sub">${stats.today} picks today across saved local session history</div>
         </div>
         <div class="dash-grid">
@@ -16923,8 +17014,8 @@
                   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
             }</div>
           <div class="log-head">
-            <div class="log-name">${title}</div>
-            <div class="log-time">${st}${s.location ? ' · Loc: ' + s.location : ''} · Qty: ${s.qty || total}</div>
+            <div class="log-name">${escapeHtml(title)}</div>
+            <div class="log-time">${escapeHtml(st)}${s.location ? ' · Loc: ' + escapeHtml(s.location) : ''} · Qty: ${Number(s.qty || total || 0)}</div>
           </div>
           <span class="chip ${badgeClass}" style="font-size:10px;font-weight:800;letter-spacing:.4px;padding:2px 8px;border-radius:10px">${badgeText}</span>
         </div>
@@ -16972,10 +17063,10 @@
         return `<div class="tl-item" style="animation-delay:${i * 25}ms">
       <div class="tl-icon ${badgeClass}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isDropMode ? 'var(--rd)' : 'var(--gr)'}" stroke-width="2.5">${isDropMode ? '<polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/>' : '<polyline points="20 6 9 17 4 12"/>'}</svg></div>
       <div class="tl-info">
-        <div class="tl-name">${p?.name || it.barcode || s.sku}</div>
-        <div class="tl-meta">${t} · <span class="tl-loc">${p?.loc || s.location || '—'}</span> · Qty: ${it.picked || it.qty || s.qty || 1}${it.pickTime ? ' · ' + it.pickTime + 's' : ''}</div>
-        ${it.skipReason ? `<div class="skip-row"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Reason: ${it.skipReason}</div>` : ''}
-        ${it.note || s.note ? `<div class="note-row" style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${it.note || s.note}</div>` : ''}
+        <div class="tl-name">${escapeHtml(p?.name || it.barcode || s.sku)}</div>
+        <div class="tl-meta">${escapeHtml(t)} · <span class="tl-loc">${escapeHtml(p?.loc || s.location || '—')}</span> · Qty: ${Number(it.picked || it.qty || s.qty || 1)}${it.pickTime ? ' · ' + Number(it.pickTime) + 's' : ''}</div>
+        ${it.skipReason ? `<div class="skip-row"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Reason: ${escapeHtml(it.skipReason)}</div>` : ''}
+        ${it.note || s.note ? `<div class="note-row" style="margin-top:4px;font-size:11px;font-weight:600;color:var(--or);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Note: ${escapeHtml(it.note || s.note)}</div>` : ''}
       </div>
       <span class="tl-badge ${badgeClass}">${badgeLabel}</span>
     </div>`;
@@ -17052,8 +17143,14 @@
         SCAN.ctx = SCAN.canvas.getContext('2d', { willReadFrequently: true });
         scanLoop();
       } catch (e) {
-        console.warn('Camera error:', e.name, e.message);
-        document.getElementById('scanHint').textContent = '📷 No camera — use Manual input';
+        console.warn('Camera error:', e?.name, e?.message);
+        const isDenied = e?.name === 'NotAllowedError' || e?.name === 'PermissionDeniedError' || /denied|permission/i.test(e?.message || '');
+        const hintMsg = isDenied
+          ? '📷 Camera permission denied — allow access in settings or tap Manual'
+          : '📷 No camera available — use Manual input';
+        const hintEl = document.getElementById('scanHint');
+        if (hintEl) hintEl.textContent = hintMsg;
+        if (typeof toast === 'function') toast(isDenied ? 'Camera permission denied. Use Manual entry.' : 'Camera unavailable. Use Manual entry.', 'err');
       }
     }
 
@@ -17546,12 +17643,12 @@
       }
 
       sugg.innerHTML = matches.map(p => `
-        <div onclick="selectManualSuggestion('${p.barcode || p.loc}')" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--t1)">${p.name}</div>
-            <div style="font-size:10px;color:var(--t3)">Barcode: ${p.barcode} · Loc: ${p.loc}</div>
+        <div data-code="${escapeHtml(p.barcode || p.loc || '')}" onclick="selectManualSuggestion(this.dataset.code)" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer">
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:700;color:var(--t1);overflow-wrap:anywhere">${escapeHtml(p.name)}</div>
+            <div style="font-size:10px;color:var(--t3);word-break:break-all">Barcode: ${escapeHtml(p.barcode)} · Loc: ${escapeHtml(p.loc)}</div>
           </div>
-          <span class="chip c-or" style="font-size:10px">Use Code</span>
+          <span class="chip c-or" style="font-size:10px;flex-shrink:0">Use Code</span>
         </div>
       `).join('');
     }
@@ -18082,8 +18179,8 @@
         row.innerHTML = `
       ${renderProductImgHtml(item, 'pick-thumb', 'width:100%;height:100%;object-fit:cover;border-radius:8px;')}
       <div class="pick-info">
-        <div class="pick-name">${item.name}</div>
-        <div class="pick-loc">${item.loc || '—'}</div>
+        <div class="pick-name">${escapeHtml(item.name)}</div>
+        <div class="pick-loc">${escapeHtml(item.loc || '—')}</div>
         <div class="pick-sku" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:2px">
           <span class="chip c-or" style="padding:2px 6px;font-size:10px;font-weight:800">${escapeHtml(bid)} • ₹${unitMrp}</span>
           <span class="chip ${sc}" style="padding:2px 6px;font-size:10px">Stock: ${effStock}</span>
@@ -19859,10 +19956,13 @@
         const borderStyle = isSelected ? '2px solid var(--or)' : (isPrim ? '1.5px solid var(--or-md)' : '1px solid var(--bd)');
         const bgStyle = isSelected ? 'var(--or-lt)' : (isPrim ? 'var(--or-lt)' : 'var(--bg)');
 
+        const stype = l.storage_type || (isWh ? 'WAREHOUSE' : 'SHOP');
+        const safeQty = Math.max(0, Number(l.qty) || 0);
+        const safeThresh = Math.max(0, Number(l.threshold) || 0);
         html += `
-          <div onclick="selectAPLocationToEdit('${l.location}', '${l.storage_type || (isWh ? 'WAREHOUSE' : 'SHOP')}', ${l.qty}, ${l.threshold})" style="background:${bgStyle};border:${borderStyle};border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--t1);cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <span>${l.location}</span>
-            <span style="color:var(--t3);font-size:11px;">· ${l.qty} pcs</span>
+          <div data-loc="${escapeHtml(l.location)}" data-stype="${escapeHtml(stype)}" onclick="selectAPLocationToEdit(this.dataset.loc, this.dataset.stype, ${safeQty}, ${safeThresh})" style="background:${bgStyle};border:${borderStyle};border-radius:8px;padding:8px 12px;min-height:44px;font-size:12px;font-weight:700;color:var(--t1);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <span>${escapeHtml(l.location)}</span>
+            <span style="color:var(--t3);font-size:11px;">· ${safeQty} pcs</span>
             ${isPrim ? '<span style="background:var(--or);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:800;">Primary</span>' : ''}
           </div>
         `;
@@ -19983,11 +20083,13 @@
       const q = inp.value.toLowerCase().trim();
       const matches = q ? list.filter(i => i.toLowerCase().includes(q)) : list;
       let html = matches.slice(0, 40).map(item => {
-        const hl = q ? item.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>') : item;
-        return `<div class="ap-dl-item" onmousedown="selectDD('${ddId}','${inputId}','${item.replace(/'/g, "\\'")}','${ddId.replace('DD', '')}')"> ${hl}</div>`;
+        const hlHtml = q
+          ? escapeHtml(item).replace(new RegExp('(' + escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>')
+          : escapeHtml(item);
+        return `<div class="ap-dl-item" data-dd="${escapeHtml(ddId)}" data-inp="${escapeHtml(inputId)}" data-val="${escapeHtml(item)}" data-field="${escapeHtml(ddId.replace('DD', ''))}" onmousedown="selectDD(this.dataset.dd,this.dataset.inp,this.dataset.val,this.dataset.field)"> ${hlHtml}</div>`;
       }).join('');
       if (allowNew && q && !list.find(i => i.toLowerCase() === q)) {
-        html += `<div class="ap-dl-item ap-dl-new" onmousedown="selectDD('${ddId}','${inputId}','${inp.value.replace(/'/g, "\\'")}','${ddId.replace('DD', '')}')">+ Create "${inp.value}"</div>`;
+        html += `<div class="ap-dl-item ap-dl-new" data-dd="${escapeHtml(ddId)}" data-inp="${escapeHtml(inputId)}" data-val="${escapeHtml(inp.value)}" data-field="${escapeHtml(ddId.replace('DD', ''))}" onmousedown="selectDD(this.dataset.dd,this.dataset.inp,this.dataset.val,this.dataset.field)">+ Create "${escapeHtml(inp.value)}"</div>`;
       }
       dl.innerHTML = html || '<div class="ap-dl-item" style="color:var(--t4)">No results</div>';
       dl.classList.add('open');
@@ -20449,9 +20551,13 @@
 
       const name = gv('apName');
       const barcode = gv('apBarcode');
+      const rawMrpCheck = gn('apMRP'), rawSpCheck = gn('apSP'), rawQtyCheck = gn('apQty'), rawThreshCheck = gn('apThreshold');
 
       if (!name) { toast('Enter product name', 'err'); document.getElementById('apName')?.focus(); return; }
+      if (name.length > 200) { toast('Product name too long (max 200 chars)', 'err'); document.getElementById('apName')?.focus(); return; }
       if (!barcode) { toast('Enter or generate barcode', 'err'); return; }
+      if (barcode.length > 100) { toast('Barcode too long (max 100 chars)', 'err'); return; }
+      if (rawMrpCheck < 0 || rawSpCheck < 0 || rawQtyCheck < 0 || rawThreshCheck < 0) { toast('Price, MRP, stock, and threshold cannot be negative', 'err'); return; }
 
       const customBrandVal = gv('apCustomBrandIn');
       const rawBrand = customBrandVal || gv('apBrand');
@@ -22592,7 +22698,7 @@
       var html =
         '<div class="dash-hero">' +
         '<div class="dash-kicker">Welcome back</div>' +
-        '<div class="dash-title">' + (STATE.pickerName || 'Picker') + '</div>' +
+        '<div class="dash-title">' + escapeHtml(STATE.pickerName || 'Picker') + '</div>' +
         '<div class="dash-sub">Here is your performance overview</div>' +
         '</div>' +
 

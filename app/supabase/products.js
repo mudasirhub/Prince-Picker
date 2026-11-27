@@ -107,27 +107,34 @@
     if (typeof rawPrimary === 'string' && rawPrimary.startsWith('blob:')) rawPrimary = '';
     const primaryImageUrl = rawPrimary;
 
+    const cleanMrp = Math.max(0, Number(product.mrp || 0) || 0);
+    const cleanSp = Math.max(0, Number(product.sp || 0) || 0);
+    const cleanStock = Math.max(0, Number(product.stock ?? product.qty ?? 0) || 0);
+    const cleanTotalStock = Math.max(0, Number(product.total_stock ?? cleanStock) || 0);
+    const cleanQty = Math.max(0, Number(product.qty ?? cleanStock) || 0);
+    const cleanThresh = Math.max(0, Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5) || 0);
+
     // Full rich payload
     const fullPayload = {
       id: id,
       sku: sku,
       barcode: barcode,
-      name: product.name || '',
-      brand: product.brand || '',
-      category: product.category || '',
-      location: product.location || product.loc || '',
-      loc: product.loc || product.location || '',
+      name: String(product.name || '').slice(0, 200),
+      brand: String(product.brand || '').slice(0, 100),
+      category: String(product.category || '').slice(0, 100),
+      location: String(product.location || product.loc || '').slice(0, 64),
+      loc: String(product.loc || product.location || '').slice(0, 64),
       primary_storage: product.primary_storage || product.storage_type || '',
-      primary_location: product.primary_location || product.location || product.loc || '',
+      primary_location: String(product.primary_location || product.location || product.loc || '').slice(0, 64),
       storage_type: product.storage_type || product.primary_storage || '',
       locations: Array.isArray(product.locations) ? product.locations : [],
-      mrp: Number(product.mrp || 0),
-      sp: Number(product.sp || 0),
-      stock: Number(product.stock ?? product.qty ?? 0),
-      total_stock: Number(product.total_stock ?? product.stock ?? product.qty ?? 0),
-      qty: Number(product.qty ?? product.stock ?? 0),
-      threshold: Number(product.threshold !== undefined && product.threshold !== null ? product.threshold : 5),
-      fitment_group: product.fitment_group || '',
+      mrp: cleanMrp,
+      sp: cleanSp,
+      stock: cleanStock,
+      total_stock: cleanTotalStock,
+      qty: cleanQty,
+      threshold: cleanThresh,
+      fitment_group: String(product.fitment_group || '').slice(0, 100),
       intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
       is_intact: Boolean(product.is_intact ?? product.intact ?? (product.fitment_group ? true : false)),
       compatibility: Array.isArray(product.compatibility) ? product.compatibility : [],
@@ -142,21 +149,21 @@
       id: id,
       sku: sku,
       barcode: barcode,
-      name: product.name || '',
-      brand: product.brand || '',
-      category: product.category || '',
-      location: product.location || product.loc || '',
-      loc: product.loc || product.location || '',
-      primary_storage: product.primary_storage || product.storage_type || '',
-      primary_location: product.primary_location || product.location || product.loc || '',
-      storage_type: product.storage_type || product.primary_storage || '',
-      locations: Array.isArray(product.locations) ? product.locations : [],
-      stock: Number(product.stock ?? product.qty ?? 0),
-      mrp: Number(product.mrp || 0),
-      fitment_group: product.fitment_group || '',
-      intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
+      name: fullPayload.name,
+      brand: fullPayload.brand,
+      category: fullPayload.category,
+      location: fullPayload.location,
+      loc: fullPayload.loc,
+      primary_storage: fullPayload.primary_storage,
+      primary_location: fullPayload.primary_location,
+      storage_type: fullPayload.storage_type,
+      locations: fullPayload.locations,
+      stock: cleanStock,
+      mrp: cleanMrp,
+      fitment_group: fullPayload.fitment_group,
+      intact: fullPayload.intact,
       image: primaryImageUrl,
-      updated_at: product.updated_at || new Date().toISOString()
+      updated_at: fullPayload.updated_at
     };
 
     // Legacy fallback payload (for Supabase tables without multi-location SQL columns added yet)
@@ -164,16 +171,16 @@
       id: id,
       sku: sku,
       barcode: barcode,
-      name: product.name || '',
-      brand: product.brand || '',
-      category: product.category || '',
-      location: product.location || product.loc || '',
-      stock: Number(product.stock ?? product.qty ?? 0),
-      mrp: Number(product.mrp || 0),
-      fitment_group: product.fitment_group || '',
-      intact: Boolean(product.intact ?? product.is_intact ?? (product.fitment_group ? true : false)),
+      name: fullPayload.name,
+      brand: fullPayload.brand,
+      category: fullPayload.category,
+      location: fullPayload.location,
+      stock: cleanStock,
+      mrp: cleanMrp,
+      fitment_group: fullPayload.fitment_group,
+      intact: fullPayload.intact,
       image: primaryImageUrl,
-      updated_at: product.updated_at || new Date().toISOString()
+      updated_at: fullPayload.updated_at
     };
 
     console.log('[SAVE_PRODUCT] Product:', product);
@@ -297,8 +304,10 @@
 
   async function deleteProduct(identifier) {
     const client = window.SUPABASE_CLIENT ? window.SUPABASE_CLIENT.instance : null;
-    const targetStr = String(identifier || '');
-    if (!targetStr) return { success: false, error: 'No identifier provided' };
+    const rawTarget = String(identifier || '').trim();
+    // Prevent PostgREST .or() filter injection via commas or parentheses
+    const targetStr = rawTarget.replace(/[,()\\]/g, '');
+    if (!targetStr) return { success: false, error: 'No valid identifier provided' };
 
     if (!client) {
       console.warn('[Products] Supabase client offline. Queuing deletion for background sync.');
