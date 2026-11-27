@@ -12756,6 +12756,9 @@
           if (updatedProds && updatedProds.length > 0) {
             loadProducts(updatedProds);
             renderSearch(document.getElementById('homeQ')?.value?.trim() || '');
+            if (document.getElementById('s-products')?.classList.contains('on') && typeof renderProductsList === 'function') {
+              renderProductsList(document.getElementById('prodQ')?.value?.trim() || '');
+            }
           }
         });
       }
@@ -20298,21 +20301,42 @@
       };
     }
 
+    let _prodListRenderSeq = 0;
+
     async function renderProductsList(q) {
+      const renderSeq = ++_prodListRenderSeq;
       const el = document.getElementById('prodList');
       const statsEl = document.getElementById('prodStats');
       if (!el) return;
 
+      // Recover from IndexedDB if in-memory stores are empty (e.g., direct deep-link or race on startup)
+      if (!FS_PRODUCTS.length && !STATE.products.length && window.PICKER_DB && typeof window.PICKER_DB.getAllProducts === 'function') {
+        try {
+          const cachedProds = await window.PICKER_DB.getAllProducts();
+          if (renderSeq !== _prodListRenderSeq) return;
+          if (Array.isArray(cachedProds) && cachedProds.length > 0) {
+            const cachedBatches = typeof window.PICKER_DB.getAllBatches === 'function'
+              ? await window.PICKER_DB.getAllBatches()
+              : [];
+            if (renderSeq !== _prodListRenderSeq) return;
+            if (Array.isArray(cachedBatches) && cachedBatches.length > 0 && window.SUPABASE_BATCHES) {
+              window.SUPABASE_BATCHES.attachBatchesToProducts(cachedProds, cachedBatches);
+            }
+            loadProducts(cachedProds);
+          }
+        } catch (e) { }
+      }
+
       // Single source of truth: FS_PRODUCTS (synced from all sources via loadProducts + syncFStoState)
       // Supplement with STATE.products for any that slipped through
-      const _fsIds = new Set(FS_PRODUCTS.map(p => p.id || p.barcode).filter(Boolean));
-      const _extra = STATE.products.filter(p => !_fsIds.has(p.id || p.barcode));
+      const _fsIds = new Set(FS_PRODUCTS.map(p => p && (p.id || p.barcode)).filter(Boolean));
+      const _extra = STATE.products.filter(p => p && !_fsIds.has(p.id || p.barcode));
       // Merge extras into FS_PRODUCTS so they're included in future saves
       for (const p of _extra) {
         const key = p.id || p.barcode;
         if (key) { FS_PRODUCTS.push(p); _fsIds.add(key); }
       }
-      const combined = [...FS_PRODUCTS];
+      const combined = FS_PRODUCTS.filter(Boolean);
 
       // Stats
       const lowStock = combined.filter(p => {
@@ -20351,7 +20375,7 @@
       if (ql) {
         if (window.PrinceSearchEngine && window.PrinceSearchEngine.isReady()) {
           const searchRes = window.PrinceSearchEngine.search(q, { limit: 200 });
-          data = (searchRes.items || searchRes).map(item => item.product);
+          data = (searchRes.items || searchRes).map(item => item && item.product).filter(Boolean);
         } else {
           data = combined.filter(p => {
             const info = getProductFacilityInfo(p);
@@ -20420,7 +20444,7 @@
           <div class="empty-state-card">
             <div class="empty-state-icon">🔍</div>
             <div class="empty-state-title">No Matching Products</div>
-            <div class="empty-state-sub">We couldn't find any products in your inventory matching "${q || ''}".</div>
+            <div class="empty-state-sub">We couldn't find any products in your inventory matching "${escapeHtml(q || '')}".</div>
             <div class="empty-state-actions">
               <button class="btn-p" onclick="document.getElementById('prodQ').value = ''; renderProductsList(''); if (window.ScrollChromeController) window.ScrollChromeController.sync('s-products');">
                 Clear Search
@@ -20481,15 +20505,15 @@
         let locHtml = '';
         if (displayStorage === 'MULTI') {
           locHtml = `<div class="pr-loc" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-size:12px;font-weight:800;letter-spacing:0;margin-bottom:2px;">
-            <span style="background:var(--or-lt,#fff4e5);color:var(--or,#ff6b00);padding:2px 6px;border-radius:4px;border:1px solid var(--or-md,rgba(255,107,0,0.3));">SHOP · ${info.shopLocCode}</span>
-            <span style="background:#f1f5f9;color:#475569;padding:2px 6px;border-radius:4px;border:1px solid #cbd5e1;">WH · ${info.whLocCode}</span>
+            <span style="background:var(--or-lt,#fff4e5);color:var(--or,#ff6b00);padding:2px 6px;border-radius:4px;border:1px solid var(--or-md,rgba(255,107,0,0.3));">SHOP · ${escapeHtml(info.shopLocCode)}</span>
+            <span style="background:#f1f5f9;color:#475569;padding:2px 6px;border-radius:4px;border:1px solid #cbd5e1;">WH · ${escapeHtml(info.whLocCode)}</span>
           </div>`;
         } else {
-          locHtml = `<div class="pr-loc">${displayStorage} · ${displayLoc}</div>`;
+          locHtml = `<div class="pr-loc">${escapeHtml(displayStorage)} · ${escapeHtml(displayLoc)}</div>`;
         }
 
         const batchSummaryHtml = batchInfo.isMulti
-          ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${batchInfo.activeBatches.slice(0, 3).map(b => `<span class="batch-b1-tag">${esc(b.batch_id)} · ₹${b.mrp} (${b.stock_qty})</span>`).join('')}${batchInfo.activeBatches.length > 3 ? `<span class="batch-b1-tag">+${batchInfo.activeBatches.length - 3}</span>` : ''}</div>`
+          ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${batchInfo.activeBatches.slice(0, 3).map(b => `<span class="batch-b1-tag">${escapeHtml(b.batch_id)} · ₹${Number(b.mrp || 0)} (${Number(b.stock_qty || 0)})</span>`).join('')}${batchInfo.activeBatches.length > 3 ? `<span class="batch-b1-tag">+${batchInfo.activeBatches.length - 3}</span>` : ''}</div>`
           : '';
 
         let totalHtml = '';
@@ -20516,8 +20540,8 @@
       ${renderProductImgHtml(p, 'pr-img')}
       <div class="pr-info">
         ${locHtml}
-        <div class="pr-name">${p.name || '—'}</div>
-        <div class="pr-brand">${p.brand || ''} ${p.category ? '· ' + p.category : ''}</div>
+        <div class="pr-name">${escapeHtml(p.name || '—')}</div>
+        <div class="pr-brand">${escapeHtml(p.brand || '')} ${p.category ? '· ' + escapeHtml(p.category) : ''}</div>
         ${batchSummaryHtml}
       </div>
       <div class="pr-qty">
@@ -20530,6 +20554,10 @@
         div.onclick = (function (id) { return function () { openProdDetail(id); }; })(p.id || p.barcode);
         el.appendChild(div);
       });
+
+      if (window.ScrollChromeController && typeof window.ScrollChromeController.sync === 'function') {
+        window.ScrollChromeController.sync('s-products');
+      }
     }
 
     function onProdListScan(val) {
@@ -20537,33 +20565,10 @@
       if (q) { q.value = val; renderProductsList(val); }
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  INIT PRODUCT MODULE
-    // ══════════════════════════════════════════════════════════
-    async function initProducts() {
-      // Init IDB with retry
-      let idbOk = false;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          await initIDB();
-          idbOk = true;
-          console.log('[IDB] ready on attempt', attempt);
-          break;
-        } catch (e) {
-          console.warn('[IDB] attempt', attempt, 'failed:', e.message || e);
-          await new Promise(r => setTimeout(r, 300 * attempt));
-        }
-      }
-      if (!idbOk) console.error('[IDB] Could not open IndexedDB — products will not persist');
-
-      wireImageInputs();
-      renderCompatList();
-      syncAPLoc();
-
-      try {
-        const groups = await getMeta('fitment_groups', []);
-        if (Array.isArray(groups)) FIT_GROUPS.push(...groups);
-      } catch (e) { }
+    let _productsInputsWired = false;
+    function wireProductsInputs() {
+      if (_productsInputsWired) return;
+      _productsInputsWired = true;
 
       const pq = document.getElementById('prodQ');
       if (pq) pq.addEventListener('input', debounce(function () { renderProductsList(this.value.trim()); }, 250));
@@ -20581,6 +20586,9 @@
             if (!arr.length) { toast('No products found', 'err'); return; }
             FS_PRODUCTS = arr;
             await syncFStoState();
+            if (window.PICKER_DB && typeof window.PICKER_DB.putProducts === 'function') {
+              await window.PICKER_DB.putProducts(arr);
+            }
             toast('✓ Imported ' + arr.length + ' products', 'ok');
             updateFileLbl();
             renderProductsList('');
@@ -20599,7 +20607,7 @@
         reader.onload = async function (ev) {
           try {
             FS_IMAGES = JSON.parse(ev.target.result);
-            if (IDB) {
+            if (typeof IDB !== 'undefined' && IDB) {
               try {
                 const tx = IDB.transaction('images', 'readwrite');
                 const s = tx.objectStore('images');
@@ -20623,6 +20631,30 @@
         savedVehs.forEach(v => { if (!VEHICLES.includes(v)) VEHICLES.push(v); });
         savedBrands.forEach(b => { if (!BRANDS.includes(b)) BRANDS.push(b); });
       } catch (e) { }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  INIT PRODUCT MODULE
+    // ══════════════════════════════════════════════════════════
+    async function initProducts() {
+      if (typeof initIDB === 'function') {
+        let idbOk = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await initIDB();
+            idbOk = true;
+            break;
+          } catch (e) {
+            await new Promise(r => setTimeout(r, 300 * attempt));
+          }
+        }
+        if (!idbOk) console.error('[IDB] Could not open IndexedDB — products will not persist');
+      }
+
+      wireImageInputs();
+      renderCompatList();
+      syncAPLoc();
+      wireProductsInputs();
 
       // Load existing products + images on init
       await fsLoad();
@@ -20852,7 +20884,7 @@
 
     // ── Export/link products.json ──
     async function exportProductsFile() {
-      if (!FS_PRODUCTS.length && IDB) {
+      if (!FS_PRODUCTS.length && typeof IDB !== 'undefined' && IDB) {
         try { FS_PRODUCTS = await idbGetAll('products'); } catch (e) { }
       }
       const accept = { 'application/json': ['.json'] };
@@ -20877,7 +20909,7 @@
               FS_IMG_HANDLE = await _saveFile('images.json', accept) || null;
             }
             // Sync to IDB
-            if (IDB) {
+            if (typeof IDB !== 'undefined' && IDB) {
               try {
                 const tx = IDB.transaction('images', 'readwrite');
                 const s = tx.objectStore('images');
@@ -20896,7 +20928,7 @@
     // ── Export/link images.json ──
     async function exportImagesFile() {
       // Load from IDB if FS_IMAGES empty
-      if (!Object.keys(FS_IMAGES).length && IDB) {
+      if (!Object.keys(FS_IMAGES).length && typeof IDB !== 'undefined' && IDB) {
         try {
           const rows = await idbGetAll('images');
           rows.forEach(r => { if (r.id && r.data) FS_IMAGES[r.id] = r.data; });
@@ -20937,6 +20969,7 @@
     const DEFAULT_CATS = [...CATS];
     const DEFAULT_VEHICLES = [...VEHICLES];
     const DEFAULT_BRANDS = [...BRANDS];
+    if (typeof wireProductsInputs === 'function') wireProductsInputs();
 
     function updateFileLbl() {
       const el = document.getElementById('prodFileLbl');
